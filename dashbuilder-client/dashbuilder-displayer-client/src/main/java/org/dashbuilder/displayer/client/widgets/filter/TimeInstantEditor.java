@@ -17,47 +17,41 @@ package org.dashbuilder.displayer.client.widgets.filter;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.enterprise.context.Dependent;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
-import org.dashbuilder.dataset.client.resources.i18n.DateIntervalTypeConstants;
-import org.dashbuilder.dataset.client.resources.i18n.TimeModeConstants;
 import org.dashbuilder.dataset.date.TimeAmount;
 import org.dashbuilder.dataset.date.TimeInstant;
 import org.dashbuilder.dataset.group.DateIntervalType;
-import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
-import org.gwtbootstrap3.client.ui.ListBox;
+import org.uberfire.client.mvp.UberView;
+import org.uberfire.mvp.Command;
 
-@Dependent
-public class TimeInstantEditor extends Composite {
+public class TimeInstantEditor implements IsWidget {
 
-    interface Listener {
-        void valueChanged(TimeInstant timeInstant);
+    interface View extends UberView<TimeInstantEditor> {
+
+        void clearTimeModeSelector();
+
+        void addTimeModeItem(TimeInstant.TimeMode timeMode);
+
+        void setSelectedTimeModeIndex(int index);
+
+        int getTimeModeSelectedIndex();
+
+        void enableIntervalTypeSelector();
+
+        void disableIntervalTypeSelector();
+
+        void clearIntervalTypeSelector();
+
+        void addIntervalTypeItem(DateIntervalType type);
+
+        void setSelectedIntervalTypeIndex(int index);
+
+        int getSelectedIntervalTypeIndex();
     }
 
-    interface Binder extends UiBinder<Widget, TimeInstantEditor> {}
-    private static Binder uiBinder = GWT.create(Binder.class);
-
-    Listener listener = null;
-    TimeInstant timeInstant = null;
-    boolean timeModeRequired = true;
-
-    @UiField
-    ListBox timeModeList;
-
-    @UiField
-    ListBox intervalTypeList;
-
-    @UiField
-    TimeAmountEditor timeAmountEditor;
-
-    static List<DateIntervalType> ALLOWED_TYPES = Arrays.asList(
+    static List<DateIntervalType> INTERVAL_TYPES = Arrays.asList(
             DateIntervalType.MINUTE,
             DateIntervalType.HOUR,
             DateIntervalType.DAY,
@@ -67,93 +61,101 @@ public class TimeInstantEditor extends Composite {
             DateIntervalType.CENTURY,
             DateIntervalType.MILLENIUM);
 
-    public TimeInstantEditor() {
-        initWidget(uiBinder.createAndBindUi(this));
+    View view;
+    TimeInstant timeInstant = null;
+    TimeAmountEditor timeAmountEditor = null;
+    Command onChangeCommand = new Command() { public void execute() {} };
+
+    public TimeInstantEditor(TimeInstant timeInstant) {
+        this(new TimeInstantEditorView(),
+            new TimeAmountEditor(timeInstant.getTimeAmount()),
+            timeInstant);
     }
 
-    public void init(final TimeInstant instant, boolean timeModeRequired, final Listener listener) {
-        this.timeModeRequired = timeModeRequired;
-        this.listener = listener;
-        this.timeInstant = instant != null ? instant : new TimeInstant();
-        refreshUI();
+    public TimeInstantEditor(View view, TimeAmountEditor timeAmountEditor, TimeInstant timeInstant) {
+        this.timeInstant = timeInstant != null ? timeInstant : new TimeInstant();
+        this.timeAmountEditor = timeAmountEditor;
+        this.view = view;
+        this.view.init(this);
+
+        init();
     }
 
-    public void refreshUI() {
-
-        initTimeModeListBox();
-        initIntervalTypeListBox();
-
-        intervalTypeList.setVisible(false);
-        TimeInstant.TimeMode timeMode = timeInstant.getTimeMode();
-        if (timeMode != null && !timeMode.equals(TimeInstant.TimeMode.NOW)) {
-            intervalTypeList.setVisible(true);
-        }
-
-        TimeAmount timeAmount = timeInstant.getTimeAmount();
-        timeAmountEditor.init(timeAmount, new TimeAmountEditor.Listener() {
-            public void valueChanged(TimeAmount timeAmount) {
-                onTimeAmountChanged(timeAmount);
-            }
-        });
+    @Override
+    public Widget asWidget() {
+        return view.asWidget();
     }
 
-    protected void initTimeModeListBox() {
-        timeModeList.clear();
-        if (!timeModeRequired) {
-            timeModeList.addItem(CommonConstants.INSTANCE.common_dropdown_select());
-        }
+    public TimeInstant getTimeInstant() {
+        return timeInstant;
+    }
+
+    public TimeAmountEditor getTimeAmountEditor() {
+        return timeAmountEditor;
+    }
+
+    public void setOnChangeCommand(Command onChangeCommand) {
+        this.onChangeCommand = onChangeCommand;
+
+        // Propagate any changes coming from composites
+        timeAmountEditor.setOnChangeCommand(onChangeCommand);
+    }
+
+    public void init() {
+        initTimeModeSelector();
+        initIntervalTypeSelector();
+    }
+
+    protected void initTimeModeSelector() {
+        view.clearTimeModeSelector();
         TimeInstant.TimeMode current = timeInstant.getTimeMode();
         TimeInstant.TimeMode[] modes = TimeInstant.TimeMode.values();
         for (int i=0; i<modes.length ; i++) {
             TimeInstant.TimeMode mode = modes[i];
-            timeModeList.addItem(TimeModeConstants.INSTANCE.getString(mode.name()));
+            view.addTimeModeItem(mode);
             if (current != null && current.equals(mode)) {
-                timeModeList.setSelectedIndex(timeModeRequired ? i : i+1);
+                view.setSelectedTimeModeIndex(i);
             }
         }
     }
 
-    protected void initIntervalTypeListBox() {
-        intervalTypeList.clear();
-        DateIntervalType current = timeInstant.getIntervalType();
-        for (int i=0; i< ALLOWED_TYPES.size(); i++) {
-            DateIntervalType type = ALLOWED_TYPES.get(i);
-            intervalTypeList.addItem(DateIntervalTypeConstants.INSTANCE.getString(type.name()));
-            if (current != null && current.equals(type)) {
-                intervalTypeList.setSelectedIndex(i);
+    protected void initIntervalTypeSelector() {
+        view.disableIntervalTypeSelector();
+        TimeInstant.TimeMode timeMode = timeInstant.getTimeMode();
+        if (timeMode != null && !timeMode.equals(TimeInstant.TimeMode.NOW)) {
+            view.enableIntervalTypeSelector();
+            view.clearIntervalTypeSelector();
+            DateIntervalType current = timeInstant.getIntervalType();
+            for (int i = 0; i < INTERVAL_TYPES.size(); i++) {
+                DateIntervalType type = INTERVAL_TYPES.get(i);
+                view.addIntervalTypeItem(type);
+                if (current != null && current.equals(type)) {
+                    view.setSelectedIntervalTypeIndex(i);
+                }
             }
         }
     }
 
-    // UI events
+    void changeTimeMode() {
+        int selectedIdx = view.getTimeModeSelectedIndex();
 
-    @UiHandler(value = "timeModeList")
-    public void onTimeModeSelected(ChangeEvent changeEvent) {
-        int selectedIdx = timeModeList.getSelectedIndex();
-
-        TimeInstant.TimeMode mode = null;
-        if (timeModeRequired) mode = TimeInstant.TimeMode.getByIndex(selectedIdx);
-        else mode = selectedIdx == 0 ? null : TimeInstant.TimeMode.getByIndex(selectedIdx-1);
-
+        TimeInstant.TimeMode mode = TimeInstant.TimeMode.getByIndex(selectedIdx);
         timeInstant.setTimeMode(mode);
         TimeAmount timeAmount = timeInstant.getTimeAmount();
-        if (timeAmount != null) timeAmount.setQuantity(0);
+        if (timeAmount != null) {
+            timeAmount.setQuantity(0);
+        }
 
-        listener.valueChanged(timeInstant);
-        refreshUI();
+        onChangeCommand.execute();
+        initIntervalTypeSelector();
     }
 
-    @UiHandler(value = "intervalTypeList")
-    public void onIntervalTypeSelected(ChangeEvent changeEvent) {
-        int selectedIdx = intervalTypeList.getSelectedIndex();
-        DateIntervalType intervalType = ALLOWED_TYPES.get(selectedIdx);
+    void changeIntervalType() {
+        int selectedIdx = view.getSelectedIntervalTypeIndex();
+        DateIntervalType intervalType = INTERVAL_TYPES.get(selectedIdx);
         timeInstant.setIntervalType(intervalType);
-        listener.valueChanged(timeInstant);
-        refreshUI();
-    }
 
-    public void onTimeAmountChanged(TimeAmount timeAmount) {
-        timeInstant.setTimeAmount(timeAmount);
-        listener.valueChanged(timeInstant);
+        onChangeCommand.execute();
+        initIntervalTypeSelector();
     }
 }

@@ -16,48 +16,51 @@
 package org.dashbuilder.displayer.client.widgets.filter;
 
 import java.util.Date;
-import javax.enterprise.context.Dependent;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
-import org.gwtbootstrap3.extras.datetimepicker.client.ui.DateTimePicker;
+import org.uberfire.client.mvp.UberView;
+import org.uberfire.mvp.Command;
 
-@Dependent
-public class DateParameterEditor extends Composite {
+public class DateParameterEditor implements IsWidget {
 
-    interface Listener {
-        void valueChanged(Date d);
+    interface View extends UberView<DateParameterEditor> {
+        Date getCurrentValue();
+        void setCurrentValue(Date value);
     }
 
-    interface Binder extends UiBinder<Widget, DateParameterEditor> {}
-    private static Binder uiBinder = GWT.create(Binder.class);
-
-    Listener listener = null;
-
-    @UiField
-    DateTimePicker input;
+    Command onChangeCommand = new Command() { public void execute() {} };
+    View view;
 
     public DateParameterEditor() {
-        initWidget(uiBinder.createAndBindUi(this));
+        this(new DateParameterEditorView());
     }
 
-    public void init(Date value, final Listener listener) {
-        this.listener = listener;
-        if (value != null) input.setValue(value);
-        input.addValueChangeHandler(new ValueChangeHandler<Date>() {
-            public void onValueChange(ValueChangeEvent<Date> event) {
-                listener.valueChanged(event.getValue());
-            }
-        });
-        input.setAutoClose(true); // hide datepicker when time selected
+    public DateParameterEditor(View view) {
+        this.view = view;
+        this.view.init(this);
     }
 
-    public DateTimePicker getInput() {
-        return input;
+    @Override
+    public Widget asWidget() {
+        return view.asWidget();
+    }
+
+    public void setOnChangeCommand(Command onChangeCommand) {
+        this.onChangeCommand = onChangeCommand;
+    }
+
+    public Date getCurrentValue() {
+        return view.getCurrentValue();
+    }
+
+    public void setCurrentValue(Date value) {
+        view.setCurrentValue(value);
+    }
+
+    void valueChanged(Date value) {
+        onChangeCommand.execute();
     }
 }

@@ -15,43 +15,48 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
-import javax.enterprise.context.Dependent;
-
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
-import org.uberfire.ext.widgets.common.client.common.NumericDoubleTextBox;
+import org.uberfire.client.mvp.UberView;
+import org.uberfire.mvp.Command;
 
-@Dependent
-public class NumberParameterEditor extends Composite {
+public class NumberParameterEditor implements IsWidget {
 
-    interface Listener {
-        void valueChanged(Number n);
+    interface View extends UberView<NumberParameterEditor> {
+        Double getCurrentValue();
+        void setCurrentValue(Double value);
     }
 
-    interface Binder extends UiBinder<Widget, NumberParameterEditor> {}
-    private static Binder uiBinder = GWT.create(Binder.class);
-
-    Listener listener = null;
-
-    @UiField
-    NumericDoubleTextBox input;
+    Command onChangeCommand = new Command() { public void execute() {} };
+    View view;
 
     public NumberParameterEditor() {
-        initWidget(uiBinder.createAndBindUi(this));
+        this(new NumberParameterEditorView());
     }
 
-    public void init(Number value, final Listener listener) {
-        this.listener = listener;
-        if (value != null) input.setValue(value.toString());
-        input.addValueChangeHandler(new ValueChangeHandler<String>() {
-            public void onValueChange(ValueChangeEvent<String> event) {
-                listener.valueChanged(new Double(event.getValue()));
-            }
-        });
+    public NumberParameterEditor(View view) {
+        this.view = view;
+        this.view.init(this);
+    }
+
+    @Override
+    public Widget asWidget() {
+        return view.asWidget();
+    }
+
+    public void setOnChangeCommand(Command onChangeCommand) {
+        this.onChangeCommand = onChangeCommand;
+    }
+
+    public Double getCurrentValue() {
+        return view.getCurrentValue();
+    }
+
+    public void setCurrentValue(Double value) {
+        view.setCurrentValue(value);
+    }
+
+    void valueChanged(Double value) {
+        onChangeCommand.execute();
     }
 }

@@ -38,9 +38,10 @@ import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Icon;
 import org.gwtbootstrap3.client.ui.ListBox;
+import org.uberfire.mvp.Command;
 
 @Dependent
-public class DataSetFilterEditor extends Composite implements ColumnFilterEditor.Listener {
+public class DataSetFilterEditor extends Composite {
 
     public interface Listener {
         void filterChanged(DataSetFilter filter);
@@ -89,8 +90,9 @@ public class DataSetFilterEditor extends Composite implements ColumnFilterEditor
 
         if (filter != null) {
             for (ColumnFilter columnFilter : filter.getColumnFilterList()) {
-                ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor();
-                columnFilterEditor.init(metadata, columnFilter, this);
+                ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor(metadata, columnFilter);
+                columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
+                columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
                 filterListPanel.add(columnFilterEditor);
             }
         }
@@ -133,39 +135,47 @@ public class DataSetFilterEditor extends Composite implements ColumnFilterEditor
             if (filter == null) filter = new DataSetFilter();
             filter.addFilterColumn(columnFilter);
 
-            ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor();
-            columnFilterEditor.init(metadata, columnFilter, this);
-            columnFilterEditor.expand();
+            final ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor(metadata, columnFilter);
+            columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
+            columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
+            columnFilterEditor.showFilterConfig();
             filterListPanel.add(columnFilterEditor);
 
             newFilterListBox.setSelectedIndex(0);
             addFilterPanel.setVisible(false);
             addFilterButton.setVisible(true);
 
-            columnFilterChanged(columnFilterEditor);
+            fireFilterChanged();
         }
     }
 
-    // ColumnFilterEditor listener
-
-    public void columnFilterDeleted(ColumnFilterEditor editor) {
-        addFilterButton.setVisible(true);
-        addFilterPanel.setVisible(false);
-        filterListPanel.remove(editor);
-
-        Integer index = filter.getColumnFilterIdx(editor.getFilter());
-        if (index != null) {
-            filter.getColumnFilterList().remove(index.intValue());
-
-            if (listener != null) {
-                listener.filterChanged(filter);
-            }
-        }
-    }
-
-    public void columnFilterChanged(ColumnFilterEditor editor) {
+    protected void fireFilterChanged() {
         if (listener != null) {
             listener.filterChanged(filter);
         }
+    }
+
+    protected Command createFilterChangeCommand(final ColumnFilterEditor editor) {
+        return new Command() {
+            public void execute() {
+                fireFilterChanged();
+            }
+        };
+    }
+
+    protected Command createFilterDeleteCommand(final ColumnFilterEditor editor) {
+        return new Command() {
+            public void execute() {
+                addFilterButton.setVisible(true);
+                addFilterPanel.setVisible(false);
+                filterListPanel.remove(editor);
+
+                Integer index = filter.getColumnFilterIdx(editor.getFilter());
+                if (index != null) {
+                    filter.getColumnFilterList().remove(index.intValue());
+                    fireFilterChanged();
+                }
+            }
+        };
     }
 }

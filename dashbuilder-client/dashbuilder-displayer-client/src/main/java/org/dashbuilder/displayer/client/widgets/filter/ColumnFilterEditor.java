@@ -15,93 +15,114 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.enterprise.context.Dependent;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.dataset.DataSetMetadata;
-import org.dashbuilder.dataset.client.resources.i18n.CoreFunctionTypeConstants;
 import org.dashbuilder.dataset.filter.ColumnFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
 import org.dashbuilder.dataset.filter.FilterFactory;
 import org.dashbuilder.dataset.date.TimeFrame;
-import org.gwtbootstrap3.client.ui.Icon;
-import org.gwtbootstrap3.client.ui.ListBox;
-import org.gwtbootstrap3.client.ui.constants.IconType;
+import org.uberfire.client.mvp.UberView;
+import org.uberfire.mvp.Command;
 
-@Dependent
-public class ColumnFilterEditor extends Composite {
+public class ColumnFilterEditor implements IsWidget {
 
-    public interface Listener {
-        void columnFilterChanged(ColumnFilterEditor editor);
-        void columnFilterDeleted(ColumnFilterEditor editor);
+    public interface View extends UberView<ColumnFilterEditor> {
+
+        void clearFunctionSelector();
+
+        void addToFunctionSelector(CoreFunctionType function);
+
+        void setCurrentFunctionSelected(String function);
+
+        void showFilterConfig();
+
+        void clearFilterConfig();
+
+        void addFilterConfigWidget(IsWidget widget);
+
+        String formatDate(Date date);
+
+        String formatNumber(Number number);
     }
 
-    interface Binder extends UiBinder<Widget, ColumnFilterEditor> {}
-    private static Binder uiBinder = GWT.create(Binder.class);
-
-    private static DateTimeFormat dateTimeFormat = DateTimeFormat.getFormat(DateTimeFormat.PredefinedFormat.DATE_TIME_SHORT);
-    private static NumberFormat numberFormat = NumberFormat.getDecimalFormat();
-
-    Listener listener = null;
+    View view = null;
+    FilterParamEditorFactory paramEditorFactory = null;
     ColumnFilter filter = null;
     DataSetMetadata metadata = null;
+    Command onFilterChangeCommand = new Command() { public void execute() {} };
+    Command onFilterDeleteCommand = new Command() { public void execute() {} };
 
-    @UiField
-    ListBox filterListBox;
-
-    @UiField
-    Icon filterDeleteIcon;
-
-    @UiField
-    Icon filterExpandIcon;
-
-    @UiField
-    Panel filterDetailsPanel;
-
-    public ColumnFilterEditor() {
-        initWidget(uiBinder.createAndBindUi(this));
-        filterExpandIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                expandOrCollapse();
-            }
-        }, ClickEvent.getType());
-        filterDeleteIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                delete();
-            }
-        }, ClickEvent.getType());
+    public ColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
+        this(new ColumnFilterEditorView(), new FilterParamEditorFactory(), metadata, filter);
     }
 
-    public void init(DataSetMetadata metadata, ColumnFilter filter, Listener listener) {
+    public ColumnFilterEditor(View view, FilterParamEditorFactory paramEditorFactory, DataSetMetadata metadata, ColumnFilter filter) {
+        this.view = view;
+        this.paramEditorFactory = paramEditorFactory;
         this.filter = filter;
-        this.listener = listener;
         this.metadata = metadata;
+        this.view.init(this);
 
-        filterExpandIcon.setType(IconType.ARROW_DOWN);
-        filterExpandIcon.setVisible(hasDetails());
-        initFilterListBox();
+        initFilterSelector();
+        initFilterConfig();
     }
 
     public ColumnFilter getFilter() {
         return filter;
     }
 
-    public CoreFunctionFilter getCoreFilter() {
+    public void setOnFilterChangeCommand(Command onFilterChangeCommand) {
+        this.onFilterChangeCommand = onFilterChangeCommand;
+    }
+
+    public void setOnFilterDeleteCommand(Command onFilterDeleteCommand) {
+        this.onFilterDeleteCommand = onFilterDeleteCommand;
+    }
+
+    public View getView() {
+        return view;
+    }
+
+    @Override
+    public Widget asWidget() {
+        return view.asWidget();
+    }
+
+    // Presenter interface
+
+    public void selectFilterFunction(int index) {
+        CoreFunctionFilter coreFilter = getCoreFilter();
+        ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
+        List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
+        CoreFunctionType functionType = functionTypes.get(index);
+        List params = FilterFactory.createParameters(columnType, functionType);
+        coreFilter.setType(functionType);
+        coreFilter.setParameters(params);
+
+        initFilterSelector();
+        if (!initFilterConfig().isEmpty()) {
+            view.showFilterConfig();
+        }
+    }
+
+    public void showFilterConfig() {
+        view.showFilterConfig();
+    }
+
+    public void deleteFilter() {
+        onFilterDeleteCommand.execute();
+    }
+
+    // Internals
+
+    protected CoreFunctionFilter getCoreFilter() {
         try {
             return (CoreFunctionFilter) filter;
         }
@@ -110,102 +131,53 @@ public class ColumnFilterEditor extends Composite {
         }
     }
 
-    public boolean hasDetails() {
+    protected List<IsWidget> createFilterInputControls() {
+        List<IsWidget> filterInputControls = new ArrayList<IsWidget>();
         CoreFunctionFilter coreFilter = getCoreFilter();
-        return (coreFilter != null && coreFilter.getType().getParametersCount() > 0);
-    }
-
-    public void expand() {
-        if (hasDetails()) {
-            filterExpandIcon.setVisible(true);
-            filterExpandIcon.setType(IconType.ARROW_UP);
-            filterDetailsPanel.setVisible(true);
-            initFilterDetailsPanel();
+        if (CoreFunctionType.LIKE_TO.equals(coreFilter.getType())) {
+            IsWidget paramInput = createLikeToFunctionWidget(coreFilter);
+            filterInputControls.add(paramInput);
         }
-    }
-
-    public void collapse() {
-        filterDetailsPanel.setVisible(false);
-        filterExpandIcon.setType(IconType.ARROW_DOWN);
-        filterExpandIcon.setVisible(hasDetails());
-    }
-
-    public void expandOrCollapse() {
-        if (filterDetailsPanel.isVisible()) {
-            collapse();
-        } else {
-            expand();
+        else {
+            for (int i = 0; i < coreFilter.getType().getParametersCount(); i++) {
+                IsWidget paramInput = createParamInputWidget(coreFilter, i);
+                filterInputControls.add(paramInput);
+            }
         }
+        return filterInputControls;
     }
 
-    public void delete() {
-        listener.columnFilterDeleted(this);
-    }
-
-    // UI events
-
-    @UiHandler(value = "filterListBox")
-    public void onFilterSelected(ChangeEvent changeEvent) {
-        int selectedIdx = filterListBox.getSelectedIndex();
-        if (selectedIdx > 0) {
-            CoreFunctionFilter coreFilter = getCoreFilter();
-            ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
-            List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
-            CoreFunctionType functionType = functionTypes.get(selectedIdx-1);
-
-            List params = FilterFactory.createParameters(columnType, functionType);
-            coreFilter.setType(functionType);
-            coreFilter.setParameters(params);
-            filterUpdated();
-
-            if (hasDetails()) expand();
-            else collapse();
-        }
-    }
-
-    // Internals
-
-    protected void initFilterListBox() {
+    protected void initFilterSelector() {
         CoreFunctionFilter coreFilter = getCoreFilter();
         if (coreFilter != null) {
-            filterListBox.clear();
-            String currentFilter = formatFilter(coreFilter);
-            filterListBox.addItem(currentFilter);
-            filterListBox.setTitle(currentFilter);
+            view.clearFunctionSelector();
+            String currentFunction = formatFilterFunction(coreFilter);
+            view.setCurrentFunctionSelected(currentFunction);
 
-            // Add the remain available functions
             ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
             List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
             for (int i = 0; i < functionTypes.size(); i++) {
                 CoreFunctionType ft = functionTypes.get(i);
-                String function = CoreFunctionTypeConstants.INSTANCE.getString(ft.name());
-                filterListBox.addItem(function);
+                view.addToFunctionSelector(ft);
             }
         }
     }
 
-    protected void initFilterDetailsPanel() {
-        filterDetailsPanel.clear();
-
-        CoreFunctionFilter coreFilter = getCoreFilter();
-        if (CoreFunctionType.LIKE_TO.equals(coreFilter.getType())) {
-            Widget paramInput = createLikeToFunctionWidget(coreFilter);
-            filterDetailsPanel.add(paramInput);
+    protected List<IsWidget> initFilterConfig() {
+        view.clearFilterConfig();
+        List<IsWidget> inputs = createFilterInputControls();
+        for (IsWidget input : inputs) {
+            view.addFilterConfigWidget(input);
         }
-        else {
-            for (int i = 0; i < coreFilter.getType().getParametersCount(); i++) {
-                Widget paramInput = createParamInputWidget(coreFilter, i);
-                filterDetailsPanel.add(paramInput);
-            }
-        }
+        return inputs;
     }
 
-    protected void filterUpdated() {
-        listener.columnFilterChanged(this);
-        initFilterListBox();
+
+    protected void fireFilterChanged() {
+        onFilterChangeCommand.execute();
     }
 
-    protected Widget createParamInputWidget(final CoreFunctionFilter coreFilter, final int paramIndex) {
+    protected IsWidget createParamInputWidget(final CoreFunctionFilter coreFilter, final int paramIndex) {
         final List paramList = coreFilter.getParameters();
         ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
 
@@ -221,128 +193,135 @@ public class ColumnFilterEditor extends Composite {
         return createTextInputWidget(paramList, paramIndex);
     }
 
-    protected Widget createDateInputWidget(final List paramList, final int paramIndex) {
+    protected IsWidget createDateInputWidget(final List paramList, final int paramIndex) {
         Date param = (Date) paramList.get(paramIndex);
 
-        DateParameterEditor input = new DateParameterEditor();
-        input.init(param, new DateParameterEditor.Listener() {
-            public void valueChanged(Date d) {
-                paramList.set(paramIndex, d);
-                filterUpdated();
+        final DateParameterEditor input = paramEditorFactory.createDateInputWidget();
+        input.setCurrentValue(param);
+        input.setOnChangeCommand(new Command() {
+            public void execute() {
+                paramList.set(paramIndex, input.getCurrentValue());
+                fireFilterChanged();
             }
         });
         return input;
     }
 
-    protected Widget createNumberInputWidget(final List paramList, final int paramIndex) {
-        Number param = Double.parseDouble(paramList.get(paramIndex).toString());
+    protected IsWidget createNumberInputWidget(final List paramList, final int paramIndex) {
+        Double param = Double.parseDouble(paramList.get(paramIndex).toString());
 
-        NumberParameterEditor input = new NumberParameterEditor();
-        input.init(param, new NumberParameterEditor.Listener() {
-            public void valueChanged(Number n) {
-                paramList.set(paramIndex, n);
-                filterUpdated();
+        final NumberParameterEditor input = paramEditorFactory.createNumberInputWidget();
+        input.setCurrentValue(param);
+        input.setOnChangeCommand(new Command() {
+            public void execute() {
+                paramList.set(paramIndex, input.getCurrentValue());
+                fireFilterChanged();
             }
         });
         return input;
     }
 
-    protected Widget createTextInputWidget(final List paramList, final int paramIndex) {
+    protected IsWidget createTextInputWidget(final List paramList, final int paramIndex) {
         String param = (String) paramList.get(paramIndex);
 
-        TextParameterEditor input = new TextParameterEditor();
-        input.init(param, new TextParameterEditor.Listener() {
-            public void valueChanged(String s) {
-                paramList.set(paramIndex, s);
-                filterUpdated();
+        final TextParameterEditor input = paramEditorFactory.createTextInputWidget();
+        input.setCurrentValue(param);
+        input.setOnChangeCommand(new Command() {
+            @Override
+            public void execute() {
+                paramList.set(paramIndex, input.getCurrentValue());
+                fireFilterChanged();
             }
         });
         return input;
     }
 
-    protected Widget createTimeFrameWidget(final List paramList, final int paramIndex) {
+    protected IsWidget createTimeFrameWidget(final List paramList, final int paramIndex) {
         TimeFrame timeFrame = TimeFrame.parse((String) paramList.get(paramIndex));
 
-        TimeFrameEditor input = new TimeFrameEditor();
-        input.init(timeFrame, new TimeFrameEditor.Listener() {
-            public void valueChanged(TimeFrame tf) {
-                paramList.set(paramIndex, tf.toString());
-                filterUpdated();
+        final TimeFrameEditor input = paramEditorFactory.createTimeFrameWidget(timeFrame);
+        input.setOnChangeCommand(new Command() {
+            public void execute() {
+                paramList.set(paramIndex, input.getTimeFrame().toString());
+                fireFilterChanged();
             }
         });
         return input;
     }
 
-    protected Widget createLikeToFunctionWidget(final CoreFunctionFilter coreFilter) {
-        LikeToFunctionEditor input = new LikeToFunctionEditor();
+    protected IsWidget createLikeToFunctionWidget(final CoreFunctionFilter coreFilter) {
+        final LikeToFunctionEditor input = paramEditorFactory.createLikeToFunctionWidget();
         final List paramList = coreFilter.getParameters();
         String pattern = (String) paramList.get(0);
         boolean caseSensitive = paramList.size() < 2 || Boolean.parseBoolean(paramList.get(1).toString());
 
-        input.init(pattern, caseSensitive, new LikeToFunctionEditor.Listener() {
-
-            public void valueChanged(String pattern, boolean caseSensitive) {
+        input.setCaseSensitive(caseSensitive);
+        input.setPattern(pattern);
+        input.setOnChangeCommand(new Command() {
+            public void execute() {
                 paramList.clear();
-                paramList.add(pattern);
-                if (!caseSensitive) {
+                paramList.add(input.getPattern());
+                if (!input.isCaseSensitive()) {
                     // Only add if disabled since case sensitive is enabled by default.
-                    paramList.add(caseSensitive);
+                    paramList.add(input.isCaseSensitive());
                 }
-                filterUpdated();
+                fireFilterChanged();
             }
         });
         return input;
     }
 
-    protected String formatFilter(CoreFunctionFilter f) {
-        String columnId = f.getColumnId();
-        CoreFunctionType type = f.getType();
+    public String formatFilterFunction(CoreFunctionFilter filter) {
+        String columnId = filter.getColumnId();
+        CoreFunctionType type = filter.getType();
+        List parameters = filter.getParameters();
+
         StringBuilder out = new StringBuilder();
 
         if (CoreFunctionType.BETWEEN.equals(type)) {
             out.append(columnId).append(" [");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
             out.append("]");
         }
         else if (CoreFunctionType.GREATER_THAN.equals(type)) {
             out.append(columnId).append(" > ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.GREATER_OR_EQUALS_TO.equals(type)) {
             out.append(columnId).append(" >= ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.LOWER_THAN.equals(type)) {
             out.append(columnId).append(" < ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.LOWER_OR_EQUALS_TO.equals(type)) {
             out.append(columnId).append(" <= ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.EQUALS_TO.equals(type)) {
             out.append(columnId).append(" = ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.NOT_EQUALS_TO.equals(type)) {
             out.append(columnId).append(" != ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.LIKE_TO.equals(type)) {
             out.append(columnId).append(" like ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.IS_NULL.equals(type)) {
             out.append(columnId).append(" = null ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.NOT_NULL.equals(type)) {
             out.append(columnId).append(" != null ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         else if (CoreFunctionType.TIME_FRAME.equals(type)) {
             out.append(columnId).append(" = ");
-            formatParameters(out, f.getParameters());
+            formatParameters(out, parameters);
         }
         return out.toString();
     }
@@ -361,11 +340,11 @@ public class ColumnFilterEditor extends Composite {
         }
         if (p instanceof Date) {
             Date d = (Date) p;
-            return dateTimeFormat.format(d);
+            return view.formatDate(d);
         }
         if (p instanceof Number) {
             Number n = (Number) p;
-            return numberFormat.format(n);
+            return view.formatNumber(n);
         }
         return p.toString();
     }
