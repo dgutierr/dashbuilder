@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import com.google.gwt.user.client.ui.IsWidget;
@@ -45,14 +46,15 @@ import org.dashbuilder.displayer.DisplayerType;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerHelper;
 import org.dashbuilder.displayer.client.DisplayerLocator;
+import org.dashbuilder.displayer.client.events.DisplayerSettingsChangedEvent;
+import org.dashbuilder.displayer.client.events.DisplayerSubtypeSelectedEvent;
+import org.dashbuilder.displayer.client.events.DisplayerTypeSelectedEvent;
 import org.dashbuilder.displayer.client.prototypes.DisplayerPrototypes;
 import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
 
 @Dependent
 public class DisplayerEditor implements IsWidget,
-        DisplayerTypeSelector.Listener,
-        DataSetLookupEditor.Listener,
-        DisplayerSettingsEditor.Listener {
+        DataSetLookupEditor.Listener {
 
     public interface Listener {
         void onClose(DisplayerEditor editor);
@@ -162,14 +164,20 @@ public class DisplayerEditor implements IsWidget,
 
     // Widget listeners callback notifications
 
-    @Override
-    public void displayerSettingsChanged(DisplayerSettings settings) {
-        displayerSettings = settings;
+    protected void onDisplayerTypeChanged(@Observes DisplayerSettingsChangedEvent event) {
+        displayerSettings = event.getDisplayerSettings();
         view.init(displayerSettings, this);
     }
 
-    @Override
-    public void displayerTypeChanged(DisplayerType type, DisplayerSubType displayerSubType) {
+    protected void onDisplayerTypeChanged(@Observes DisplayerTypeSelectedEvent event) {
+        displayerTypeChanged(event.getSelectedType(), null);
+    }
+
+    protected void onDisplayerSubtypeChanged(@Observes DisplayerSubtypeSelectedEvent event) {
+        displayerTypeChanged(displayerSettings.getType(), event.getSelectedSubType());
+    }
+
+    protected void displayerTypeChanged(DisplayerType type, DisplayerSubType displayerSubType) {
 
         // Create new settings for the selected type
         DisplayerSettings oldSettings = displayerSettings;

@@ -102,7 +102,7 @@ public class DataSetLookupEditorView extends Composite
     @UiField
     Panel filtersControlPanel;
 
-    @UiField
+    @UiField(provided = true)
     DataSetFilterEditor filterEditor;
 
     @Override
@@ -227,9 +227,9 @@ public class DataSetLookupEditorView extends Composite
 
     private void _updateFilterControls() {
         filtersControlPanel.setVisible(true);
-        filterEditor.init(presenter.getDataSetMetadata(),
+        /*filterEditor.init(presenter.getDataSetMetadata(),
                 presenter.getDataSetLookup().getFirstFilterOp(),
-                presenter);
+                presenter);*/
     }
 
     private void _updateGroupControls() {

@@ -25,6 +25,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.ColumnType;
@@ -38,121 +39,118 @@ import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Icon;
 import org.gwtbootstrap3.client.ui.ListBox;
+import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
-@Dependent
-public class DataSetFilterEditor extends Composite {
+public class DataSetFilterEditor implements IsWidget {
 
-    public interface Listener {
-        void filterChanged(DataSetFilter filter);
+    public interface View extends UberView<DataSetFilterEditor> {
+
+        void showNewFilterHome();
+
+        void showColumnSelector();
+
+        void addColumn(String column);
+
+        int getSelectedColumnIndex();
+
+        void resetSelectedColumn();
+
+        void addColumnFilterEditor(ColumnFilterEditor editor);
+
+        void removeColumnFilterEditor(ColumnFilterEditor editor);
     }
 
-    interface Binder extends UiBinder<Widget, DataSetFilterEditor> {}
-    private static Binder uiBinder = GWT.create(Binder.class);
+    public static class Factory {
 
-    Listener listener = null;
+        public ColumnFilterEditor createColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
+            return new ColumnFilterEditor(metadata, filter);
+        }
+    }
+
+    View view = null;
+    Factory factory = null;
     DataSetFilter filter = null;
     DataSetMetadata metadata = null;
+    Command onChangeCommand = new Command() { public void execute() {} };
 
-    @UiField
-    ListBox newFilterListBox;
+    public DataSetFilterEditor(View view,
+                               Factory factory,
+                               DataSetFilter filter,
+                               DataSetMetadata metadata,
+                               Command onChangeCommand) {
+        this.view = view;
+        this.factory = factory;
+        this.filter = filter;
+        this.metadata = metadata;
+        this.onChangeCommand = onChangeCommand;
+        view.init(this);
 
-    @UiField
-    Panel filterListPanel;
-
-    @UiField
-    Button addFilterButton;
-
-    @UiField
-    Panel addFilterPanel;
-
-    @UiField
-    Icon filterDeleteIcon;
-
-    public DataSetFilterEditor() {
-        initWidget(uiBinder.createAndBindUi(this));
-        filterDeleteIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                onNewFilterClosed(event);
-            }
-        }, ClickEvent.getType());
+        init();
     }
 
-    public void init(DataSetMetadata metadata, DataSetFilter filter, Listener listener) {
-        this.metadata = metadata;
-        this.filter = filter;
-        this.listener = listener;
+    @Override
+    public Widget asWidget() {
+        return view.asWidget();
+    }
 
-        addFilterButton.setVisible(true);
-        addFilterPanel.setVisible(false);
-        initNewFilterListBox();
-        filterListPanel.clear();
+    public DataSetFilter getFilter() {
+        return filter;
+    }
+
+    public void init() {
+
+        view.showNewFilterHome();
+        if (metadata != null) {
+            for (int i = 0; i < metadata.getNumberOfColumns(); i++) {
+                view.addColumn(metadata.getColumnId(i));
+            }
+        }
 
         if (filter != null) {
             for (ColumnFilter columnFilter : filter.getColumnFilterList()) {
-                ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor(metadata, columnFilter);
+                ColumnFilterEditor columnFilterEditor = factory.createColumnFilterEditor(metadata, columnFilter);
                 columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
                 columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
-                filterListPanel.add(columnFilterEditor);
+                view.addColumnFilterEditor(columnFilterEditor);
             }
         }
     }
 
-    protected void initNewFilterListBox() {
-        newFilterListBox.clear();
-        newFilterListBox.addItem( CommonConstants.INSTANCE.filter_editor_selectcolumn());
+    public void newFilterStart() {
+        view.showColumnSelector();
+    }
 
-        if (metadata != null) {
-            for (int i = 0; i < metadata.getNumberOfColumns(); i++) {
-                newFilterListBox.addItem(metadata.getColumnId(i));
-            }
+    public void newFilterCancel() {
+        view.showNewFilterHome();
+    }
+
+    public void createFilter() {
+        int selectedIdx = view.getSelectedColumnIndex();
+        String columnId = metadata.getColumnId(selectedIdx);
+        ColumnType columnType = metadata.getColumnType(selectedIdx);
+        CoreFunctionFilter columnFilter = FilterFactory.createCoreFunctionFilter(
+                columnId, columnType,
+                ColumnType.DATE.equals(columnType) ? CoreFunctionType.TIME_FRAME : CoreFunctionType.NOT_EQUALS_TO);
+
+        if (filter == null) {
+            filter = new DataSetFilter();
         }
-    }
+        filter.addFilterColumn(columnFilter);
 
-    // UI events
+        ColumnFilterEditor columnFilterEditor = factory.createColumnFilterEditor(metadata, columnFilter);
+        columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
+        columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
+        columnFilterEditor.showFilterConfig();
 
-    @UiHandler(value = "addFilterButton")
-    public void onAddFilterClicked(ClickEvent event) {
-        addFilterButton.setVisible(false);
-        addFilterPanel.setVisible(true);
-    }
-
-    public void onNewFilterClosed(ClickEvent event) {
-        addFilterButton.setVisible(true);
-        addFilterPanel.setVisible(false);
-    }
-
-    @UiHandler(value = "newFilterListBox")
-    public void onNewFilterSelected(ChangeEvent changeEvent) {
-        int selectedIdx = newFilterListBox.getSelectedIndex();
-        if (selectedIdx > 0) {
-            String columnId = metadata.getColumnId(selectedIdx-1);
-            ColumnType columnType = metadata.getColumnType(selectedIdx - 1);
-            CoreFunctionFilter columnFilter = FilterFactory.createCoreFunctionFilter(
-                    columnId, columnType,
-                    ColumnType.DATE.equals(columnType) ? CoreFunctionType.TIME_FRAME : CoreFunctionType.NOT_EQUALS_TO);
-
-            if (filter == null) filter = new DataSetFilter();
-            filter.addFilterColumn(columnFilter);
-
-            final ColumnFilterEditor columnFilterEditor = new ColumnFilterEditor(metadata, columnFilter);
-            columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
-            columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
-            columnFilterEditor.showFilterConfig();
-            filterListPanel.add(columnFilterEditor);
-
-            newFilterListBox.setSelectedIndex(0);
-            addFilterPanel.setVisible(false);
-            addFilterButton.setVisible(true);
-
-            fireFilterChanged();
-        }
+        view.addColumnFilterEditor(columnFilterEditor);
+        view.resetSelectedColumn();
+        view.showNewFilterHome();
+        fireFilterChanged();
     }
 
     protected void fireFilterChanged() {
-        if (listener != null) {
-            listener.filterChanged(filter);
-        }
+        onChangeCommand.execute();
     }
 
     protected Command createFilterChangeCommand(final ColumnFilterEditor editor) {
@@ -166,10 +164,8 @@ public class DataSetFilterEditor extends Composite {
     protected Command createFilterDeleteCommand(final ColumnFilterEditor editor) {
         return new Command() {
             public void execute() {
-                addFilterButton.setVisible(true);
-                addFilterPanel.setVisible(false);
-                filterListPanel.remove(editor);
-
+                view.removeColumnFilterEditor(editor);
+                view.showNewFilterHome();
                 Integer index = filter.getColumnFilterIdx(editor.getFilter());
                 if (index != null) {
                     filter.getColumnFilterList().remove(index.intValue());

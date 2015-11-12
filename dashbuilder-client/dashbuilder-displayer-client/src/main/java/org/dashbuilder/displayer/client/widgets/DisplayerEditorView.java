@@ -140,8 +140,7 @@ public class DisplayerEditorView extends Composite
     public void gotoTypeSelection() {
         saveLastTab(0);
 
-        typeSelector.init(presenter);
-        typeSelector.select(settings.getRenderer(), settings.getType(), settings.getSubtype());
+        typeSelector.select(settings.getType(), settings.getSubtype());
         leftColumn.clear();
         leftColumn.getElement().getStyle().setOverflowY(Style.Overflow.HIDDEN);
         leftColumn.add(typeSelector);
@@ -187,7 +186,7 @@ public class DisplayerEditorView extends Composite
         if (Window.confirm(CommonConstants.INSTANCE.displayer_editor_incompatible_settings())) {
             presenter.changeSettings(oldSettings, newSettings);
         } else {
-            typeSelector.select(oldSettings.getRenderer(), oldSettings.getType(), oldSettings.getSubtype());
+            typeSelector.select(oldSettings.getType(), oldSettings.getSubtype());
         }
     }
 
@@ -204,7 +203,7 @@ public class DisplayerEditorView extends Composite
         saveLastTab(2);
         optionSettings.setActive(true);
 
-        settingsEditor.init(settings, presenter);
+        settingsEditor.init(settings);
         leftColumn.clear();
         leftColumn.getElement().getStyle().setOverflowY(Style.Overflow.AUTO);
         leftColumn.add(settingsEditor);

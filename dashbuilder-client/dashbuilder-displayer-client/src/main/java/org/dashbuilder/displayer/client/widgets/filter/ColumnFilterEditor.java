@@ -52,20 +52,43 @@ public class ColumnFilterEditor implements IsWidget {
         String formatNumber(Number number);
     }
 
+    public static class Factory {
+
+        protected TextParameterEditor createTextInputWidget() {
+            return new TextParameterEditor();
+        }
+
+        public DateParameterEditor createDateInputWidget() {
+            return new DateParameterEditor();
+        }
+
+        public NumberParameterEditor createNumberInputWidget() {
+            return new NumberParameterEditor();
+        }
+
+        public TimeFrameEditor createTimeFrameWidget(TimeFrame timeFrame) {
+            return new TimeFrameEditor(timeFrame);
+        }
+
+        public LikeToFunctionEditor createLikeToFunctionWidget() {
+            return new LikeToFunctionEditor();
+        }
+    }
+
     View view = null;
-    FilterParamEditorFactory paramEditorFactory = null;
+    Factory factory = null;
     ColumnFilter filter = null;
     DataSetMetadata metadata = null;
     Command onFilterChangeCommand = new Command() { public void execute() {} };
     Command onFilterDeleteCommand = new Command() { public void execute() {} };
 
     public ColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
-        this(new ColumnFilterEditorView(), new FilterParamEditorFactory(), metadata, filter);
+        this(new ColumnFilterEditorView(), new Factory(), metadata, filter);
     }
 
-    public ColumnFilterEditor(View view, FilterParamEditorFactory paramEditorFactory, DataSetMetadata metadata, ColumnFilter filter) {
+    public ColumnFilterEditor(View view, Factory factory, DataSetMetadata metadata, ColumnFilter filter) {
         this.view = view;
-        this.paramEditorFactory = paramEditorFactory;
+        this.factory = factory;
         this.filter = filter;
         this.metadata = metadata;
         this.view.init(this);
@@ -196,7 +219,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createDateInputWidget(final List paramList, final int paramIndex) {
         Date param = (Date) paramList.get(paramIndex);
 
-        final DateParameterEditor input = paramEditorFactory.createDateInputWidget();
+        final DateParameterEditor input = factory.createDateInputWidget();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             public void execute() {
@@ -210,7 +233,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createNumberInputWidget(final List paramList, final int paramIndex) {
         Double param = Double.parseDouble(paramList.get(paramIndex).toString());
 
-        final NumberParameterEditor input = paramEditorFactory.createNumberInputWidget();
+        final NumberParameterEditor input = factory.createNumberInputWidget();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             public void execute() {
@@ -224,7 +247,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createTextInputWidget(final List paramList, final int paramIndex) {
         String param = (String) paramList.get(paramIndex);
 
-        final TextParameterEditor input = paramEditorFactory.createTextInputWidget();
+        final TextParameterEditor input = factory.createTextInputWidget();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             @Override
@@ -239,7 +262,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createTimeFrameWidget(final List paramList, final int paramIndex) {
         TimeFrame timeFrame = TimeFrame.parse((String) paramList.get(paramIndex));
 
-        final TimeFrameEditor input = paramEditorFactory.createTimeFrameWidget(timeFrame);
+        final TimeFrameEditor input = factory.createTimeFrameWidget(timeFrame);
         input.setOnChangeCommand(new Command() {
             public void execute() {
                 paramList.set(paramIndex, input.getTimeFrame().toString());
@@ -250,7 +273,7 @@ public class ColumnFilterEditor implements IsWidget {
     }
 
     protected IsWidget createLikeToFunctionWidget(final CoreFunctionFilter coreFilter) {
-        final LikeToFunctionEditor input = paramEditorFactory.createLikeToFunctionWidget();
+        final LikeToFunctionEditor input = factory.createLikeToFunctionWidget();
         final List paramList = coreFilter.getParameters();
         String pattern = (String) paramList.get(0);
         boolean caseSensitive = paramList.size() < 2 || Boolean.parseBoolean(paramList.get(1).toString());

@@ -41,7 +41,7 @@ public class ColumnFilterEditorTest {
     ColumnFilterEditor.View filterView;
 
     @Mock
-    FilterParamEditorFactory paramEditorFactory;
+    ColumnFilterEditor.Factory filterFactory;
 
     @Mock
     TextParameterEditor textParameterEditor;
@@ -69,18 +69,18 @@ public class ColumnFilterEditorTest {
 
     @Before
     public void init() {
-        when(paramEditorFactory.createTextInputWidget()).thenReturn(textParameterEditor);
-        when(paramEditorFactory.createNumberInputWidget()).thenReturn(numberParameterEditor);
-        when(paramEditorFactory.createDateInputWidget()).thenReturn(dateParameterEditor);
-        when(paramEditorFactory.createLikeToFunctionWidget()).thenReturn(likeToFunctionEditor);
-        when(paramEditorFactory.createTimeFrameWidget(any(TimeFrame.class))).thenReturn(timeFrameEditor);
+        when(filterFactory.createTextInputWidget()).thenReturn(textParameterEditor);
+        when(filterFactory.createNumberInputWidget()).thenReturn(numberParameterEditor);
+        when(filterFactory.createDateInputWidget()).thenReturn(dateParameterEditor);
+        when(filterFactory.createLikeToFunctionWidget()).thenReturn(likeToFunctionEditor);
+        when(filterFactory.createTimeFrameWidget(any(TimeFrame.class))).thenReturn(timeFrameEditor);
     }
 
     protected ColumnFilterEditor setupEditor(ColumnType columnType, CoreFunctionType functionType, Comparable... params) {
         when(metadata.getColumnType("col")).thenReturn(columnType);
 
         CoreFunctionFilter filter = new CoreFunctionFilter("col", functionType, params);
-        ColumnFilterEditor filterEditor = new ColumnFilterEditor(filterView, paramEditorFactory, metadata, filter);
+        ColumnFilterEditor filterEditor = new ColumnFilterEditor(filterView, filterFactory, metadata, filter);
         filterEditor.setOnFilterChangeCommand(changeCommand);
         filterEditor.setOnFilterDeleteCommand(deleteCommand);
 

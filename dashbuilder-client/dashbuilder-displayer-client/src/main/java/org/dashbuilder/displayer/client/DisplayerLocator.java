@@ -43,14 +43,24 @@ public class DisplayerLocator {
         return beanDef.getInstance();
     }
 
-    @Inject ClientDataSetManager clientDataSetManager;
-    @Inject ValueFormatterRegistry formatterRegistry;
+    ClientDataSetManager clientDataSetManager;
+    ValueFormatterRegistry formatterRegistry;
+    RendererManager rendererManager;
+
+    @Inject
+    public DisplayerLocator(ClientDataSetManager clientDataSetManager,
+                            RendererManager rendererManager,
+                            ValueFormatterRegistry formatterRegistry) {
+        this.clientDataSetManager = clientDataSetManager;
+        this.rendererManager = rendererManager;
+        this.formatterRegistry = formatterRegistry;
+    }
 
     /**
      * Get the displayer component for the specified data displayer (with no data set attached).
      */
     public Displayer lookupDisplayer(DisplayerSettings target) {
-        RendererLibrary renderer = RendererManager.get().getRendererForDisplayer(target);
+        RendererLibrary renderer = rendererManager.getRendererForDisplayer(target);
         Displayer displayer = renderer.lookupDisplayer(target);
         if (displayer == null) {
             String rendererUuid = target.getRenderer();

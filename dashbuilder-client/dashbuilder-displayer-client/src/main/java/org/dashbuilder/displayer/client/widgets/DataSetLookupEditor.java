@@ -47,7 +47,6 @@ import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull
 
 @Dependent
 public class DataSetLookupEditor implements IsWidget,
-        DataSetFilterEditor.Listener,
         DataSetGroupDateEditor.Listener {
 
     public interface Listener {
