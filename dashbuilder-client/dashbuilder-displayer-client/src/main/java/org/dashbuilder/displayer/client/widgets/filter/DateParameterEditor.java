@@ -17,6 +17,9 @@ package org.dashbuilder.displayer.client.widgets.filter;
 
 import java.util.Date;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -24,6 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class DateParameterEditor implements IsWidget {
 
     interface View extends UberView<DateParameterEditor> {
@@ -34,10 +38,7 @@ public class DateParameterEditor implements IsWidget {
     Command onChangeCommand = new Command() { public void execute() {} };
     View view;
 
-    public DateParameterEditor() {
-        this(new DateParameterEditorView());
-    }
-
+    @Inject
     public DateParameterEditor(View view) {
         this.view = view;
         this.view.init(this);

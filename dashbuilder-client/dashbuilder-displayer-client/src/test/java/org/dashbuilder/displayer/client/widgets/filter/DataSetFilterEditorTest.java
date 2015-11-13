@@ -26,6 +26,9 @@ import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
 import org.dashbuilder.dataset.filter.DataSetFilter;
 import org.dashbuilder.dataset.filter.FilterFactory;
+import org.dashbuilder.displayer.client.events.DataSetFilterChangedEvent;
+import org.jboss.errai.ioc.client.container.IOCBeanDef;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.uberfire.mocks.EventSourceMock;
 import org.uberfire.mvp.Command;
 
 import static org.junit.Assert.*;
@@ -50,22 +54,21 @@ public class DataSetFilterEditorTest {
     DataSetFilterEditor.View filterView;
 
     @Mock
+    SyncBeanManager beanManager;
+
+    @Mock
+    IOCBeanDef<ColumnFilterEditor> columnFilterEditorBeanDef;
+
+    @Mock
     DataSetMetadata metadata;
 
     @Mock
-    Command changeCommand;
-
-
-    public class MockFactory extends DataSetFilterEditor.Factory {
-
-        @Override
-        public ColumnFilterEditor createColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
-            return columnFilterEditor;
-        }
-    }
+    EventSourceMock<DataSetFilterChangedEvent> changedEvent;
 
     @Before
     public void setup() {
+        when(beanManager.lookupBean(ColumnFilterEditor.class)).thenReturn(columnFilterEditorBeanDef);
+        when(columnFilterEditorBeanDef.newInstance()).thenReturn(columnFilterEditor);
         when(metadata.getNumberOfColumns()).thenReturn(3);
         when(metadata.getColumnId(0)).thenReturn("column1");
         when(metadata.getColumnId(1)).thenReturn("column2");
@@ -81,7 +84,8 @@ public class DataSetFilterEditorTest {
         ColumnFilter filter1 = FilterFactory.equalsTo("column1", "Test");
         filter.addFilterColumn(filter1);
 
-        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, new MockFactory(), filter, metadata, changeCommand);
+        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, beanManager, changedEvent);
+        filterEditor.init(filter, metadata);
 
         assertEquals(filterView, filterEditor.view);
         verify(filterView).showNewFilterHome();
@@ -93,7 +97,8 @@ public class DataSetFilterEditorTest {
 
     @Test
     public void testWorkflow() {
-        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, new MockFactory(), null, metadata, changeCommand);
+        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, beanManager, changedEvent);
+        filterEditor.init(null, metadata);
         reset(filterView);
 
         filterEditor.newFilterStart();
@@ -105,12 +110,13 @@ public class DataSetFilterEditorTest {
 
     @Test
     public void testCreateLabelFilter() {
-        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, new MockFactory(), null, metadata, changeCommand);
+        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, beanManager, changedEvent);
+        filterEditor.init(null, metadata);
         reset(filterView);
         when(filterView.getSelectedColumnIndex()).thenReturn(0);
 
         filterEditor.createFilter();
-        verify(changeCommand).execute();
+        verify(changedEvent).fire(any(DataSetFilterChangedEvent.class));
 
         DataSetFilter filter = filterEditor.getFilter();
         assertNotNull(filter);
@@ -122,12 +128,13 @@ public class DataSetFilterEditorTest {
 
     @Test
     public void testCreateDateFilter() {
-        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, new MockFactory(), null, metadata, changeCommand);
+        DataSetFilterEditor filterEditor = new DataSetFilterEditor(filterView, beanManager, changedEvent);
+        filterEditor.init(null, metadata);
         reset(filterView);
         when(filterView.getSelectedColumnIndex()).thenReturn(2);
 
         filterEditor.createFilter();
-        verify(changeCommand).execute();
+        verify(changedEvent).fire(any(DataSetFilterChangedEvent.class));
 
         DataSetFilter filter = filterEditor.getFilter();
         assertNotNull(filter);

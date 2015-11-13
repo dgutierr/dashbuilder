@@ -37,7 +37,8 @@ public class TimeAmountEditorTest {
     @Test
     public void testViewInitialization() {
         TimeAmount timeAmount = new TimeAmount(10, DateIntervalType.DAY);
-        new TimeAmountEditor(timeAmountView, timeAmount);
+        TimeAmountEditor editor = new TimeAmountEditor(timeAmountView);
+        editor.setTimeAmount(timeAmount);
 
         verify(timeAmountView).clearIntervalTypeSelector();
         verify(timeAmountView, atLeastOnce()).addIntervalTypeItem(any(DateIntervalType.class));
@@ -47,7 +48,8 @@ public class TimeAmountEditorTest {
 
     @Test
     public void testNullInitialization() {
-        new TimeAmountEditor(timeAmountView, null);
+        TimeAmountEditor editor = new TimeAmountEditor(timeAmountView);
+        editor.setTimeAmount(null);
 
         verify(timeAmountView).clearIntervalTypeSelector();
         verify(timeAmountView, atLeastOnce()).addIntervalTypeItem(any(DateIntervalType.class));
@@ -58,7 +60,8 @@ public class TimeAmountEditorTest {
     @Test
     public void testDecreaseQuantity() {
         TimeAmount timeAmount = new TimeAmount(10, DateIntervalType.DAY);
-        TimeAmountEditor timeAmountEditor = new TimeAmountEditor(timeAmountView, timeAmount);
+        TimeAmountEditor timeAmountEditor = new TimeAmountEditor(timeAmountView);
+        timeAmountEditor.setTimeAmount(timeAmount);
         timeAmountEditor.setOnChangeCommand(changeCommand);
         timeAmountEditor.decreaseQuantity();
 
@@ -71,7 +74,8 @@ public class TimeAmountEditorTest {
     @Test
     public void testIncreaseQuantity() {
         TimeAmount timeAmount = new TimeAmount(10, DateIntervalType.DAY);
-        TimeAmountEditor timeAmountEditor = new TimeAmountEditor(timeAmountView, timeAmount);
+        TimeAmountEditor timeAmountEditor = new TimeAmountEditor(timeAmountView);
+        timeAmountEditor.setTimeAmount(timeAmount);
         timeAmountEditor.setOnChangeCommand(changeCommand);
         timeAmountEditor.increaseQuantity();
 

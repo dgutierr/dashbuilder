@@ -23,11 +23,16 @@ import org.dashbuilder.dataset.DataSetMetadata;
 import org.dashbuilder.dataset.date.TimeFrame;
 import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
+import org.dashbuilder.displayer.client.events.ColumnFilterChangedEvent;
+import org.dashbuilder.displayer.client.events.ColumnFilterDeletedEvent;
+import org.jboss.errai.ioc.client.container.IOCBeanDef;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.uberfire.mocks.EventSourceMock;
 import org.uberfire.mvp.Command;
 
 import static org.junit.Assert.*;
@@ -41,7 +46,22 @@ public class ColumnFilterEditorTest {
     ColumnFilterEditor.View filterView;
 
     @Mock
-    ColumnFilterEditor.Factory filterFactory;
+    SyncBeanManager beanManager;
+
+    @Mock
+    IOCBeanDef<TextParameterEditor> textParameterBeanDef;
+
+    @Mock
+    IOCBeanDef<NumberParameterEditor> numberParameterBeanDef;
+
+    @Mock
+    IOCBeanDef<DateParameterEditor> dateParameterBeanDef;
+
+    @Mock
+    IOCBeanDef<TimeFrameEditor> timeFrameBeanDef;
+
+    @Mock
+    IOCBeanDef<LikeToFunctionEditor> likeToFunctionBeanDef;
 
     @Mock
     TextParameterEditor textParameterEditor;
@@ -62,27 +82,32 @@ public class ColumnFilterEditorTest {
     DataSetMetadata metadata;
 
     @Mock
-    Command changeCommand;
+    EventSourceMock<ColumnFilterChangedEvent> changedEvent;
 
     @Mock
-    Command deleteCommand;
+    EventSourceMock<ColumnFilterDeletedEvent> deletedEvent;
 
     @Before
     public void init() {
-        when(filterFactory.createTextInputWidget()).thenReturn(textParameterEditor);
-        when(filterFactory.createNumberInputWidget()).thenReturn(numberParameterEditor);
-        when(filterFactory.createDateInputWidget()).thenReturn(dateParameterEditor);
-        when(filterFactory.createLikeToFunctionWidget()).thenReturn(likeToFunctionEditor);
-        when(filterFactory.createTimeFrameWidget(any(TimeFrame.class))).thenReturn(timeFrameEditor);
+        when(beanManager.lookupBean(TextParameterEditor.class)).thenReturn(textParameterBeanDef);
+        when(beanManager.lookupBean(NumberParameterEditor.class)).thenReturn(numberParameterBeanDef);
+        when(beanManager.lookupBean(DateParameterEditor.class)).thenReturn(dateParameterBeanDef);
+        when(beanManager.lookupBean(TimeFrameEditor.class)).thenReturn(timeFrameBeanDef);
+        when(beanManager.lookupBean(LikeToFunctionEditor.class)).thenReturn(likeToFunctionBeanDef);
+
+        when(textParameterBeanDef.newInstance()).thenReturn(textParameterEditor);
+        when(numberParameterBeanDef.newInstance()).thenReturn(numberParameterEditor);
+        when(dateParameterBeanDef.newInstance()).thenReturn(dateParameterEditor);
+        when(likeToFunctionBeanDef.newInstance()).thenReturn(likeToFunctionEditor);
+        when(timeFrameBeanDef.newInstance()).thenReturn(timeFrameEditor);
     }
 
     protected ColumnFilterEditor setupEditor(ColumnType columnType, CoreFunctionType functionType, Comparable... params) {
         when(metadata.getColumnType("col")).thenReturn(columnType);
 
         CoreFunctionFilter filter = new CoreFunctionFilter("col", functionType, params);
-        ColumnFilterEditor filterEditor = new ColumnFilterEditor(filterView, filterFactory, metadata, filter);
-        filterEditor.setOnFilterChangeCommand(changeCommand);
-        filterEditor.setOnFilterDeleteCommand(deleteCommand);
+        ColumnFilterEditor filterEditor = new ColumnFilterEditor(filterView, beanManager, changedEvent, deletedEvent);
+        filterEditor.init(metadata, filter);
 
         assertEquals(filterView, filterEditor.getView());
         return filterEditor;

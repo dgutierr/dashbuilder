@@ -52,15 +52,6 @@ public class DataSetLookupEditorView extends Composite
     interface Binder extends UiBinder<Widget, DataSetLookupEditorView> {}
     private static Binder uiBinder = GWT.create(Binder.class);
 
-    public DataSetLookupEditorView() {
-        initWidget(uiBinder.createAndBindUi(this));
-        groupDetailsIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                expandCollapseGroupDetails();
-            }
-        }, ClickEvent.getType());
-    }
-
     DataSetLookupEditor presenter;
 
     @UiField
@@ -84,7 +75,7 @@ public class DataSetLookupEditorView extends Composite
     @UiField
     Panel groupDatePanel;
 
-    @UiField
+    @UiField(provided = true)
     DataSetGroupDateEditor groupDateEditor;
 
     @UiField
@@ -108,6 +99,16 @@ public class DataSetLookupEditorView extends Composite
     @Override
     public void init(DataSetLookupEditor presenter) {
         this.presenter = presenter;
+        this.filterEditor = presenter.getFilterEditor();
+        this.groupDateEditor = presenter.getGroupDateEditor();
+        initWidget(uiBinder.createAndBindUi(this));
+
+        groupDetailsIcon.addDomHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                expandCollapseGroupDetails();
+            }
+        }, ClickEvent.getType());
+
         filtersControlPanel.setVisible(false);
         groupControlPanel.setVisible(false);
         columnsControlPanel.setVisible(false);
@@ -219,7 +220,7 @@ public class DataSetLookupEditorView extends Composite
             groupDatePanel.setVisible(true);
             groupDetailsIcon.setType(IconType.ARROW_UP);
             ColumnGroup columnGroup = presenter.getFirstGroupOp().getColumnGroup();
-            groupDateEditor.init(columnGroup, presenter);
+            groupDateEditor.setColumnGroup(columnGroup);
         }
     }
 
@@ -227,9 +228,7 @@ public class DataSetLookupEditorView extends Composite
 
     private void _updateFilterControls() {
         filtersControlPanel.setVisible(true);
-        /*filterEditor.init(presenter.getDataSetMetadata(),
-                presenter.getDataSetLookup().getFirstFilterOp(),
-                presenter);*/
+        filterEditor.init(presenter.getDataSetLookup().getFirstFilterOp(), presenter.getDataSetMetadata());
     }
 
     private void _updateGroupControls() {

@@ -19,6 +19,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.ColumnType;
@@ -28,9 +32,13 @@ import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
 import org.dashbuilder.dataset.filter.FilterFactory;
 import org.dashbuilder.dataset.date.TimeFrame;
+import org.dashbuilder.displayer.client.events.ColumnFilterChangedEvent;
+import org.dashbuilder.displayer.client.events.ColumnFilterDeletedEvent;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class ColumnFilterEditor implements IsWidget {
 
     public interface View extends UberView<ColumnFilterEditor> {
@@ -52,61 +60,34 @@ public class ColumnFilterEditor implements IsWidget {
         String formatNumber(Number number);
     }
 
-    public static class Factory {
-
-        protected TextParameterEditor createTextInputWidget() {
-            return new TextParameterEditor();
-        }
-
-        public DateParameterEditor createDateInputWidget() {
-            return new DateParameterEditor();
-        }
-
-        public NumberParameterEditor createNumberInputWidget() {
-            return new NumberParameterEditor();
-        }
-
-        public TimeFrameEditor createTimeFrameWidget(TimeFrame timeFrame) {
-            return new TimeFrameEditor(timeFrame);
-        }
-
-        public LikeToFunctionEditor createLikeToFunctionWidget() {
-            return new LikeToFunctionEditor();
-        }
-    }
-
     View view = null;
-    Factory factory = null;
+    SyncBeanManager beanManager = null;
     ColumnFilter filter = null;
     DataSetMetadata metadata = null;
-    Command onFilterChangeCommand = new Command() { public void execute() {} };
-    Command onFilterDeleteCommand = new Command() { public void execute() {} };
+    Event<ColumnFilterChangedEvent> changedEvent = null;
+    Event<ColumnFilterDeletedEvent> deletedEvent = null;
 
-    public ColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
-        this(new ColumnFilterEditorView(), new Factory(), metadata, filter);
+    @Inject
+    public ColumnFilterEditor(View view,
+                              SyncBeanManager beanManager,
+                              Event<ColumnFilterChangedEvent> changedEvent,
+                              Event<ColumnFilterDeletedEvent> deletedEvent) {
+        this.view = view;
+        this.beanManager = beanManager;
+        this.changedEvent = changedEvent;
+        this.deletedEvent = deletedEvent;
+        this.view.init(this);
     }
 
-    public ColumnFilterEditor(View view, Factory factory, DataSetMetadata metadata, ColumnFilter filter) {
-        this.view = view;
-        this.factory = factory;
+    public void init(DataSetMetadata metadata, ColumnFilter filter) {
         this.filter = filter;
         this.metadata = metadata;
-        this.view.init(this);
-
         initFilterSelector();
         initFilterConfig();
     }
 
     public ColumnFilter getFilter() {
         return filter;
-    }
-
-    public void setOnFilterChangeCommand(Command onFilterChangeCommand) {
-        this.onFilterChangeCommand = onFilterChangeCommand;
-    }
-
-    public void setOnFilterDeleteCommand(Command onFilterDeleteCommand) {
-        this.onFilterDeleteCommand = onFilterDeleteCommand;
     }
 
     public View getView() {
@@ -140,7 +121,7 @@ public class ColumnFilterEditor implements IsWidget {
     }
 
     public void deleteFilter() {
-        onFilterDeleteCommand.execute();
+        deletedEvent.fire(new ColumnFilterDeletedEvent(this));
     }
 
     // Internals
@@ -195,9 +176,8 @@ public class ColumnFilterEditor implements IsWidget {
         return inputs;
     }
 
-
     protected void fireFilterChanged() {
-        onFilterChangeCommand.execute();
+        changedEvent.fire(new ColumnFilterChangedEvent(this));
     }
 
     protected IsWidget createParamInputWidget(final CoreFunctionFilter coreFilter, final int paramIndex) {
@@ -219,7 +199,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createDateInputWidget(final List paramList, final int paramIndex) {
         Date param = (Date) paramList.get(paramIndex);
 
-        final DateParameterEditor input = factory.createDateInputWidget();
+        final DateParameterEditor input = beanManager.lookupBean(DateParameterEditor.class).newInstance();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             public void execute() {
@@ -233,7 +213,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createNumberInputWidget(final List paramList, final int paramIndex) {
         Double param = Double.parseDouble(paramList.get(paramIndex).toString());
 
-        final NumberParameterEditor input = factory.createNumberInputWidget();
+        final NumberParameterEditor input = beanManager.lookupBean(NumberParameterEditor.class).newInstance();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             public void execute() {
@@ -247,7 +227,7 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createTextInputWidget(final List paramList, final int paramIndex) {
         String param = (String) paramList.get(paramIndex);
 
-        final TextParameterEditor input = factory.createTextInputWidget();
+        final TextParameterEditor input = beanManager.lookupBean(TextParameterEditor.class).newInstance();
         input.setCurrentValue(param);
         input.setOnChangeCommand(new Command() {
             @Override
@@ -262,7 +242,8 @@ public class ColumnFilterEditor implements IsWidget {
     protected IsWidget createTimeFrameWidget(final List paramList, final int paramIndex) {
         TimeFrame timeFrame = TimeFrame.parse((String) paramList.get(paramIndex));
 
-        final TimeFrameEditor input = factory.createTimeFrameWidget(timeFrame);
+        final TimeFrameEditor input = beanManager.lookupBean(TimeFrameEditor.class).newInstance();
+        input.setTimeFrame(timeFrame);
         input.setOnChangeCommand(new Command() {
             public void execute() {
                 paramList.set(paramIndex, input.getTimeFrame().toString());
@@ -273,7 +254,7 @@ public class ColumnFilterEditor implements IsWidget {
     }
 
     protected IsWidget createLikeToFunctionWidget(final CoreFunctionFilter coreFilter) {
-        final LikeToFunctionEditor input = factory.createLikeToFunctionWidget();
+        final LikeToFunctionEditor input = beanManager.lookupBean(LikeToFunctionEditor.class).newInstance();
         final List paramList = coreFilter.getParameters();
         String pattern = (String) paramList.get(0);
         boolean caseSensitive = paramList.size() < 2 || Boolean.parseBoolean(paramList.get(1).toString());

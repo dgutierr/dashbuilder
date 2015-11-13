@@ -16,17 +16,11 @@
 package org.dashbuilder.displayer.client.widgets.filter;
 
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.dataset.DataSetMetadata;
@@ -35,13 +29,13 @@ import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
 import org.dashbuilder.dataset.filter.DataSetFilter;
 import org.dashbuilder.dataset.filter.FilterFactory;
-import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
-import org.gwtbootstrap3.client.ui.Button;
-import org.gwtbootstrap3.client.ui.Icon;
-import org.gwtbootstrap3.client.ui.ListBox;
+import org.dashbuilder.displayer.client.events.ColumnFilterChangedEvent;
+import org.dashbuilder.displayer.client.events.ColumnFilterDeletedEvent;
+import org.dashbuilder.displayer.client.events.DataSetFilterChangedEvent;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
-import org.uberfire.mvp.Command;
 
+@Dependent
 public class DataSetFilterEditor implements IsWidget {
 
     public interface View extends UberView<DataSetFilterEditor> {
@@ -61,32 +55,20 @@ public class DataSetFilterEditor implements IsWidget {
         void removeColumnFilterEditor(ColumnFilterEditor editor);
     }
 
-    public static class Factory {
-
-        public ColumnFilterEditor createColumnFilterEditor(DataSetMetadata metadata, ColumnFilter filter) {
-            return new ColumnFilterEditor(metadata, filter);
-        }
-    }
-
     View view = null;
-    Factory factory = null;
     DataSetFilter filter = null;
     DataSetMetadata metadata = null;
-    Command onChangeCommand = new Command() { public void execute() {} };
+    SyncBeanManager beanManager;
+    Event<DataSetFilterChangedEvent> changeEvent;
 
+    @Inject
     public DataSetFilterEditor(View view,
-                               Factory factory,
-                               DataSetFilter filter,
-                               DataSetMetadata metadata,
-                               Command onChangeCommand) {
+                               SyncBeanManager beanManager,
+                               Event<DataSetFilterChangedEvent> changeEvent) {
         this.view = view;
-        this.factory = factory;
-        this.filter = filter;
-        this.metadata = metadata;
-        this.onChangeCommand = onChangeCommand;
+        this.beanManager = beanManager;
+        this.changeEvent = changeEvent;
         view.init(this);
-
-        init();
     }
 
     @Override
@@ -98,8 +80,9 @@ public class DataSetFilterEditor implements IsWidget {
         return filter;
     }
 
-    public void init() {
-
+    public void init(DataSetFilter filter, DataSetMetadata metadata) {
+        this.filter = filter;
+        this.metadata = metadata;
         view.showNewFilterHome();
         if (metadata != null) {
             for (int i = 0; i < metadata.getNumberOfColumns(); i++) {
@@ -109,9 +92,8 @@ public class DataSetFilterEditor implements IsWidget {
 
         if (filter != null) {
             for (ColumnFilter columnFilter : filter.getColumnFilterList()) {
-                ColumnFilterEditor columnFilterEditor = factory.createColumnFilterEditor(metadata, columnFilter);
-                columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
-                columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
+                ColumnFilterEditor columnFilterEditor = beanManager.lookupBean(ColumnFilterEditor.class).newInstance();
+                columnFilterEditor.init(metadata, columnFilter);
                 view.addColumnFilterEditor(columnFilterEditor);
             }
         }
@@ -138,40 +120,30 @@ public class DataSetFilterEditor implements IsWidget {
         }
         filter.addFilterColumn(columnFilter);
 
-        ColumnFilterEditor columnFilterEditor = factory.createColumnFilterEditor(metadata, columnFilter);
-        columnFilterEditor.setOnFilterChangeCommand(createFilterChangeCommand(columnFilterEditor));
-        columnFilterEditor.setOnFilterDeleteCommand(createFilterDeleteCommand(columnFilterEditor));
+        ColumnFilterEditor columnFilterEditor = beanManager.lookupBean(ColumnFilterEditor.class).newInstance();
+        columnFilterEditor.init(metadata, columnFilter);
         columnFilterEditor.showFilterConfig();
 
         view.addColumnFilterEditor(columnFilterEditor);
         view.resetSelectedColumn();
         view.showNewFilterHome();
-        fireFilterChanged();
+        changeEvent.fire(new DataSetFilterChangedEvent(filter));
     }
 
-    protected void fireFilterChanged() {
-        onChangeCommand.execute();
+    protected void onColumnFilterChanged(@Observes ColumnFilterChangedEvent event) {
+        changeEvent.fire(new DataSetFilterChangedEvent(filter));
     }
 
-    protected Command createFilterChangeCommand(final ColumnFilterEditor editor) {
-        return new Command() {
-            public void execute() {
-                fireFilterChanged();
-            }
-        };
-    }
+    protected void onColumnFilterDeleted(@Observes final ColumnFilterDeletedEvent event) {
+        ColumnFilterEditor editor = event.getColumnFilterEditor();
+        view.removeColumnFilterEditor(editor);
+        view.showNewFilterHome();
+        beanManager.destroyBean(editor);
 
-    protected Command createFilterDeleteCommand(final ColumnFilterEditor editor) {
-        return new Command() {
-            public void execute() {
-                view.removeColumnFilterEditor(editor);
-                view.showNewFilterHome();
-                Integer index = filter.getColumnFilterIdx(editor.getFilter());
-                if (index != null) {
-                    filter.getColumnFilterList().remove(index.intValue());
-                    fireFilterChanged();
-                }
-            }
-        };
+        Integer index = filter.getColumnFilterIdx(editor.getFilter());
+        if (index != null) {
+            filter.getColumnFilterList().remove(index.intValue());
+            changeEvent.fire(new DataSetFilterChangedEvent(filter));
+        }
     }
 }

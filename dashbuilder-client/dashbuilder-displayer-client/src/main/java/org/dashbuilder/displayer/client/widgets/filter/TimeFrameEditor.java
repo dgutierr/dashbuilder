@@ -15,15 +15,20 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.date.Month;
 import org.dashbuilder.dataset.date.TimeFrame;
 import org.dashbuilder.dataset.date.TimeInstant;
 import org.dashbuilder.dataset.group.DateIntervalType;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class TimeFrameEditor implements IsWidget {
 
     interface View extends UberView<TimeFrameEditor> {
@@ -42,25 +47,17 @@ public class TimeFrameEditor implements IsWidget {
     }
 
     View view;
+    SyncBeanManager beanManager;
     TimeFrame timeFrame = null;
     TimeInstantEditor fromEditor;
     TimeInstantEditor toEditor;
     Command onChangeCommand = new Command() { public void execute() {} };
 
-    public TimeFrameEditor(TimeFrame timeFrame) {
-        this(new TimeFrameEditorView(),
-                new TimeInstantEditor(timeFrame.getFrom()),
-                new TimeInstantEditor(timeFrame.getTo()),
-                timeFrame);
-    }
-
-    public TimeFrameEditor(View view, TimeInstantEditor fromEditor, TimeInstantEditor toEditor, TimeFrame timeFrame) {
-        this.timeFrame = timeFrame != null ? timeFrame : TimeFrame.parse("begin[year] till end[year]");
-        this.fromEditor = fromEditor;
-        this.toEditor = toEditor;
+    @Inject
+    public TimeFrameEditor(View view, SyncBeanManager beanManager) {
         this.view = view;
+        this.beanManager = beanManager;
         this.view.init(this);
-        init();
     }
 
     @Override
@@ -84,24 +81,30 @@ public class TimeFrameEditor implements IsWidget {
         this.onChangeCommand = onChangeCommand;
     }
 
-    protected void init() {
-        initFirstMonthSelector();
-        changeFirstMonthAvailability();
+    public void setTimeFrame(TimeFrame tf) {
+        this.timeFrame = tf != null ? tf : TimeFrame.parse("begin[year] till end[year]");
 
-        fromEditor.setOnChangeCommand(new Command() {
+        this.fromEditor = beanManager.lookupBean(TimeInstantEditor.class).newInstance();
+        this.fromEditor.setTimeInstant(timeFrame.getFrom());
+        this.fromEditor.setOnChangeCommand(new Command() {
             public void execute() {
                 fromEditor.getTimeInstant().setFirstMonthOfYear(getFirstMonthOfYear());
                 changeFirstMonthAvailability();
                 fireChanges();
             }
         });
-        toEditor.setOnChangeCommand(new Command() {
+        this.toEditor = beanManager.lookupBean(TimeInstantEditor.class).newInstance();
+        this.toEditor.setTimeInstant(timeFrame.getTo());
+        this.toEditor.setOnChangeCommand(new Command() {
             public void execute() {
                 toEditor.getTimeInstant().setFirstMonthOfYear(getFirstMonthOfYear());
                 changeFirstMonthAvailability();
                 fireChanges();
             }
         });
+
+        initFirstMonthSelector();
+        changeFirstMonthAvailability();
     }
 
     protected void initFirstMonthSelector() {

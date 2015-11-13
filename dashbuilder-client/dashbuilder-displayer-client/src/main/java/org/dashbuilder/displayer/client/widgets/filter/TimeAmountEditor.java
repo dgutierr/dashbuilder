@@ -18,6 +18,9 @@ package org.dashbuilder.displayer.client.widgets.filter;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.common.client.StringUtils;
@@ -26,6 +29,7 @@ import org.dashbuilder.dataset.group.DateIntervalType;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class TimeAmountEditor implements IsWidget {
 
     interface View extends UberView<TimeAmountEditor> {
@@ -58,14 +62,10 @@ public class TimeAmountEditor implements IsWidget {
     TimeAmount timeAmount = null;
     Command onChangeCommand = new Command() { public void execute() {} };
 
-    public TimeAmountEditor(TimeAmount timeAmount) {
-        this(new TimeAmountEditorView(), timeAmount);
-    }
-
-    public TimeAmountEditor(View view, TimeAmount timeAmount) {
+    @Inject
+    public TimeAmountEditor(View view) {
         this.view = view;
         this.view.init(this);
-        this.setTimeAmount(timeAmount);
     }
 
     @Override

@@ -15,11 +15,15 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class TextParameterEditor implements IsWidget {
 
     interface View extends UberView<TextParameterEditor> {
@@ -30,10 +34,7 @@ public class TextParameterEditor implements IsWidget {
     Command onChangeCommand = new Command() { public void execute() {} };
     View view;
 
-    public TextParameterEditor() {
-        this(new TextParameterEditorView());
-    }
-
+    @Inject
     public TextParameterEditor(View view) {
         this.view = view;
         this.view.init(this);

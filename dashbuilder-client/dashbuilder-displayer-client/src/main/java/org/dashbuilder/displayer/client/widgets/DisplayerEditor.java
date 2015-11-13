@@ -235,6 +235,7 @@ public class DisplayerEditor implements IsWidget,
         removeStaleSettings();
         view.init(displayerSettings, this);
     }
+
     @Override
     public void dataSetChanged(final String uuid) {
         try {

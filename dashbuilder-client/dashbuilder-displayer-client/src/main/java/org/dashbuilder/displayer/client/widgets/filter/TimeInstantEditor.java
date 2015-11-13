@@ -18,6 +18,9 @@ package org.dashbuilder.displayer.client.widgets.filter;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.date.TimeAmount;
@@ -26,6 +29,7 @@ import org.dashbuilder.dataset.group.DateIntervalType;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class TimeInstantEditor implements IsWidget {
 
     interface View extends UberView<TimeInstantEditor> {
@@ -66,19 +70,12 @@ public class TimeInstantEditor implements IsWidget {
     TimeAmountEditor timeAmountEditor = null;
     Command onChangeCommand = new Command() { public void execute() {} };
 
-    public TimeInstantEditor(TimeInstant timeInstant) {
-        this(new TimeInstantEditorView(),
-            new TimeAmountEditor(timeInstant.getTimeAmount()),
-            timeInstant);
-    }
-
-    public TimeInstantEditor(View view, TimeAmountEditor timeAmountEditor, TimeInstant timeInstant) {
-        this.timeInstant = timeInstant != null ? timeInstant : new TimeInstant();
+    @Inject
+    public TimeInstantEditor(View view, TimeAmountEditor timeAmountEditor) {
         this.timeAmountEditor = timeAmountEditor;
+        this.timeInstant = new TimeInstant();
         this.view = view;
         this.view.init(this);
-
-        init();
     }
 
     @Override
@@ -90,6 +87,13 @@ public class TimeInstantEditor implements IsWidget {
         return timeInstant;
     }
 
+    public void setTimeInstant(TimeInstant ti) {
+        this.timeInstant = ti != null ? ti : new TimeInstant();
+        this.timeAmountEditor.setTimeAmount(timeInstant.getTimeAmount());
+        initTimeModeSelector();
+        initIntervalTypeSelector();
+    }
+
     public TimeAmountEditor getTimeAmountEditor() {
         return timeAmountEditor;
     }
@@ -99,11 +103,6 @@ public class TimeInstantEditor implements IsWidget {
 
         // Propagate any changes coming from composites
         timeAmountEditor.setOnChangeCommand(onChangeCommand);
-    }
-
-    public void init() {
-        initTimeModeSelector();
-        initIntervalTypeSelector();
     }
 
     protected void initTimeModeSelector() {

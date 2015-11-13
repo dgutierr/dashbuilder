@@ -39,15 +39,17 @@ import org.dashbuilder.dataset.group.AggregateFunctionType;
 import org.dashbuilder.dataset.group.ColumnGroup;
 import org.dashbuilder.dataset.group.DataSetGroup;
 import org.dashbuilder.dataset.group.GroupFunction;
+import org.dashbuilder.displayer.client.events.DataSetFilterChangedEvent;
+import org.dashbuilder.displayer.client.events.DataSetGroupDateChanged;
 import org.dashbuilder.displayer.client.widgets.filter.DataSetFilterEditor;
 import org.dashbuilder.displayer.client.widgets.group.DataSetGroupDateEditor;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.uberfire.client.mvp.UberView;
 
 import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
 
 @Dependent
-public class DataSetLookupEditor implements IsWidget,
-        DataSetGroupDateEditor.Listener {
+public class DataSetLookupEditor implements IsWidget {
 
     public interface Listener {
         void dataSetChanged(String uuid);
@@ -56,8 +58,7 @@ public class DataSetLookupEditor implements IsWidget,
         void filterChanged(DataSetFilter filterOp);
     }
 
-    public interface View extends IsWidget {
-        void init(DataSetLookupEditor presenter);
+    public interface View extends UberView<DataSetLookupEditor> {
         void updateDataSetLookup();
         void showDataSetDefs(List<DataSetDef> dataSetDefs);
         void addDataSetDef(DataSetDef dataSetDef);
@@ -69,15 +70,20 @@ public class DataSetLookupEditor implements IsWidget,
     Listener listener;
     View view;
     DataSetClientServices clientServices;
-
+    DataSetFilterEditor filterEditor;
+    DataSetGroupDateEditor groupDateEditor;
     DataSetLookup dataSetLookup = null;
     DataSetLookupConstraints lookupConstraints = null;
     DataSetMetadata dataSetMetadata = null;
 
     @Inject
     public DataSetLookupEditor(DataSetLookupEditorView view,
-            DataSetClientServices clientServices) {
+                               DataSetFilterEditor filterEditor,
+                               DataSetGroupDateEditor groupDateEditor,
+                               DataSetClientServices clientServices) {
         this.view = view;
+        this.filterEditor = filterEditor;
+        this.groupDateEditor = groupDateEditor;
         this.clientServices = clientServices;
     }
 
@@ -120,6 +126,14 @@ public class DataSetLookupEditor implements IsWidget,
 
     public View getView() {
         return view;
+    }
+
+    public DataSetFilterEditor getFilterEditor() {
+        return filterEditor;
+    }
+
+    public DataSetGroupDateEditor getGroupDateEditor() {
+        return groupDateEditor;
     }
 
     public DataSetLookup getDataSetLookup() {
@@ -363,32 +377,32 @@ public class DataSetLookupEditor implements IsWidget,
 
     // DataSetFilterEditor callback
 
-    public void filterChanged(DataSetFilter filter) {
-        changeDataSetFilter(filter);
+    protected void filterChanged(@Observes DataSetFilterChangedEvent event) {
+        changeDataSetFilter(event.getFilter());
     }
 
     // DataSetGroupDateEditor callback
 
-    public void columnGroupChanged(ColumnGroup columnGroup) {
-        changeGroupColumn(columnGroup);
+    protected void dateGroupChanged(@Observes DataSetGroupDateChanged event) {
+        changeGroupColumn(event.getColumnGroup());
     }
 
     // Be aware of data set lifecycle events
 
-    private void onDataSetDefRegisteredEvent(@Observes DataSetDefRegisteredEvent event) {
+    protected void onDataSetDefRegisteredEvent(@Observes DataSetDefRegisteredEvent event) {
         checkNotNull("event", event);
 
         view.addDataSetDef(event.getDataSetDef());
     }
 
-    private void onDataSetDefModifiedEvent(@Observes DataSetDefModifiedEvent event) {
+    protected void onDataSetDefModifiedEvent(@Observes DataSetDefModifiedEvent event) {
         checkNotNull("event", event);
 
         view.removeDataSetDef(event.getOldDataSetDef());
         view.addDataSetDef(event.getNewDataSetDef());
     }
 
-    private void onDataSetDefRemovedEvent(@Observes DataSetDefRemovedEvent event) {
+    protected void onDataSetDefRemovedEvent(@Observes DataSetDefRemovedEvent event) {
         checkNotNull("event", event);
 
         view.removeDataSetDef(event.getDataSetDef());

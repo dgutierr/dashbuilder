@@ -15,11 +15,15 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.uberfire.client.mvp.UberView;
 import org.uberfire.mvp.Command;
 
+@Dependent
 public class LikeToFunctionEditor implements IsWidget {
 
     interface View extends UberView<LikeToFunctionEditor> {
@@ -32,10 +36,7 @@ public class LikeToFunctionEditor implements IsWidget {
     Command onChangeCommand = new Command() { public void execute() {} };
     View view;
 
-    public LikeToFunctionEditor() {
-        this(new LikeToFunctionEditorView());
-    }
-
+    @Inject
     public LikeToFunctionEditor(View view) {
         this.view = view;
         this.view.init(this);

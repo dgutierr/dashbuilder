@@ -16,6 +16,9 @@ package org.dashbuilder.displayer.client.widgets.filter;
 
 import org.dashbuilder.dataset.date.Month;
 import org.dashbuilder.dataset.date.TimeFrame;
+import org.jboss.errai.ioc.client.container.IOCBeanDef;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -32,10 +35,13 @@ public class TimeFrameEditorTest {
     TimeFrameEditor.View timeFrameView;
 
     @Mock
-    TimeInstantEditor fromEditor;
+    SyncBeanManager beanManager;
 
     @Mock
-    TimeInstantEditor toEditor;
+    IOCBeanDef<TimeInstantEditor> timeInstantEditorBeanDef;
+
+    @Mock
+    TimeInstantEditor timeInstantEditor;
 
     @Mock
     Command changeCommand;
@@ -45,9 +51,17 @@ public class TimeFrameEditorTest {
     public static final TimeFrame CURRENT_YEAR = TimeFrame.parse("begin[year] till end[year]");
     public static final TimeFrame UNDEFINED = null;
 
+    @Before
+    public void init() {
+        when(beanManager.lookupBean(TimeInstantEditor.class)).thenReturn(timeInstantEditorBeanDef);
+        when(timeInstantEditorBeanDef.newInstance()).thenReturn(timeInstantEditor);
+    }
+
     @Test
     public void testViewInitialization() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, fromEditor, toEditor, TEN_DAYS);
+        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
+        timeFrameEditor.setTimeFrame(TEN_DAYS);
+        timeFrameEditor.setOnChangeCommand(changeCommand);
 
         assertEquals(timeFrameView, timeFrameEditor.view);
         verify(timeFrameView).init(timeFrameEditor);
@@ -58,7 +72,9 @@ public class TimeFrameEditorTest {
 
     @Test
     public void testNullInitialization() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, fromEditor, toEditor, UNDEFINED);
+        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
+        timeFrameEditor.setTimeFrame(UNDEFINED);
+        timeFrameEditor.setOnChangeCommand(changeCommand);
 
         assertEquals(timeFrameView, timeFrameEditor.view);
         verify(timeFrameView).init(timeFrameEditor);
@@ -69,13 +85,17 @@ public class TimeFrameEditorTest {
 
     @Test
     public void testFirstMonthAvailable() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, fromEditor, toEditor, CURRENT_YEAR);
+        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
+        timeFrameEditor.setTimeFrame(CURRENT_YEAR);
+        timeFrameEditor.setOnChangeCommand(changeCommand);
         assertEquals(timeFrameEditor.isFirstMonthAvailable(), true);
     }
 
     @Test
     public void testFirstMonthUnavailable() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, fromEditor, toEditor, LAST_DAY);
+        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
+        timeFrameEditor.setTimeFrame(LAST_DAY);
+        timeFrameEditor.setOnChangeCommand(changeCommand);
         assertEquals(timeFrameEditor.isFirstMonthAvailable(), false);
     }
 }
