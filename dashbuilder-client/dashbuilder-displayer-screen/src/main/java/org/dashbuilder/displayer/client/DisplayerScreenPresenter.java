@@ -221,70 +221,73 @@ public class DisplayerScreenPresenter {
             public void execute() {
                 perspectiveCoordinator.editOn();
 
-                final String currentTitle = displayerSettings.getTitle();
-                displayerEditor.init(displayerSettings.cloneInstance(), new DisplayerEditor.Listener() {
-
-                    public void onClose( DisplayerEditor editor ) {
-                        perspectiveCoordinator.editOff();
-                    }
-
-                    public void onSave( final DisplayerEditor editor ) {
-                        perspectiveCoordinator.editOff();
-
-                        DisplayerSettings newSettings = editor.getDisplayerSettings();
-
-                        if (!displayerSettings.equals(newSettings)) {
-
-                            String newTitle = newSettings.getTitle();
-                            if (!currentTitle.equals(newTitle)) {
-                                changeTitleEvent.fire(new ChangeTitleWidgetEvent(placeRequest, newSettings.getTitle()));
-                            }
-
-                            PanelDefinition panelDefinition = panelManager.getPanelForPlace(placeRequest);
-                            placeManager.goTo(createPlaceRequest(newSettings), panelDefinition);
-                            placeManager.closePlace(placeRequest);
-                            perspectiveManager.savePerspectiveState(new Command() {
-                                public void execute() {
-                                }
-                            });
-                        }
-
-                    }
-                } );
+                String currentTitle = displayerSettings.getTitle();
+                displayerEditor.init(displayerSettings.cloneInstance(), getSaveCommand(currentTitle), getCloseCommand());
             }
         };
     }
 
-    private Command getCloneCommand() {
+    protected Command getCloneCommand() {
         return new Command() {
             public void execute() {
                 perspectiveCoordinator.editOn();
 
                 DisplayerSettings clonedSettings = displayerSettings.cloneInstance();
-                clonedSettings.setUUID( uuidGenerator.newUuid() );
-                clonedSettings.setTitle( "Copy of " + clonedSettings.getTitle() );
+                clonedSettings.setUUID(uuidGenerator.newUuid());
+                clonedSettings.setTitle("Copy of " + clonedSettings.getTitle());
+                displayerEditor.init(clonedSettings, getSaveCloneCommand(), getCloseCommand());
+            }
+        };
+    }
 
-                displayerEditor.init(clonedSettings, new DisplayerEditor.Listener() {
+    protected Command getSaveCommand(final String currentTitle) {
+        return new Command() {
+            public void execute() {
+                // On save
+                perspectiveCoordinator.editOff();
+                DisplayerSettings newSettings = displayerEditor.getDisplayerSettings();
+                if (!displayerSettings.equals(newSettings)) {
 
-                    public void onClose( DisplayerEditor editor ) {
-                        perspectiveCoordinator.editOff();
+                    String newTitle = newSettings.getTitle();
+                    if (!currentTitle.equals(newTitle)) {
+                        changeTitleEvent.fire(new ChangeTitleWidgetEvent(placeRequest, newSettings.getTitle()));
                     }
 
-                    public void onSave( final DisplayerEditor editor ) {
-                        perspectiveCoordinator.editOff();
-                        PanelDefinition panelDefinition = panelManager.getPanelForPlace( placeRequest );
-                        placeManager.goTo( createPlaceRequest( editor.getDisplayerSettings() ), panelDefinition );
-                        perspectiveManager.savePerspectiveState( new Command() {
-                            public void execute() {
-                            }
-                        } );
+                    PanelDefinition panelDefinition = panelManager.getPanelForPlace(placeRequest);
+                    placeManager.goTo(createPlaceRequest(newSettings), panelDefinition);
+                    placeManager.closePlace(placeRequest);
+                    perspectiveManager.savePerspectiveState(new Command() {
+                        public void execute() {
+                        }
+                    });
+                }
+            }
+        };
+    }
+
+    protected Command getSaveCloneCommand() {
+        return new Command() {
+            public void execute() {
+                perspectiveCoordinator.editOff();
+                PanelDefinition panelDefinition = panelManager.getPanelForPlace( placeRequest );
+                placeManager.goTo(createPlaceRequest(displayerEditor.getDisplayerSettings()), panelDefinition);
+                perspectiveManager.savePerspectiveState(new Command() {
+                    public void execute() {
                     }
                 } );
             }
         };
     }
 
-    private Command getExportCsvCommand() {
+    protected Command getCloseCommand() {
+        return new Command() {
+            public void execute() {
+                perspectiveCoordinator.editOff();
+            }
+        };
+    }
+
+    protected Command getExportCsvCommand() {
         return new Command() {
             public void execute() {
                 try {
@@ -310,7 +313,7 @@ public class DisplayerScreenPresenter {
         };
     }
 
-    private Command getExportExcelCommand() {
+    protected Command getExportExcelCommand() {
         return new Command() {
             public void execute() {
                 try {
@@ -336,7 +339,7 @@ public class DisplayerScreenPresenter {
         };
     }
 
-    private DataSetLookup getConstrainedDataSetLookup( DataSetLookup dataSetLookup ) {
+    protected DataSetLookup getConstrainedDataSetLookup( DataSetLookup dataSetLookup ) {
         DataSetLookup _dataSetLookup = dataSetLookup.cloneInstance();
         if ( dataSetLookup.getNumberOfRows() > 0 ) {
             // TODO: ask the user ....
@@ -356,7 +359,7 @@ public class DisplayerScreenPresenter {
         displayer.close();
     }
 
-    private PlaceRequest createPlaceRequest( DisplayerSettings displayerSettings ) {
+    protected PlaceRequest createPlaceRequest( DisplayerSettings displayerSettings ) {
         String json = jsonMarshaller.toJsonString( displayerSettings );
         Map<String, String> params = new HashMap<String, String>();
         params.put( "json", json );
@@ -365,13 +368,13 @@ public class DisplayerScreenPresenter {
         return new DefaultPlaceRequest( "DisplayerScreen", params );
     }
 
-    private void adjustMenuActions( DisplayerSettings displayerSettings ) {
+    protected void adjustMenuActions( DisplayerSettings displayerSettings ) {
         final ComplexPanel menu = (ComplexPanel) menuActionsButton.getWidget( 1 );
         menu.getWidget( 2 ).setVisible( displayerSettings.isCSVExportAllowed() );
         menu.getWidget( 3 ).setVisible( displayerSettings.isExcelExportAllowed() );
     }
 
-    private ButtonGroup getMenuActionsButton() {
+    protected ButtonGroup getMenuActionsButton() {
         return new ButtonGroup() {{
             add( new Button( Constants.INSTANCE.menu_button_actions() ) {{
                 setSize( ButtonSize.EXTRA_SMALL );

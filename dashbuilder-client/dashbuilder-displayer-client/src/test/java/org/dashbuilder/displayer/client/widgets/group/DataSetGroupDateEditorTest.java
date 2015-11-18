@@ -14,16 +14,16 @@
  */
 package org.dashbuilder.displayer.client.widgets.group;
 
+import javax.enterprise.event.Event;
+
 import org.dashbuilder.dataset.group.ColumnGroup;
 import org.dashbuilder.dataset.group.DateIntervalType;
-import org.dashbuilder.dataset.group.GroupStrategy;
 import org.dashbuilder.displayer.client.events.DataSetGroupDateChanged;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.uberfire.mocks.EventSourceMock;
 
 import static org.dashbuilder.dataset.group.DateIntervalType.*;
 import static org.dashbuilder.dataset.group.GroupStrategy.*;
@@ -38,7 +38,7 @@ public class DataSetGroupDateEditorTest {
     DataSetGroupDateEditor.View view;
 
     @Mock
-    EventSourceMock<DataSetGroupDateChanged> changeEvent;
+    Event<DataSetGroupDateChanged> changeEvent;
 
     DataSetGroupDateEditor presenter;
 
@@ -49,7 +49,7 @@ public class DataSetGroupDateEditorTest {
 
     @Test
     public void testFixedModeInit() {
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
 
         verify(view).setFixedModeValue(true);
         verify(view).clearIntervalTypeSelector();
@@ -63,7 +63,7 @@ public class DataSetGroupDateEditorTest {
     @Test
     public void testDynamicModeInit() {
         ColumnGroup columnGroup = new ColumnGroup("col", "col", DYNAMIC, 15, HOUR.toString());
-        presenter.setColumnGroup(columnGroup);
+        presenter.init(columnGroup);
 
         verify(view).setFixedModeValue(false);
         verify(view).clearIntervalTypeSelector();
@@ -78,40 +78,40 @@ public class DataSetGroupDateEditorTest {
 
     @Test
     public void testFirstMonthDayVisibility() {
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, QUARTER.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, QUARTER.toString()));
         verify(view).setFirstMonthVisibility(false);
         verify(view).setFirstDayVisibility(false);
         verify(view, never()).setFirstDayVisibility(true);
         verify(view, never()).setFirstMonthVisibility(true);
 
         reset(view);
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, MONTH.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, MONTH.toString()));
         verify(view).setFirstMonthVisibility(true);
         verify(view).setFirstDayVisibility(false);
         verify(view, never()).setFirstDayVisibility(true);
 
         reset(view);
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, DAY_OF_WEEK.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, DAY_OF_WEEK.toString()));
         verify(view).setFirstDayVisibility(true);
         verify(view).setFirstMonthVisibility(false);
         verify(view, never()).setFirstMonthVisibility(true);
 
         reset(view);
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
         verify(view).setFirstMonthVisibility(false);
         verify(view).setFirstDayVisibility(false);
         verify(view, never()).setFirstDayVisibility(true);
         verify(view, never()).setFirstMonthVisibility(true);
 
         reset(view);
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, MINUTE.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, MINUTE.toString()));
         verify(view).setFirstMonthVisibility(false);
         verify(view).setFirstDayVisibility(false);
         verify(view, never()).setFirstDayVisibility(true);
         verify(view, never()).setFirstMonthVisibility(true);
 
         reset(view);
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, SECOND.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, SECOND.toString()));
         verify(view).setFirstMonthVisibility(false);
         verify(view).setFirstDayVisibility(false);
         verify(view, never()).setFirstDayVisibility(true);
@@ -121,7 +121,7 @@ public class DataSetGroupDateEditorTest {
 
     @Test
     public void testEnableFixedMode() {
-        presenter.setColumnGroup(new ColumnGroup("col", "col", DYNAMIC, 15, CENTURY.toString()));
+        presenter.init(new ColumnGroup("col", "col", DYNAMIC, 15, CENTURY.toString()));
         reset(view);
 
         when(view.getFixedModeValue()).thenReturn(true);
@@ -139,7 +139,7 @@ public class DataSetGroupDateEditorTest {
     public void testDisableFixedMode() {
         when(view.getFixedModeValue()).thenReturn(false);
 
-        presenter.setColumnGroup(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
+        presenter.init(new ColumnGroup("col", "col", FIXED, 15, HOUR.toString()));
         presenter.onFixedStrategyChanged();
         verify(changeEvent).fire(any(DataSetGroupDateChanged.class));
 

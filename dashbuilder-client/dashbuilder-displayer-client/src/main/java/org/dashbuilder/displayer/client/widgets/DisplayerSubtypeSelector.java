@@ -57,10 +57,6 @@ public class DisplayerSubtypeSelector implements IsWidget {
         this.view = view;
         this.rendererManager = rendererManager;
         this.selectEvent = selectEvent;
-    }
-
-    @PostConstruct
-    protected void init() {
         view.init(this);
     }
 
@@ -73,7 +69,7 @@ public class DisplayerSubtypeSelector implements IsWidget {
         return selectedSubtype;
     }
 
-    public void select(DisplayerType type, DisplayerSubType selectedSubType) {
+    public void init(DisplayerType type, DisplayerSubType selectedSubType) {
         view.clear();
 
         RendererLibrary rendererLibrary = rendererManager.getRendererForType(type);

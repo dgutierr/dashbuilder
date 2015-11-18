@@ -49,7 +49,7 @@ public class DisplayerTypeSelectorTest {
 
     @Test
     public void testInitialization() {
-        presenter.select(LINECHART, SMOOTH);
+        presenter.init(LINECHART, SMOOTH);
         verify(typeView).select(LINECHART);
     }
 

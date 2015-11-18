@@ -15,26 +15,26 @@
  */
 package org.dashbuilder.displayer.client.events;
 
-import org.dashbuilder.dataset.filter.ColumnFilter;
+import org.dashbuilder.dataset.group.GroupFunction;
 import org.jboss.errai.common.client.api.annotations.Portable;
 
 @Portable
-public class ColumnFilterDeletedEvent {
+public class ColumnDetailsChangedEvent {
 
-    ColumnFilter columnFilter;
+    GroupFunction columnFunction;
 
-    public ColumnFilterDeletedEvent() {
+    public ColumnDetailsChangedEvent() {
     }
 
-    public ColumnFilterDeletedEvent(ColumnFilter columnFilter) {
-        this.columnFilter = columnFilter;
+    public ColumnDetailsChangedEvent(GroupFunction columnFunction) {
+        this.columnFunction = columnFunction;
     }
 
-    public ColumnFilter getColumnFilter() {
-        return columnFilter;
+    public GroupFunction getColumnFunction() {
+        return columnFunction;
     }
 
-    public void setColumnFilter(ColumnFilter columnFilter) {
-        this.columnFilter = columnFilter;
+    public void setColumnFunction(GroupFunction columnFunction) {
+        this.columnFunction = columnFunction;
     }
 }

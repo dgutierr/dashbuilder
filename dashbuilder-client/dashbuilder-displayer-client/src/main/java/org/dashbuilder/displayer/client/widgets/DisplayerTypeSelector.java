@@ -15,7 +15,6 @@
  */
 package org.dashbuilder.displayer.client.widgets;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -48,6 +47,18 @@ public class DisplayerTypeSelector implements IsWidget {
         this.view = view;
         this.subtypeSelector = subtypeSelector;
         this.typeSelectedEvent = typeSelectedEvent;
+        view.init(this);
+        view.clear();
+        view.show(DisplayerType.BARCHART);
+        view.show(DisplayerType.PIECHART);
+        view.show(DisplayerType.LINECHART);
+        view.show(DisplayerType.AREACHART);
+        view.show(DisplayerType.BUBBLECHART);
+        view.show(DisplayerType.METERCHART);
+        view.show(DisplayerType.METRIC);
+        view.show(DisplayerType.MAP);
+        view.show(DisplayerType.TABLE);
+        view.select(selectedType);
     }
 
     @Override
@@ -67,31 +78,15 @@ public class DisplayerTypeSelector implements IsWidget {
         return subtypeSelector;
     }
 
-    @PostConstruct
-    protected void init() {
-        view.init(this);
-        view.clear();
-        view.show(DisplayerType.BARCHART);
-        view.show(DisplayerType.PIECHART);
-        view.show(DisplayerType.LINECHART);
-        view.show(DisplayerType.AREACHART);
-        view.show(DisplayerType.BUBBLECHART);
-        view.show(DisplayerType.METERCHART);
-        view.show(DisplayerType.METRIC);
-        view.show(DisplayerType.MAP);
-        view.show(DisplayerType.TABLE);
-        view.select(selectedType);
-    }
-
-    public void select(DisplayerType selectedType, DisplayerSubType selectedSubtype) {
+    public void init(DisplayerType selectedType, DisplayerSubType selectedSubtype) {
         this.selectedType = selectedType;
         view.select(selectedType);
-        subtypeSelector.select(selectedType, selectedSubtype);
+        subtypeSelector.init(selectedType, selectedSubtype);
     }
 
     void onSelect(DisplayerType type) {
         selectedType = type;
-        subtypeSelector.select(type, null);
+        subtypeSelector.init(type, null);
         typeSelectedEvent.fire(new DisplayerTypeSelectedEvent(selectedType));
     }
 }

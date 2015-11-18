@@ -15,26 +15,26 @@
  */
 package org.dashbuilder.displayer.client.events;
 
-import org.dashbuilder.dataset.filter.ColumnFilter;
+import org.dashbuilder.dataset.DataSetLookup;
 import org.jboss.errai.common.client.api.annotations.Portable;
 
 @Portable
-public class ColumnFilterDeletedEvent {
+public class DataSetLookupChangedEvent {
 
-    ColumnFilter columnFilter;
+    DataSetLookup dataSetLookup;
 
-    public ColumnFilterDeletedEvent() {
+    public DataSetLookupChangedEvent() {
     }
 
-    public ColumnFilterDeletedEvent(ColumnFilter columnFilter) {
-        this.columnFilter = columnFilter;
+    public DataSetLookupChangedEvent(DataSetLookup dataSetLookup) {
+        this.dataSetLookup = dataSetLookup;
     }
 
-    public ColumnFilter getColumnFilter() {
-        return columnFilter;
+    public DataSetLookup getDataSetLookup() {
+        return dataSetLookup;
     }
 
-    public void setColumnFilter(ColumnFilter columnFilter) {
-        this.columnFilter = columnFilter;
+    public void setDataSetLookup(DataSetLookup dataSetLookup) {
+        this.dataSetLookup = dataSetLookup;
     }
 }

@@ -15,26 +15,26 @@
  */
 package org.dashbuilder.displayer.client.events;
 
-import org.dashbuilder.displayer.client.widgets.filter.ColumnFilterEditor;
+import org.dashbuilder.dataset.filter.ColumnFilter;
 import org.jboss.errai.common.client.api.annotations.Portable;
 
 @Portable
 public class ColumnFilterChangedEvent {
 
-    ColumnFilterEditor columnFilterEditor;
+    ColumnFilter columnFilter;
 
     public ColumnFilterChangedEvent() {
     }
 
-    public ColumnFilterChangedEvent(ColumnFilterEditor columnFilterEditor) {
-        this.columnFilterEditor = columnFilterEditor;
+    public ColumnFilterChangedEvent(ColumnFilter columnFilter) {
+        this.columnFilter = columnFilter;
     }
 
-    public ColumnFilterEditor getColumnFilterEditor() {
-        return columnFilterEditor;
+    public ColumnFilter getColumnFilter() {
+        return columnFilter;
     }
 
-    public void setColumnFilterEditor(ColumnFilterEditor columnFilterEditor) {
-        this.columnFilterEditor = columnFilterEditor;
+    public void setColumnFilter(ColumnFilter columnFilter) {
+        this.columnFilter = columnFilter;
     }
 }

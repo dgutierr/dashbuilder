@@ -35,12 +35,6 @@ import static org.dashbuilder.displayer.client.prototypes.DataSetPrototypes.*;
 @ApplicationScoped
 public class DisplayerPrototypes {
 
-    public static DisplayerPrototypes get() {
-        Collection<IOCBeanDef<DisplayerPrototypes>> beans = IOC.getBeanManager().lookupBeans(DisplayerPrototypes.class);
-        IOCBeanDef<DisplayerPrototypes> beanDef = beans.iterator().next();
-        return beanDef.getInstance();
-    }
-
     @Inject
     DataSetPrototypes dataSetPrototypes;
 

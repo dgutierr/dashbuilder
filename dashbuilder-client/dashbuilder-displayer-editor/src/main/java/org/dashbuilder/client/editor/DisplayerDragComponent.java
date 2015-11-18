@@ -36,6 +36,7 @@ import org.uberfire.ext.layout.editor.client.components.HasModalConfiguration;
 import org.uberfire.ext.layout.editor.client.components.ModalConfigurationContext;
 import org.uberfire.ext.layout.editor.client.components.RenderingContext;
 import org.uberfire.ext.plugin.client.perspective.editor.api.PerspectiveEditorDragComponent;
+import org.uberfire.mvp.Command;
 
 @Dependent
 public class DisplayerDragComponent implements PerspectiveEditorDragComponent, HasModalConfiguration {
@@ -92,20 +93,25 @@ public class DisplayerDragComponent implements PerspectiveEditorDragComponent, H
         Map<String, String> properties = ctx.getComponentProperties();
         String json = properties.get("json");
         DisplayerSettings settings = json != null ? marshaller.fromJsonString(json) : null;
+        return editor.init(settings, getSaveCommand(ctx), getCloseCommand(ctx));
+    }
 
-        editor.init(settings, new DisplayerEditor.Listener() {
-
-            public void onClose(DisplayerEditor editor) {
-                ctx.configurationCancelled();
-            }
-
-            public void onSave(DisplayerEditor editor) {
+    protected Command getSaveCommand(final ModalConfigurationContext ctx) {
+        return new Command() {
+            public void execute() {
                 String json = marshaller.toJsonString(editor.getDisplayerSettings());
                 ctx.setComponentProperty("json", json);
                 ctx.configurationFinished();
             }
-        });
-        return editor;
+        };
+    }
+
+    protected Command getCloseCommand(final ModalConfigurationContext ctx) {
+        return new Command() {
+            public void execute() {
+                ctx.configurationCancelled();
+            }
+        };
     }
 
     protected void adjustSize(DisplayerSettings settings, int containerWidth) {

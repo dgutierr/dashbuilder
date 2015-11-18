@@ -65,7 +65,7 @@ public class DisplayerSubtypeSelectorTest {
 
     @Test
     public void testInitialization1() {
-        presenter.select(BARCHART, BAR);
+        presenter.init(BARCHART, BAR);
         verify(subtypeView).show(BARCHART, BAR);
         verify(subtypeView).show(BARCHART, BAR_STACKED);
         verify(subtypeView).select(BAR);
@@ -73,7 +73,7 @@ public class DisplayerSubtypeSelectorTest {
 
     @Test
     public void testInitialization2() {
-        presenter.select(LINECHART, null);
+        presenter.init(LINECHART, null);
         verify(subtypeView).show(LINECHART, LINE);
         verify(subtypeView).show(LINECHART, SMOOTH);
         verify(subtypeView).select(LINE);
@@ -81,7 +81,7 @@ public class DisplayerSubtypeSelectorTest {
 
     @Test
     public void testInitialization3() {
-        presenter.select(BUBBLECHART, null);
+        presenter.init(BUBBLECHART, null);
         verify(subtypeView, never()).show(any(DisplayerType.class), any(DisplayerSubType.class));
         verify(subtypeView).showDefault(BUBBLECHART);
     }

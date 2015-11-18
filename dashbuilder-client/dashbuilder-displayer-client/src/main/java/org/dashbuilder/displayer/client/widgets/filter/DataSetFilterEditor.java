@@ -15,6 +15,8 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
@@ -60,6 +62,7 @@ public class DataSetFilterEditor implements IsWidget {
     DataSetMetadata metadata = null;
     SyncBeanManager beanManager;
     Event<DataSetFilterChangedEvent> changeEvent;
+    Map<Integer, ColumnFilterEditor> _editorsMap = new HashMap<Integer, ColumnFilterEditor>();
 
     @Inject
     public DataSetFilterEditor(View view,
@@ -124,6 +127,7 @@ public class DataSetFilterEditor implements IsWidget {
         columnFilterEditor.init(metadata, columnFilter);
         columnFilterEditor.showFilterConfig();
 
+        _editorsMap.put(_editorsMap.size(), columnFilterEditor);
         view.addColumnFilterEditor(columnFilterEditor);
         view.resetSelectedColumn();
         view.showNewFilterHome();
@@ -135,14 +139,16 @@ public class DataSetFilterEditor implements IsWidget {
     }
 
     protected void onColumnFilterDeleted(@Observes final ColumnFilterDeletedEvent event) {
-        ColumnFilterEditor editor = event.getColumnFilterEditor();
-        view.removeColumnFilterEditor(editor);
-        view.showNewFilterHome();
-        beanManager.destroyBean(editor);
 
-        Integer index = filter.getColumnFilterIdx(editor.getFilter());
-        if (index != null) {
+       Integer index = filter.getColumnFilterIdx(event.getColumnFilter());
+        if (index != null && index >=0) {
             filter.getColumnFilterList().remove(index.intValue());
+
+            ColumnFilterEditor editor = _editorsMap.get(index);
+            view.removeColumnFilterEditor(editor);
+            view.showNewFilterHome();
+
+            beanManager.destroyBean(editor);
             changeEvent.fire(new DataSetFilterChangedEvent(filter));
         }
     }

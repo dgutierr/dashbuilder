@@ -121,7 +121,7 @@ public class ColumnFilterEditor implements IsWidget {
     }
 
     public void deleteFilter() {
-        deletedEvent.fire(new ColumnFilterDeletedEvent(this));
+        deletedEvent.fire(new ColumnFilterDeletedEvent(filter));
     }
 
     // Internals
@@ -177,7 +177,7 @@ public class ColumnFilterEditor implements IsWidget {
     }
 
     protected void fireFilterChanged() {
-        changedEvent.fire(new ColumnFilterChangedEvent(this));
+        changedEvent.fire(new ColumnFilterChangedEvent(filter));
     }
 
     protected IsWidget createParamInputWidget(final CoreFunctionFilter coreFilter, final int paramIndex) {

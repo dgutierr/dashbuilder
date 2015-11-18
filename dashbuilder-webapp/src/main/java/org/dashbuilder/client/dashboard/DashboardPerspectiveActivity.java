@@ -210,18 +210,28 @@ public class DashboardPerspectiveActivity  implements PerspectiveActivity {
                 /* Displayer settings == null => Create a brand new displayer */
                 perspectiveCoordinator.editOn();
                 DisplayerEditorPopup displayerEditor = getDisplayerEditorPopup();
-                displayerEditor.init(null, new DisplayerEditor.Listener() {
+                displayerEditor.init(null, getSaveDisplayerCommand(displayerEditor), getCloseDisplayerCommand());
+            }
+        };
+    }
 
-                    public void onClose(final DisplayerEditor editor) {
-                        perspectiveCoordinator.editOff();
-                    }
-
-                    public void onSave(final DisplayerEditor editor) {
-                        perspectiveCoordinator.editOff();
-                        placeManager.goTo(createPlaceRequest(editor.getDisplayerSettings()));
-                        perspectiveManager.savePerspectiveState(new Command() {public void execute() {}});
+    protected Command getSaveDisplayerCommand(final DisplayerEditorPopup editor) {
+        return new Command() {
+            public void execute() {
+                perspectiveCoordinator.editOff();
+                placeManager.goTo(createPlaceRequest(editor.getDisplayerSettings()));
+                perspectiveManager.savePerspectiveState(new Command() {
+                    public void execute() {
                     }
                 });
+            }
+        };
+    }
+
+    protected Command getCloseDisplayerCommand() {
+        return new Command() {
+            public void execute() {
+                perspectiveCoordinator.editOff();
             }
         };
     }

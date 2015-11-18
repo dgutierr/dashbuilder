@@ -98,7 +98,7 @@ public class DataSetGroupDateEditor implements IsWidget {
         return columnGroup;
     }
 
-    public void setColumnGroup(ColumnGroup columnGroup) {
+    public void init(ColumnGroup columnGroup) {
         this.columnGroup = columnGroup;
         if (columnGroup != null) {
             if (isFixedStrategy()) {
