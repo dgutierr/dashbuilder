@@ -54,13 +54,10 @@ public class TimeAmountEditorView extends Composite implements TimeAmountEditor.
     @UiField
     ListBox typeList;
 
-    public TimeAmountEditorView() {
-        initWidget(uiBinder.createAndBindUi(this));
-    }
-
     @Override
     public void init(final TimeAmountEditor presenter) {
         this.presenter = presenter;
+        initWidget(uiBinder.createAndBindUi(this));
 
         plusIcon.addDomHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
@@ -116,7 +113,6 @@ public class TimeAmountEditorView extends Composite implements TimeAmountEditor.
 
     @UiHandler(value = "typeList")
     public void onFilterSelected(ChangeEvent changeEvent) {
-        int selectedIdx = typeList.getSelectedIndex();
         presenter.changeIntervalType();
     }
 }

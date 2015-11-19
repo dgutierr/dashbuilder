@@ -27,12 +27,6 @@ import java.util.Collection;
 @ApplicationScoped
 public class ClientUUIDGenerator implements UUIDGenerator {
 
-    public static ClientUUIDGenerator get() {
-        Collection<IOCBeanDef<ClientUUIDGenerator>> beans = IOC.getBeanManager().lookupBeans(ClientUUIDGenerator.class);
-        IOCBeanDef<ClientUUIDGenerator> beanDef = beans.iterator().next();
-        return beanDef.getInstance();
-    }
-    
     public String newUuid() {
         return Document.get().createUniqueId();
     }

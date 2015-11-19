@@ -93,7 +93,10 @@ public class DisplayerDragComponent implements PerspectiveEditorDragComponent, H
         Map<String, String> properties = ctx.getComponentProperties();
         String json = properties.get("json");
         DisplayerSettings settings = json != null ? marshaller.fromJsonString(json) : null;
-        return editor.init(settings, getSaveCommand(ctx), getCloseCommand(ctx));
+        editor.init(settings);
+        editor.setOnSaveCommand(getSaveCommand(ctx));
+        editor.setOnCloseCommand(getCloseCommand(ctx));
+        return editor;
     }
 
     protected Command getSaveCommand(final ModalConfigurationContext ctx) {

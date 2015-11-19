@@ -15,6 +15,8 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
+import javax.enterprise.context.Dependent;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -27,6 +29,7 @@ import org.dashbuilder.dataset.client.resources.i18n.MonthConstants;
 import org.dashbuilder.dataset.date.Month;
 import org.gwtbootstrap3.client.ui.ListBox;
 
+@Dependent
 public class TimeFrameEditorView extends Composite implements TimeFrameEditor.View {
 
     interface Binder extends UiBinder<Widget, TimeFrameEditorView> {}

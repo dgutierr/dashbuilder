@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -46,6 +47,8 @@ import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerListener;
 import org.dashbuilder.displayer.client.DisplayerLocator;
 import org.dashbuilder.displayer.client.events.DataSetLookupChangedEvent;
+import org.dashbuilder.displayer.client.events.DisplayerEditorClosedEvent;
+import org.dashbuilder.displayer.client.events.DisplayerEditorSavedEvent;
 import org.dashbuilder.displayer.client.events.DisplayerSettingsChangedEvent;
 import org.dashbuilder.displayer.client.events.DisplayerSubtypeSelectedEvent;
 import org.dashbuilder.displayer.client.events.DisplayerTypeSelectedEvent;
@@ -101,6 +104,8 @@ public class DisplayerEditor implements IsWidget {
     protected boolean typeSelectionEnabled = true;
     protected boolean dataLookupConfEnabled = true;
     protected boolean displaySettingsEnabled = true;
+    protected Event<DisplayerEditorSavedEvent> saveEvent;
+    protected Event<DisplayerEditorClosedEvent> closeEvent;
     protected Command onCloseCommand = new Command() { public void execute() {}};
     protected Command onSaveCommand = new Command() { public void execute() {}};
 
@@ -110,6 +115,10 @@ public class DisplayerEditor implements IsWidget {
         }
     };
 
+    public DisplayerEditor() {
+
+    }
+    
     @Inject
     public DisplayerEditor(View view,
                            DataSetClientServices clientServices,
@@ -118,7 +127,9 @@ public class DisplayerEditor implements IsWidget {
                            DisplayerTypeSelector typeSelector,
                            DataSetLookupEditor lookupEditor,
                            DisplayerSettingsEditor settingsEditor,
-                           DisplayerEditorStatus editorStatus) {
+                           DisplayerEditorStatus editorStatus,
+                           Event<DisplayerEditorSavedEvent> savedEvent,
+                           Event<DisplayerEditorClosedEvent> closedEvent) {
         this.view = view;
         this.displayerLocator = displayerLocator;
         this.clientServices = clientServices;
@@ -126,19 +137,14 @@ public class DisplayerEditor implements IsWidget {
         this.typeSelector = typeSelector;
         this.lookupEditor = lookupEditor;
         this.settingsEditor = settingsEditor;
-        this.editorStatus  = editorStatus;
+        this.editorStatus = editorStatus;
+        this.saveEvent = savedEvent;
+        this.closeEvent = closedEvent;
 
         view.init(this);
     }
 
-    public void init(DisplayerSettings settings, Command saveCommand, Command closeCommand) {
-        this.onSaveCommand = saveCommand != null ? saveCommand : onCloseCommand;
-        this.onCloseCommand = closeCommand != null ? closeCommand : onCloseCommand;
-        init(settings);
-    }
-
     public void init(DisplayerSettings settings) {
-
         selectedTypeSettings = null;
         if (settings != null) {
             brandNewDisplayer = false;
@@ -201,6 +207,10 @@ public class DisplayerEditor implements IsWidget {
         return displayerSettings;
     }
 
+    public Displayer getDisplayer() {
+        return displayer;
+    }
+
     public DisplayerTypeSelector getTypeSelector() {
         return typeSelector;
     }
@@ -226,6 +236,14 @@ public class DisplayerEditor implements IsWidget {
     public void setDisplaySettingsEnabled(boolean enabled) {
         displaySettingsEnabled = enabled;
         view.setDisplaySettingsEnabled(enabled);
+    }
+
+    public void setOnSaveCommand(Command saveCommand) {
+        this.onSaveCommand = saveCommand != null ? saveCommand : onCloseCommand;
+    }
+
+    public void setOnCloseCommand(Command closeCommand) {
+        this.onCloseCommand = closeCommand != null ? closeCommand : onCloseCommand;
     }
 
     public void showDisplayer() {
@@ -290,7 +308,7 @@ public class DisplayerEditor implements IsWidget {
         activeSection = 1;
         editorStatus.saveSelectedOption(displayerSettings.getUUID(), activeSection);
         view.gotoDataSetLookupConf(lookupEditor);
-        view.setTableDisplayModeEnabled(DisplayerType.TABLE.equals(displayerSettings.getType()));
+        view.setTableDisplayModeEnabled(!DisplayerType.TABLE.equals(displayerSettings.getType()));
     }
 
     public void gotoDisplaySettings() {
@@ -300,14 +318,17 @@ public class DisplayerEditor implements IsWidget {
     }
 
     public void save() {
+        // Clear settings before return
+        DisplayerConstraints displayerConstraints = displayer.getDisplayerConstraints();
+        displayerConstraints.removeUnsupportedAttributes(displayerSettings);
+
+        // Dispose the displayer
         if (displayer != null) {
             displayer.close();
         }
-        // Clear settings before return
-        Displayer displayer = displayerLocator.lookupDisplayer(displayerSettings);
-        DisplayerConstraints displayerConstraints = displayer.getDisplayerConstraints();
-        displayerConstraints.removeUnsupportedAttributes(displayerSettings);
+        // Notify event
         onSaveCommand.execute();
+        saveEvent.fire(new DisplayerEditorSavedEvent(displayerSettings));
     }
 
     public void close() {
@@ -315,6 +336,7 @@ public class DisplayerEditor implements IsWidget {
             displayer.close();
         }
         onCloseCommand.execute();
+        closeEvent.fire(new DisplayerEditorClosedEvent(displayerSettings));
     }
 
     // Widget listeners callback notifications

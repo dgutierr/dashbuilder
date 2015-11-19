@@ -56,6 +56,7 @@ import org.dashbuilder.displayer.client.widgets.group.DataSetGroupDateEditor;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
+import org.uberfire.mvp.Command;
 
 import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
 
@@ -63,6 +64,8 @@ import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull
 public class DataSetLookupEditor implements IsWidget {
 
     public interface View extends UberView<DataSetLookupEditor> {
+
+        void clearAll();
 
         void clearDataSetSelector();
 
@@ -124,7 +127,7 @@ public class DataSetLookupEditor implements IsWidget {
     Map<Integer, ColumnFunctionEditor> _editorsMap = new HashMap<Integer, ColumnFunctionEditor>();
 
     @Inject
-    public DataSetLookupEditor(final DataSetLookupEditorView view,
+    public DataSetLookupEditor(final View view,
                                SyncBeanManager beanManager,
                                DataSetFilterEditor filterEditor,
                                DataSetGroupDateEditor groupDateEditor,
@@ -144,54 +147,52 @@ public class DataSetLookupEditor implements IsWidget {
     }
 
     public void init(DataSetLookupConstraints lookupConstraints) {
-        init(lookupConstraints, new RemoteCallback<List<DataSetDef>>() {
+        this.lookupConstraints = lookupConstraints;
+        this.view.clearAll();
+        this.clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
             public void callback(List<DataSetDef> dataSetDefs) {
+                showDataSetDefs(dataSetDefs);
             }
         });
     }
 
     public void init(DataSetLookupConstraints lookupConstraints, final DataSetLookup dataSetLookup) {
         this.dataSetLookup = dataSetLookup;
-        init(lookupConstraints, new RemoteCallback<List<DataSetDef>>() {
-
+        this.lookupConstraints = lookupConstraints;
+        this.view.clearAll();
+        this.clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
             public void callback(List<DataSetDef> dataSetDefs) {
-                try {
-                    final String uuid = dataSetLookup.getDataSetUUID();
-                    clientServices.fetchMetadata(uuid, new DataSetMetadataCallback() {
-
-                        public void callback(DataSetMetadata metadata) {
-                            dataSetMetadata = metadata;
-                            updateDataSetLookup();
-                        }
-
-                        public void notFound() {
-                            view.errorDataSetNotFound(uuid);
-                        }
-
-                        public boolean onError(ClientRuntimeError error) {
-                            view.error(error);
-                            return false;
-                        }
-                    });
-                } catch (Exception e) {
-                    view.error(new ClientRuntimeError(e));
-                }
+                showDataSetDefs(dataSetDefs);
+                fetchMetadata(dataSetLookup.getDataSetUUID(), new RemoteCallback<DataSetMetadata>() {
+                    public void callback(DataSetMetadata metadata) {
+                        updateDataSetLookup();
+                    }
+                });
             }
         });
     }
 
-    void init(DataSetLookupConstraints lookupConstraints, final RemoteCallback<List<DataSetDef>> callback) {
-        view.setFilterEnabled(false);
-        view.setGroupEnabled(false);
-        view.setColumnsSectionEnabled(false);
+    void fetchMetadata(final String uuid, final RemoteCallback<DataSetMetadata> callback) {
+        try {
+            clientServices.fetchMetadata(uuid, new DataSetMetadataCallback() {
 
-        this.lookupConstraints = lookupConstraints;
-        clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
-            public void callback(List<DataSetDef> dataSetDefs) {
-                showDataSetDefs(dataSetDefs);
-                callback.callback(dataSetDefs);
-            }
-        });
+                public void callback(DataSetMetadata metadata) {
+                    dataSetMetadata = metadata;
+                    callback.callback(metadata);
+                }
+
+                public void notFound() {
+                    view.errorDataSetNotFound(uuid);
+                }
+
+                public boolean onError(ClientRuntimeError error) {
+                    view.error(error);
+                    return false;
+                }
+            });
+        } catch (Exception e) {
+            view.error(new ClientRuntimeError(e));
+        }
     }
 
     @Override
@@ -379,6 +380,13 @@ public class DataSetLookupEditor implements IsWidget {
         // Only show the group controls if group is enabled
         if (lookupConstraints.isGroupRequired() || lookupConstraints.isGroupAllowed()) {
             String groupColumnId = getFirstGroupColumnId();
+
+            // Always ensure a group exists when required
+            if (lookupConstraints.isGroupRequired() && groupColumnId == null) {
+                dataSetLookup = lookupConstraints.newDataSetLookup(dataSetMetadata);
+                changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
+            }
+
             List<Integer> groupColumnIdxs = getAvailableGroupColumnIdxs();
             String rowsTitle = lookupConstraints.getGroupsTitle();
 
@@ -402,15 +410,6 @@ public class DataSetLookupEditor implements IsWidget {
                 if (groupColumnId != null && groupColumnId.equals(columnId)) {
                     view.setSelectedGroupColumnIndex(i);
                 }
-            }
-            // Always ensure a group exists when required
-            if (lookupConstraints.isGroupRequired() && groupColumnId == null) {
-                groupColumnId = getColumnId(groupColumnIdxs.get(0));
-                DataSetGroup groupOp = new DataSetGroup();
-                groupOp.getColumnGroup().setSourceId(groupColumnId);
-                groupOp.getColumnGroup().setColumnId(groupColumnId);
-                dataSetLookup.addOperation(groupOp);
-                changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
             }
         }
     }
@@ -509,12 +508,17 @@ public class DataSetLookupEditor implements IsWidget {
     // View notifications
 
     void onDataSetSelected() {
-        String dataSetUUID = view.getSelectedDataSetId();
+        String selectedUUID = view.getSelectedDataSetId();
         for (DataSetDef dataSetDef : _dataSetDefList) {
-            if (dataSetDef.getUUID().equals(dataSetUUID)) {
-                dataSetLookup = lookupConstraints.newDataSetLookup(dataSetMetadata);
-                updateDataSetLookup();
-                changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
+            if (dataSetDef.getUUID().equals(selectedUUID)) {
+                fetchMetadata(selectedUUID, new RemoteCallback<DataSetMetadata>() {
+
+                    public void callback(DataSetMetadata metadata) {
+                        dataSetLookup = lookupConstraints.newDataSetLookup(metadata);
+                        updateDataSetLookup();
+                        changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
+                    }
+                });
             }
         }
     }
@@ -549,8 +553,6 @@ public class DataSetLookupEditor implements IsWidget {
 
                 }
             }
-            // Notify the change
-            changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
         }
 
         // Refresh the group by date editor if required

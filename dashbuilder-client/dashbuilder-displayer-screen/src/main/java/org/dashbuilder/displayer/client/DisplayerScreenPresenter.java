@@ -71,44 +71,42 @@ import org.uberfire.workbench.model.menu.impl.BaseMenuCustom;
 @Dependent
 public class DisplayerScreenPresenter {
 
-    @Inject
     private DataSetClientServices dataSetClientServices;
-
     private DisplayerView displayerView;
     private DisplayerEditorPopup displayerEditor;
     private PerspectiveCoordinator perspectiveCoordinator;
     private PerspectiveManager perspectiveManager;
     private PanelManager panelManager;
     private DisplayerSettingsJSONMarshaller jsonMarshaller;
-    private DisplayerSettings displayerSettings;
     private PlaceManager placeManager;
     private UUIDGenerator uuidGenerator;
+    private Event<ChangeTitleWidgetEvent> changeTitleEvent;
 
+    private DisplayerSettings displayerSettings;
     private PlaceRequest placeRequest;
     private Menus menu = null;
     private boolean editEnabled = false;
     private boolean cloneEnabled = false;
     private boolean csvExportAllowed = false;
     private boolean excelExportAllowed = false;
-
     private ButtonGroup menuActionsButton;
 
     // TODO allow configuration of this through a custom system property?
     private static final int MAX_EXPORT_LIMIT = 100000;
 
     @Inject
-    private Event<ChangeTitleWidgetEvent> changeTitleEvent;
+    public DisplayerScreenPresenter(DataSetClientServices dataSetClientServices,
+                                    UUIDGenerator uuidGenerator,
+                                    PerspectiveManager perspectiveManager,
+                                    PlaceManager placeManager,
+                                    DisplayerView displayerView,
+                                    PanelManager panelManager,
+                                    DisplayerEditorPopup displayerEditor,
+                                    PerspectiveCoordinator perspectiveCoordinator,
+                                    DisplayerSettingsJSONMarshaller jsonMarshaller,
+                                    Event<ChangeTitleWidgetEvent> changeTitleEvent) {
 
-    @Inject
-    public DisplayerScreenPresenter(UUIDGenerator uuidGenerator,
-            PerspectiveManager perspectiveManager,
-            PlaceManager placeManager,
-            DisplayerView displayerView,
-            PanelManager panelManager,
-            DisplayerEditorPopup displayerEditor,
-            PerspectiveCoordinator perspectiveCoordinator,
-            DisplayerSettingsJSONMarshaller jsonMarshaller) {
-
+        this.dataSetClientServices = dataSetClientServices;
         this.uuidGenerator = uuidGenerator;
         this.placeManager = placeManager;
         this.perspectiveManager = perspectiveManager;
@@ -118,6 +116,7 @@ public class DisplayerScreenPresenter {
         this.jsonMarshaller = jsonMarshaller;
         this.displayerEditor =  displayerEditor;
         this.menuActionsButton = getMenuActionsButton();
+        this.changeTitleEvent = changeTitleEvent;
     }
 
     @OnStartup
@@ -222,7 +221,9 @@ public class DisplayerScreenPresenter {
                 perspectiveCoordinator.editOn();
 
                 String currentTitle = displayerSettings.getTitle();
-                displayerEditor.init(displayerSettings.cloneInstance(), getSaveCommand(currentTitle), getCloseCommand());
+                displayerEditor.init(displayerSettings.cloneInstance());
+                displayerEditor.setOnSaveCommand(getSaveCommand(currentTitle));
+                displayerEditor.setOnCloseCommand(getCloseCommand());
             }
         };
     }
@@ -235,7 +236,9 @@ public class DisplayerScreenPresenter {
                 DisplayerSettings clonedSettings = displayerSettings.cloneInstance();
                 clonedSettings.setUUID(uuidGenerator.newUuid());
                 clonedSettings.setTitle("Copy of " + clonedSettings.getTitle());
-                displayerEditor.init(clonedSettings, getSaveCloneCommand(), getCloseCommand());
+                displayerEditor.init(clonedSettings);
+                displayerEditor.setOnSaveCommand(getSaveCloneCommand());
+                displayerEditor.setOnCloseCommand(getCloseCommand());
             }
         };
     }
@@ -339,15 +342,15 @@ public class DisplayerScreenPresenter {
         };
     }
 
-    protected DataSetLookup getConstrainedDataSetLookup( DataSetLookup dataSetLookup ) {
+    protected DataSetLookup getConstrainedDataSetLookup(DataSetLookup dataSetLookup) {
         DataSetLookup _dataSetLookup = dataSetLookup.cloneInstance();
         if ( dataSetLookup.getNumberOfRows() > 0 ) {
             // TODO: ask the user ....
-            DataSetMetadata metadata = DataSetClientServices.get().getMetadata( dataSetLookup.getDataSetUUID() );
-            if ( metadata.getNumberOfRows() > MAX_EXPORT_LIMIT ) {
-                Window.alert( Constants.INSTANCE.displayer_presenter_export_large_dataset() );
+            DataSetMetadata metadata = dataSetClientServices.getMetadata( dataSetLookup.getDataSetUUID());
+            if (metadata.getNumberOfRows() > MAX_EXPORT_LIMIT) {
+                Window.alert(Constants.INSTANCE.displayer_presenter_export_large_dataset());
             }
-            _dataSetLookup.setRowOffset( 0 );
+            _dataSetLookup.setRowOffset(0);
             _dataSetLookup.setNumberOfRows( MAX_EXPORT_LIMIT );
         }
         return _dataSetLookup;
@@ -360,53 +363,53 @@ public class DisplayerScreenPresenter {
     }
 
     protected PlaceRequest createPlaceRequest( DisplayerSettings displayerSettings ) {
-        String json = jsonMarshaller.toJsonString( displayerSettings );
+        String json = jsonMarshaller.toJsonString(displayerSettings);
         Map<String, String> params = new HashMap<String, String>();
-        params.put( "json", json );
-        params.put( "edit", "true" );
-        params.put( "clone", "true" );
-        return new DefaultPlaceRequest( "DisplayerScreen", params );
+        params.put("json", json);
+        params.put("edit", "true");
+        params.put("clone", "true");
+        return new DefaultPlaceRequest("DisplayerScreen", params);
     }
 
-    protected void adjustMenuActions( DisplayerSettings displayerSettings ) {
-        final ComplexPanel menu = (ComplexPanel) menuActionsButton.getWidget( 1 );
-        menu.getWidget( 2 ).setVisible( displayerSettings.isCSVExportAllowed() );
-        menu.getWidget( 3 ).setVisible( displayerSettings.isExcelExportAllowed() );
+    protected void adjustMenuActions(DisplayerSettings displayerSettings) {
+        final ComplexPanel menu = (ComplexPanel) menuActionsButton.getWidget(1);
+        menu.getWidget(2).setVisible(displayerSettings.isCSVExportAllowed());
+        menu.getWidget(3).setVisible(displayerSettings.isExcelExportAllowed());
     }
 
     protected ButtonGroup getMenuActionsButton() {
         return new ButtonGroup() {{
-            add( new Button( Constants.INSTANCE.menu_button_actions() ) {{
-                setSize( ButtonSize.EXTRA_SMALL );
-                addStyleName( Pull.RIGHT.getCssName() );
+            add(new Button( Constants.INSTANCE.menu_button_actions()) {{
+                setSize(ButtonSize.EXTRA_SMALL);
+                addStyleName(Pull.RIGHT.getCssName());
                 setDataToggle(Toggle.DROPDOWN);
             }} );
-            add( new DropDownMenu() {{
-                add( new AnchorListItem( Constants.INSTANCE.menu_edit() ) {{
-                    addClickHandler( new ClickHandler() {
+            add(new DropDownMenu() {{
+                add(new AnchorListItem(Constants.INSTANCE.menu_edit()) {{
+                    addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick( ClickEvent clickEvent ) {
                             getEditCommand().execute();
                         }
-                    } );
+                    });
                 }} );
-                add( new AnchorListItem( Constants.INSTANCE.menu_clone() ) {{
+                add(new AnchorListItem(Constants.INSTANCE.menu_clone() ) {{
                     addClickHandler( new ClickHandler() {
                         @Override
                         public void onClick( ClickEvent clickEvent ) {
                             getCloneCommand().execute();
                         }
-                    } );
+                    });
                 }} );
-                add( new AnchorListItem( Constants.INSTANCE.menu_export_csv() ) {{
-                    addClickHandler( new ClickHandler() {
+                add(new AnchorListItem(Constants.INSTANCE.menu_export_csv() ) {{
+                    addClickHandler(new ClickHandler() {
                         @Override
                         public void onClick( ClickEvent clickEvent ) {
                             getExportCsvCommand().execute();
                         }
-                    } );
+                    });
                 }} );
-                add( new AnchorListItem( Constants.INSTANCE.menu_export_excel() ) {{
+                add(new AnchorListItem(Constants.INSTANCE.menu_export_excel()) {{
                     addClickHandler( new ClickHandler() {
                         @Override
                         public void onClick( ClickEvent clickEvent ) {

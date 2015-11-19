@@ -107,6 +107,15 @@ public class DataSetLookupEditorView extends Composite
         }, ClickEvent.getType());
     }
 
+    @Override
+    public void clearAll() {
+        setFilterEnabled(false);
+        setGroupEnabled(false);
+        setColumnsSectionEnabled(false);
+        clearDataSetSelector();
+        clearGroupColumnSelector();
+        clearColumnList();
+    }
 
     @Override
     public void clearDataSetSelector() {

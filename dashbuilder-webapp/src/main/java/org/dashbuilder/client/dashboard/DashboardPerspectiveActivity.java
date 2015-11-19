@@ -47,7 +47,7 @@ import org.uberfire.workbench.model.toolbar.ToolBar;
 /**
  * The dashboard composer perspective.
  */
-public class DashboardPerspectiveActivity  implements PerspectiveActivity {
+public class DashboardPerspectiveActivity implements PerspectiveActivity {
 
     private DashboardManager dashboardManager;
     private PerspectiveManager perspectiveManager;
@@ -210,7 +210,9 @@ public class DashboardPerspectiveActivity  implements PerspectiveActivity {
                 /* Displayer settings == null => Create a brand new displayer */
                 perspectiveCoordinator.editOn();
                 DisplayerEditorPopup displayerEditor = getDisplayerEditorPopup();
-                displayerEditor.init(null, getSaveDisplayerCommand(displayerEditor), getCloseDisplayerCommand());
+                displayerEditor.init(null);
+                displayerEditor.setOnSaveCommand(getSaveDisplayerCommand(displayerEditor));
+                displayerEditor.setOnCloseCommand(getCloseDisplayerCommand());
             }
         };
     }

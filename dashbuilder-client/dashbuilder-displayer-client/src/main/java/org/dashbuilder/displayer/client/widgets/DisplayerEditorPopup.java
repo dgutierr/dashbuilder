@@ -53,8 +53,8 @@ public class DisplayerEditorPopup extends BaseModal {
         setWidth(1200+"px");
     }
 
-    public DisplayerEditorPopup init(DisplayerSettings settings, Command onSaveCommand, Command onCloseCommand) {
-        ModalShownHandler shownHandler = createShownHandler(settings, onSaveCommand, onCloseCommand);
+    public DisplayerEditorPopup init(DisplayerSettings settings) {
+        ModalShownHandler shownHandler = createShownHandler(settings);
         this.showHandlerRegistration = this.addShownHandler(shownHandler);
         show();
         return this;
@@ -64,18 +64,22 @@ public class DisplayerEditorPopup extends BaseModal {
         return editor.getDisplayerSettings();
     }
 
+    public void setOnSaveCommand(Command saveCommand) {
+        this.editor.setOnSaveCommand(saveCommand);
+    }
+
+    public void setOnCloseCommand(Command closeCommand) {
+        this.editor.setOnCloseCommand(closeCommand);
+    }
     /**
      * <p>The popup must be visible in order that the table can display the different row's values. So after popup is shown, initialize the editor.</p>
      */
-    protected ModalShownHandler createShownHandler(
-            final DisplayerSettings settings,
-            final Command onSaveCommand,
-            final Command onCloseCommand) {
+    protected ModalShownHandler createShownHandler(final DisplayerSettings settings) {
 
         return new ModalShownHandler() {
             @Override
             public void onShown(ModalShownEvent modalShownEvent) {
-                editor.init(settings, onSaveCommand, onCloseCommand);
+                editor.init(settings);
                 setTitle(CommonConstants.INSTANCE.displayer_editor_title());
                 if (editor.isBrandNewDisplayer()) {
                     setTitle(CommonConstants.INSTANCE.displayer_editor_new());
