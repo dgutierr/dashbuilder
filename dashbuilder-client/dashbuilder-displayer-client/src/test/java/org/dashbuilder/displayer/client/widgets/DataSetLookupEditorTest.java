@@ -258,6 +258,22 @@ public class DataSetLookupEditorTest {
     }
 
     @Test
+    public void testDataSetDefFilter() {
+
+        presenter.setDataSetDefFilter(new DataSetLookupEditor.DataSetDefFilter() {
+            public boolean accept(DataSetDef def) {
+                return def.getUUID().equals(REVENUE_UUID);
+            }
+        });
+
+        presenter.init(DATA_2D_FIXED);
+
+        verify(view).clearDataSetSelector();
+        verify(view, never()).addDataSetItem("Population", POPULATION_UUID);
+        verify(view).addDataSetItem("Revenue", REVENUE_UUID);
+    }
+
+    @Test
     public void testDateGroup() {
         presenter.init(DATA_2D_FIXED, DataSetFactory.newDataSetLookupBuilder()
                 .dataset(POPULATION_UUID)
@@ -377,7 +393,6 @@ public class DataSetLookupEditorTest {
         assertEquals(presenter.getFirstGroupFunctions().get(0).getFunction(), null);
         assertEquals(presenter.getFirstGroupFunctions().get(1).getFunction(), null);
     }
-
     @Test
     public void testExtraColumnsAllowed() {
         presenter.init(DATA_2D_MULTIPLE, DataSetFactory.newDataSetLookupBuilder()

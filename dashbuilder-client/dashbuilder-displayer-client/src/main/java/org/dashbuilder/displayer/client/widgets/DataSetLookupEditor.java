@@ -56,7 +56,6 @@ import org.dashbuilder.displayer.client.widgets.group.DataSetGroupDateEditor;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
-import org.uberfire.mvp.Command;
 
 import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
 
@@ -114,6 +113,10 @@ public class DataSetLookupEditor implements IsWidget {
         void removeColumnEditor(ColumnFunctionEditor editor);
     }
 
+    public interface DataSetDefFilter {
+        boolean accept(DataSetDef def);
+    }
+
     View view;
     SyncBeanManager beanManager;
     DataSetClientServices clientServices;
@@ -125,6 +128,12 @@ public class DataSetLookupEditor implements IsWidget {
     Event<DataSetLookupChangedEvent> changeEvent = null;
     List<DataSetDef> _dataSetDefList = new ArrayList<DataSetDef>();
     Map<Integer, ColumnFunctionEditor> _editorsMap = new HashMap<Integer, ColumnFunctionEditor>();
+
+    DataSetDefFilter dataSetDefFilter = new DataSetDefFilter() {
+        public boolean accept(DataSetDef def) {
+            return true;
+        }
+    };
 
     @Inject
     public DataSetLookupEditor(final View view,
@@ -220,20 +229,8 @@ public class DataSetLookupEditor implements IsWidget {
         return lookupConstraints;
     }
 
-    public DataSetMetadata getDataSetMetadata() {
-        return dataSetMetadata;
-    }
-
-    public void setDataSetLookup(DataSetLookup dataSetLookup) {
-        this.dataSetLookup = dataSetLookup;
-    }
-
-    public void setLookupConstraints(DataSetLookupConstraints lookupConstraints) {
-        this.lookupConstraints = lookupConstraints;
-    }
-
-    public void setDataSetMetadata(DataSetMetadata dataSetMetadata) {
-        this.dataSetMetadata = dataSetMetadata;
+    public void setDataSetDefFilter(DataSetDefFilter dataSetDefFilter) {
+        this.dataSetDefFilter = dataSetDefFilter;
     }
 
     public String getDataSetUUID() {
@@ -321,11 +318,14 @@ public class DataSetLookupEditor implements IsWidget {
         boolean found = false;
         for (int i=0; i<ds.size(); i++) {
             DataSetDef def = ds.get(i);
-            addDataSetDef(def);
+            if (dataSetDefFilter.accept(def)) {
 
-            if (selectedUUID != null && selectedUUID.equals(def.getUUID())) {
-                view.setSelectedDataSetIndex(i);
-                found = true;
+                addDataSetDef(def);
+
+                if (selectedUUID != null && selectedUUID.equals(def.getUUID())) {
+                    view.setSelectedDataSetIndex(i);
+                    found = true;
+                }
             }
         }
         if (!StringUtils.isBlank(selectedUUID) && !found) {

@@ -16,10 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.displayer.DisplayerSettings;
-import org.dashbuilder.displayer.DisplayerType;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DisplayerSettingsChangedEvent {
 
     DisplayerSettings displayerSettings;

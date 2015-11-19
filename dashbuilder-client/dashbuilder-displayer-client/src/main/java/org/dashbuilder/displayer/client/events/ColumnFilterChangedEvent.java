@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.dataset.filter.ColumnFilter;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class ColumnFilterChangedEvent {
 
     ColumnFilter columnFilter;

@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.dataset.group.ColumnGroup;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DataSetGroupDateChanged {
 
     ColumnGroup columnGroup;

@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.displayer.DisplayerSettings;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DisplayerEditorClosedEvent {
 
     DisplayerSettings displayerSettings;

@@ -16,10 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.dataset.group.GroupFunction;
-import org.dashbuilder.displayer.client.widgets.filter.ColumnFilterEditor;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class GroupFunctionChangedEvent {
 
     GroupFunction groupFunction;

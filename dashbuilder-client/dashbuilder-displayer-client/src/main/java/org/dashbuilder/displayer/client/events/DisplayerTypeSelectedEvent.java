@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.displayer.DisplayerType;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DisplayerTypeSelectedEvent {
 
     DisplayerType selectedType;

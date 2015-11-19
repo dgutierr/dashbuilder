@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.dataset.DataSetLookup;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DataSetLookupChangedEvent {
 
     DataSetLookup dataSetLookup;

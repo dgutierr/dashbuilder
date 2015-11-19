@@ -115,10 +115,6 @@ public class DisplayerEditor implements IsWidget {
         }
     };
 
-    public DisplayerEditor() {
-
-    }
-    
     @Inject
     public DisplayerEditor(View view,
                            DataSetClientServices clientServices,

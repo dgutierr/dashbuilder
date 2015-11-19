@@ -16,9 +16,7 @@
 package org.dashbuilder.displayer.client.events;
 
 import org.dashbuilder.dataset.filter.DataSetFilter;
-import org.jboss.errai.common.client.api.annotations.Portable;
 
-@Portable
 public class DataSetFilterChangedEvent {
 
     DataSetFilter filter;
