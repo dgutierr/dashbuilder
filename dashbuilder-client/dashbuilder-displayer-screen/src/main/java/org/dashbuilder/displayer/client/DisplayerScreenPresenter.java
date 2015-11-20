@@ -37,9 +37,8 @@ import org.dashbuilder.dataset.uuid.UUIDGenerator;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.json.DisplayerSettingsJSONMarshaller;
 import org.dashbuilder.displayer.client.resources.i18n.Constants;
-import org.dashbuilder.displayer.client.widgets.DisplayerEditor;
 import org.dashbuilder.displayer.client.widgets.DisplayerEditorPopup;
-import org.dashbuilder.displayer.client.widgets.DisplayerView;
+import org.dashbuilder.displayer.client.widgets.DisplayerViewer;
 import org.gwtbootstrap3.client.ui.AnchorListItem;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.ButtonGroup;
@@ -72,7 +71,7 @@ import org.uberfire.workbench.model.menu.impl.BaseMenuCustom;
 public class DisplayerScreenPresenter {
 
     private DataSetClientServices dataSetClientServices;
-    private DisplayerView displayerView;
+    private DisplayerViewer displayerViewer;
     private DisplayerEditorPopup displayerEditor;
     private PerspectiveCoordinator perspectiveCoordinator;
     private PerspectiveManager perspectiveManager;
@@ -99,7 +98,7 @@ public class DisplayerScreenPresenter {
                                     UUIDGenerator uuidGenerator,
                                     PerspectiveManager perspectiveManager,
                                     PlaceManager placeManager,
-                                    DisplayerView displayerView,
+                                    DisplayerViewer displayerViewer,
                                     PanelManager panelManager,
                                     DisplayerEditorPopup displayerEditor,
                                     PerspectiveCoordinator perspectiveCoordinator,
@@ -110,7 +109,7 @@ public class DisplayerScreenPresenter {
         this.uuidGenerator = uuidGenerator;
         this.placeManager = placeManager;
         this.perspectiveManager = perspectiveManager;
-        this.displayerView = displayerView;
+        this.displayerViewer = displayerViewer;
         this.panelManager = panelManager;
         this.perspectiveCoordinator = perspectiveCoordinator;
         this.jsonMarshaller = jsonMarshaller;
@@ -122,33 +121,33 @@ public class DisplayerScreenPresenter {
     @OnStartup
     public void onStartup( final PlaceRequest placeRequest ) {
         this.placeRequest = placeRequest;
-        String json = placeRequest.getParameter( "json", "" );
-        if ( !StringUtils.isBlank( json ) ) {
-            this.displayerSettings = jsonMarshaller.fromJsonString( json );
+        String json = placeRequest.getParameter("json", "");
+        if (!StringUtils.isBlank(json)) {
+            this.displayerSettings = jsonMarshaller.fromJsonString(json);
         }
-        if ( displayerSettings == null ) {
-            throw new IllegalArgumentException( Constants.INSTANCE.displayer_presenter_displayer_notfound() );
+        if (displayerSettings == null ) {
+            throw new IllegalArgumentException(Constants.INSTANCE.displayer_presenter_displayer_notfound());
         }
 
         // Check if display renderer selector component.
         Boolean showRendererSelector = Boolean.parseBoolean(placeRequest.getParameter("showRendererSelector","false"));
-        displayerView.setIsShowRendererSelector(showRendererSelector);
+        displayerViewer.setIsShowRendererSelector(showRendererSelector);
 
         // Draw the Displayer.
-        if ( StringUtils.isBlank( displayerSettings.getUUID() ) ) {
-            displayerSettings.setUUID( uuidGenerator.newUuid() );
+        if ( StringUtils.isBlank(displayerSettings.getUUID())) {
+            displayerSettings.setUUID(uuidGenerator.newUuid());
         }
-        displayerView.setDisplayerSettings( displayerSettings );
-        Displayer displayer = displayerView.draw();
+        displayerViewer.init(displayerSettings);
+        Displayer displayer = displayerViewer.draw();
 
         // Register the Displayer into the coordinator.
-        perspectiveCoordinator.addDisplayer( displayer );
+        perspectiveCoordinator.addDisplayer(displayer);
 
         // Check edit mode
-        String edit = placeRequest.getParameter( "edit", "false" );
-        String clone = placeRequest.getParameter( "clone", "false" );
-        editEnabled = Boolean.parseBoolean( edit );
-        cloneEnabled = Boolean.parseBoolean( clone );
+        String edit = placeRequest.getParameter("edit", "false" );
+        String clone = placeRequest.getParameter("clone", "false" );
+        editEnabled = Boolean.parseBoolean(edit);
+        cloneEnabled = Boolean.parseBoolean(clone);
         csvExportAllowed = displayerSettings.isCSVExportAllowed();
         excelExportAllowed = displayerSettings.isExcelExportAllowed();
         this.menu = makeMenuBar();
@@ -167,7 +166,7 @@ public class DisplayerScreenPresenter {
 
     @WorkbenchPartView
     public IsWidget getView() {
-        return displayerView;
+        return displayerViewer;
     }
 
     @WorkbenchMenu
@@ -295,7 +294,7 @@ public class DisplayerScreenPresenter {
             public void execute() {
                 try {
                     // Get all the data set rows with a maximum of 10000
-                    DataSetLookup currentLookup = getConstrainedDataSetLookup(displayerView.getDisplayer().getDataSetHandler().getCurrentDataSetLookup());
+                    DataSetLookup currentLookup = getConstrainedDataSetLookup(displayerViewer.getDisplayer().getDataSetHandler().getCurrentDataSetLookup());
                     dataSetClientServices.exportDataSetCSV(currentLookup, new DataSetExportReadyCallback() {
                         @Override
                         public void exportReady(Path exportFilePath) {
@@ -306,11 +305,11 @@ public class DisplayerScreenPresenter {
                         }
                         @Override
                         public void onError(ClientRuntimeError error) {
-                            displayerView.error(error);
+                            displayerViewer.error(error);
                         }
                     });
                 } catch (Exception e) {
-                    displayerView.error(new ClientRuntimeError(e));
+                    displayerViewer.error(new ClientRuntimeError(e));
                 }
             }
         };
@@ -321,7 +320,7 @@ public class DisplayerScreenPresenter {
             public void execute() {
                 try {
                     // Get all the data set rows with a maximum of 10000
-                    DataSetLookup currentLookup = getConstrainedDataSetLookup(displayerView.getDisplayer().getDataSetHandler().getCurrentDataSetLookup());
+                    DataSetLookup currentLookup = getConstrainedDataSetLookup(displayerViewer.getDisplayer().getDataSetHandler().getCurrentDataSetLookup());
                     dataSetClientServices.exportDataSetExcel(currentLookup, new DataSetExportReadyCallback() {
                         @Override
                         public void exportReady(Path exportFilePath) {
@@ -332,11 +331,11 @@ public class DisplayerScreenPresenter {
                         }
                         @Override
                         public void onError(ClientRuntimeError error) {
-                            displayerView.error(error);
+                            displayerViewer.error(error);
                         }
                     });
                 } catch (Exception e) {
-                    displayerView.error(new ClientRuntimeError(e));
+                    displayerViewer.error(new ClientRuntimeError(e));
                 }
             }
         };
@@ -357,7 +356,7 @@ public class DisplayerScreenPresenter {
     }
 
     protected void removeDisplayer() {
-        Displayer displayer = displayerView.getDisplayer();
+        Displayer displayer = displayerViewer.getDisplayer();
         perspectiveCoordinator.removeDisplayer( displayer );
         displayer.close();
     }

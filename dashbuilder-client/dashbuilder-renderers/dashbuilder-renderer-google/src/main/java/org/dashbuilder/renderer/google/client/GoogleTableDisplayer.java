@@ -91,11 +91,6 @@ public class GoogleTableDisplayer extends GoogleDisplayer {
     }
 
     @Override
-    public ChartPackage getPackage() {
-        return ChartPackage.TABLE;
-    }
-
-    @Override
     protected void beforeDataSetLookup() {
         // Get the sort settings
         if (lastOrderedColumn == null) {

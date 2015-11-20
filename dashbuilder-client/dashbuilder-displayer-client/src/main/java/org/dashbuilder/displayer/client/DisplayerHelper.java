@@ -15,7 +15,11 @@
  */
 package org.dashbuilder.displayer.client;
 
+import java.util.Collection;
+
 import org.dashbuilder.displayer.DisplayerSettings;
+import org.jboss.errai.ioc.client.container.IOC;
+import org.jboss.errai.ioc.client.container.IOCBeanDef;
 
 /**
  * Helper methods for dealing with Displayer instances.
@@ -27,8 +31,10 @@ public class DisplayerHelper {
      *
      * @param displayerSettings The given display configuration.
      */
-    public static Displayer lookupDisplayer(DisplayerSettings displayerSettings ) {
-        return DisplayerLocator.get().lookupDisplayer(displayerSettings);
+    public static Displayer lookupDisplayer(DisplayerSettings displayerSettings) {
+        Collection<IOCBeanDef<DisplayerLocator>> beans = IOC.getBeanManager().lookupBeans(DisplayerLocator.class);
+        IOCBeanDef<DisplayerLocator> beanDef = beans.iterator().next();
+        return beanDef.getInstance().lookupDisplayer(displayerSettings);
     }
 
     /**

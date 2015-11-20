@@ -23,13 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
@@ -38,8 +31,6 @@ import org.dashbuilder.dataset.DataColumn;
 import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.dataset.ValidationError;
 import org.dashbuilder.dataset.client.DataSetReadyCallback;
-import org.dashbuilder.dataset.client.resources.i18n.DayOfWeekConstants;
-import org.dashbuilder.dataset.client.resources.i18n.MonthConstants;
 import org.dashbuilder.dataset.date.DayOfWeek;
 import org.dashbuilder.dataset.date.Month;
 import org.dashbuilder.dataset.filter.DataSetFilter;
@@ -54,7 +45,6 @@ import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.formatter.ValueFormatter;
-import org.dashbuilder.displayer.client.resources.i18n.DisplayerConstants;
 
 /**
  * Base class for implementing custom displayers.
@@ -64,28 +54,43 @@ import org.dashbuilder.displayer.client.resources.i18n.DisplayerConstants;
  *     <li>The capture of events coming from the DisplayerListener interface.</li>
  * </ul>
  */
-public abstract class AbstractDisplayer extends Composite implements Displayer {
+public abstract class AbstractDisplayer<V extends DisplayerView> implements Displayer {
 
     protected DataSet dataSet;
     protected DataSetHandler dataSetHandler;
     protected DisplayerSettings displayerSettings;
     protected DisplayerConstraints displayerConstraints;
     protected List<DisplayerListener> listenerList = new ArrayList<DisplayerListener>();
-
-    protected FlowPanel panel = new FlowPanel();
-    protected Label label = new Label();
-
     protected Map<String,List<Interval>> columnSelectionMap = new HashMap<String,List<Interval>>();
+    protected Map<String,ValueFormatter> formatterMap = new HashMap<String, ValueFormatter>();
     protected DataSetFilter currentFilter = null;
     protected boolean refreshEnabled = true;
     protected boolean drawn = false;
-    protected Timer refreshTimer = null;
 
-    public AbstractDisplayer() {
-        initWidget(panel);
+    @Override
+    public Widget asWidget() {
+        return getView().asWidget();
     }
 
+    /**
+     * The implementation of the DisplayerView interface (to be provide by the displayer implementation)
+     */
+    public abstract V getView();
+
+    /**
+     * The constrains of this displayer (to be provide by the displayer implementation)
+     */
     public abstract DisplayerConstraints createDisplayerConstraints();
+
+    /**
+     * The Create the widget used by concrete displayer implementation.
+     */
+    protected abstract void createVisualization();
+
+    /**
+     * Update the widget used by concrete Google displayer implementation.
+     */
+    protected abstract void updateVisualization();
 
     public DisplayerConstraints getDisplayerConstraints() {
         if (displayerConstraints == null) {
@@ -107,7 +112,9 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
         DisplayerConstraints constraints = getDisplayerConstraints();
         if (displayerConstraints != null) {
             ValidationError error = constraints.check(displayerSettings);
-            if (error != null) throw error;
+            if (error != null) {
+                throw error;
+            }
         }
     }
 
@@ -150,16 +157,15 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
      */
     public void draw() {
         if (displayerSettings == null) {
-            displayMessage(DisplayerConstants.INSTANCE.error() + DisplayerConstants.INSTANCE.error_settings_unset());
+            getView().errorMissingSettings();
         }
         else if (dataSetHandler == null) {
-            displayMessage(DisplayerConstants.INSTANCE.error() + DisplayerConstants.INSTANCE.error_handler_unset());
+            getView().errorMissingHandler();
         }
         else if (!isDrawn()) {
             try {
                 drawn = true;
-                String initMsg = DisplayerConstants.INSTANCE.initializing();
-                displayMessage(initMsg);
+                getView().showLoading();
 
                 beforeLoad();
                 beforeDataSetLookup();
@@ -168,36 +174,33 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
                         try {
                             dataSet = result;
                             afterDataSetLookup(result);
-                            Widget w = createVisualization();
-                            panel.clear();
-                            panel.add(w);
+                            createVisualization();
 
                             // Set the id of the container panel so that the displayer can be easily located
                             // by testing tools for instance.
                             String id = getDisplayerId();
                             if (!StringUtils.isBlank(id)) {
-                                panel.getElement().setId(id);
+                                getView().setId(id);
                             }
                             // Draw done
                             afterDraw();
                         } catch (Exception e) {
                             // Give feedback on any initialization error
-                            afterError(e);
+                            showError(new ClientRuntimeError(e));
                         }
                     }
                     public void notFound() {
-                        displayMessage(DisplayerConstants.INSTANCE.error() + DisplayerConstants.INSTANCE.error_dataset_notfound());
+                        getView().errorDataSetNotFound(displayerSettings.getDataSetLookup().getDataSetUUID());
                     }
 
                     @Override
                     public boolean onError(final ClientRuntimeError error) {
-                        afterError(error);
+                        showError(error);
                         return false;
                     }
                 });
             } catch (Exception e) {
-                displayMessage(DisplayerConstants.INSTANCE.error() + e.getMessage());
-                afterError(e);
+                showError(new ClientRuntimeError(e));
             }
         }
     }
@@ -223,46 +226,41 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
                             afterRedraw();
                         } catch (Exception e) {
                             // Give feedback on any initialization error
-                            afterError(e);
+                            showError(new ClientRuntimeError(e));
                         }
                     }
                     public void notFound() {
-                        displayMessage(DisplayerConstants.INSTANCE.error() + DisplayerConstants.INSTANCE.error_dataset_notfound());
-                        afterError(DisplayerConstants.INSTANCE.error_dataset_notfound());
+                        String uuid = displayerSettings.getDataSetLookup().getDataSetUUID();
+                        getView().errorDataSetNotFound(uuid);
+                        afterError("Data set not found: " + uuid);
                     }
 
                     @Override
                     public boolean onError(final ClientRuntimeError error) {
-                        afterError(error);
+                        showError(error);
                         return false;
                     }
                 });
             } catch (Exception e) {
-                displayMessage(DisplayerConstants.INSTANCE.error() + e.getMessage());
-                afterError(e);
+                showError(new ClientRuntimeError(e));
             }
         }
+    }
+
+    protected void showError(ClientRuntimeError error) {
+        getView().error(error);
+        afterError(error);
     }
 
     /**
      * Close the displayer
      */
     public void close() {
-        panel.clear();
+        getView().clear();
 
         // Close done
         afterClose();
     }
-
-    /**
-     * Create the widget used by concrete Google displayer implementation.
-     */
-    protected abstract Widget createVisualization();
-
-    /**
-     * Update the widget used by concrete Google displayer implementation.
-     */
-    protected abstract void updateVisualization();
 
     /**
      * Call back method invoked just before the data set lookup is executed.
@@ -276,15 +274,6 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
     protected void afterDataSetLookup(DataSet dataSet) {
     }
 
-    /**
-     * Clear the current display and show a notification message.
-     */
-    public void displayMessage(String msg) {
-        panel.clear();
-        panel.add(label);
-        label.setText(msg);
-    }
-
     // REFRESH TIMER
 
     public void setRefreshOn(boolean enabled) {
@@ -296,25 +285,16 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
     }
 
     public boolean isRefreshOn() {
-        return refreshTimer != null;
+        return getView().isRefreshTimerOn();
     }
 
     protected void updateRefreshTimer() {
         int seconds = displayerSettings.getRefreshInterval();
         if (refreshEnabled && seconds > 0) {
-            if (refreshTimer == null) {
-                refreshTimer = new Timer() {
-                    public void run() {
-                        if (isDrawn()) {
-                            redraw();
-                        }
-                    }
-                };
-            }
-            refreshTimer.schedule(seconds * 1000);
+            getView().enableRefreshTimer(seconds);
         }
-        else if (refreshTimer != null) {
-            refreshTimer.cancel();
+        else {
+            getView().cancelRefreshTimer();
         }
     }
 
@@ -360,11 +340,6 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
     }
 
     protected void afterError(final ClientRuntimeError error) {
-        if (error.getThrowable() != null) {
-            GWT.log("ClientRuntimeError: " + error);
-        } else {
-            GWT.log("ClientRuntimeError: " + error, error.getThrowable());
-        }
         for (DisplayerListener listener : listenerList) {
             listener.onError(this, error);
         }
@@ -660,6 +635,7 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
         dataSetHandler.sort(columnId, sortOrder);
     }
 
+
     // DATA FORMATTING
 
     public String formatInterval(Interval interval, DataColumn column) {
@@ -693,10 +669,8 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
         ColumnSettings columnSettings = displayerSettings.getColumnSettings(column);
         String expression = columnSettings.getValueExpression();
         if (StringUtils.isBlank(expression)) return interval.getName();
-        return applyExpression(interval.getName(), expression);
+        return getView().applyExpression(interval.getName(), expression);
     }
-
-    Map<String,ValueFormatter> formatterMap = new HashMap<String, ValueFormatter>();
 
     public void addFormatter(String columnId, ValueFormatter formatter) {
         formatterMap.put(columnId, formatter);
@@ -746,89 +720,54 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
             ColumnType columnType = column.getColumnType();
             if (ColumnType.DATE.equals(columnType)) {
                 Date d = (Date) value;
-                return getDateFormat(pattern).format(d);
+                return getView().formatDate(pattern, d);
             }
             else if (ColumnType.NUMBER.equals(columnType)) {
-                double d = ((Number) value).doubleValue();
+                double n = ((Number) value).doubleValue();
                 if (!StringUtils.isBlank(expression)) {
-                    String r = applyExpression(value.toString(), expression);
+                    String r = getView().applyExpression(value.toString(), expression);
                     try {
-                        d = Double.parseDouble(r);
+                        n = Double.parseDouble(r);
                     } catch (NumberFormatException e) {
                         return r;
                     }
                 }
-                return getNumberFormat(pattern).format(d);
+                return getView().formatNumber(pattern, n);
             }
             else {
-                if (StringUtils.isBlank(expression)) return value.toString();
-                return applyExpression(value.toString(), expression);
+                if (StringUtils.isBlank(expression)) {
+                    return value.toString();
+                }
+                return getView().applyExpression(value.toString(), expression);
             }
         }
-    }
-
-
-    public static final String[] _jsMalicious = {"document.", "window.", "alert(", "eval(", ".innerHTML"};
-
-    protected String applyExpression(String val, String expr) {
-        if (StringUtils.isBlank(expr)) {
-            return val;
-        }
-        for (String keyword : _jsMalicious) {
-            if (expr.contains(keyword)) {
-                afterError(DisplayerConstants.INSTANCE.displayer_keyword_not_allowed(expr));
-                throw new RuntimeException(DisplayerConstants.INSTANCE.displayer_keyword_not_allowed(expr));
-            }
-        }
-        try {
-            return evalExpression(val, expr);
-        } catch (Exception e) {
-            afterError(DisplayerConstants.INSTANCE.displayer_expr_invalid_syntax(expr), e);
-            throw new RuntimeException(DisplayerConstants.INSTANCE.displayer_expr_invalid_syntax(expr));
-        }
-    }
-
-    protected native String evalExpression(String val, String expr) /*-{
-        value = val;
-        return eval(expr) + '';
-    }-*/;
-
-    // NUMBER FORMATTING
-
-    private static Map<String,NumberFormat> numberPatternMap = new HashMap<String, NumberFormat>();
-
-    protected NumberFormat getNumberFormat(String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return getNumberFormat(ColumnSettings.NUMBER_PATTERN);
-        }
-        NumberFormat format = numberPatternMap.get(pattern);
-        if (format == null) {
-            numberPatternMap.put(pattern, format = NumberFormat.getFormat(pattern));
-        }
-        return format;
     }
 
     // DATE FORMATTING
 
     protected String formatDate(DateIntervalType type, GroupStrategy strategy, String date, String pattern, String expression) {
-        if (date == null) return null;
-
+        if (date == null) {
+            return null;
+        }
         String str = GroupStrategy.FIXED.equals(strategy) ? formatDateFixed(type, date) : formatDateDynamic(type, date, pattern);
-        if (StringUtils.isBlank(expression)) return str;
-        return applyExpression(str, expression);
+        if (StringUtils.isBlank(expression)) {
+            return str;
+        }
+        return getView().applyExpression(str, expression);
     }
 
     protected String formatDateFixed(DateIntervalType type, String date) {
-        if (date == null) return null;
-
+        if (date == null) {
+            return null;
+        }
         int index = Integer.parseInt(date);
         if (DateIntervalType.DAY_OF_WEEK.equals(type)) {
             DayOfWeek dayOfWeek = DayOfWeek.getByIndex(index);
-            return DayOfWeekConstants.INSTANCE.getString(dayOfWeek.name());
+            return getView().formatDayOfWeek(dayOfWeek);
         }
         if (DateIntervalType.MONTH.equals(type)) {
             Month month = Month.getByIndex(index);
-            return MonthConstants.INSTANCE.getString(month.name());
+            return getView().formatMonth(month);
         }
         return date;
     }
@@ -836,34 +775,11 @@ public abstract class AbstractDisplayer extends Composite implements Displayer {
     protected String formatDateDynamic(DateIntervalType type, String date, String pattern) {
         if (date == null) return null;
         Date d = parseDynamicGroupDate(type, date);
-        DateTimeFormat format = getDateFormat(pattern);
-
-        /*if (DateIntervalType.QUARTER.equals(type)) {
-            String result = format.format(d);
-            int endMonth = d.getMonth() + 2;
-            d.setMonth(endMonth % 12);
-            if (endMonth > 11) d.setYear(d.getYear() + 1);
-            return result + " - " + format.format(d);
-        }*/
-        return format.format(d);
+        return getView().formatDate(pattern, d);
     }
 
     protected Date parseDynamicGroupDate(DateIntervalType type, String date) {
         String pattern = DateIntervalPattern.getPattern(type);
-        DateTimeFormat format = getDateFormat(pattern);
-        return format.parse(date);
-    }
-
-    private static Map<String,DateTimeFormat> datePatternMap = new HashMap<String, DateTimeFormat>();
-
-    protected DateTimeFormat getDateFormat(String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return getDateFormat(ColumnSettings.DATE_PATTERN);
-        }
-        DateTimeFormat format = datePatternMap.get(pattern);
-        if (format == null) {
-            datePatternMap.put(pattern, format = DateTimeFormat.getFormat(pattern));
-        }
-        return format;
+        return getView().parseDate(pattern, date);
     }
 }

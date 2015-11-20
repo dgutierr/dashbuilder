@@ -42,11 +42,6 @@ public class GoogleAreaChartDisplayer extends GoogleCategoriesDisplayer {
     protected Panel filterPanel = new SimplePanel();
 
     @Override
-    public ChartPackage getPackage() {
-        return ChartPackage.CORECHART;
-    }
-
-    @Override
     public DisplayerConstraints createDisplayerConstraints() {
 
         DataSetLookupConstraints lookupConstraints = new DataSetLookupConstraints()

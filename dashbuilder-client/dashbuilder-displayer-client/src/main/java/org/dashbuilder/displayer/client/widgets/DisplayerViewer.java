@@ -26,7 +26,7 @@ import org.dashbuilder.displayer.client.DisplayerListener;
 
 import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
 
-public class DisplayerView extends Composite {
+public class DisplayerViewer extends Composite {
 
     private static final String RENDERER_SELECTOR_WIDTH = "300px";
 
@@ -54,22 +54,12 @@ public class DisplayerView extends Composite {
         }
     };
 
-    public DisplayerView() {
+    public DisplayerViewer() {
         initWidget(container);
-    }
-
-    public DisplayerView(DisplayerSettings settings) {
-        this();
-        setDisplayerSettings(settings);
     }
 
     public DisplayerSettings getDisplayerSettings() {
         return displayerSettings;
-    }
-
-    public void setDisplayerSettings(DisplayerSettings displayerSettings) {
-        this.displayerSettings = displayerSettings;
-        init();
     }
 
     public void setIsShowRendererSelector(Boolean isShowRendererSelector) {
@@ -80,10 +70,11 @@ public class DisplayerView extends Composite {
         return displayer;
     }
 
-    public void init() {
+    public void init(DisplayerSettings displayerSettings) {
         try {
             // Lookup the displayer
             checkNotNull("displayerSettings", displayerSettings);
+            this.displayerSettings = displayerSettings;
             this.displayer = DisplayerHelper.lookupDisplayer(displayerSettings);
             this.displayer.addListener(displayerListener);
 

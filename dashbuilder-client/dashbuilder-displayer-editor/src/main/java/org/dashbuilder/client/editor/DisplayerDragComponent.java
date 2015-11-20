@@ -25,10 +25,9 @@ import com.google.gwt.user.client.ui.IsWidget;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.PerspectiveCoordinator;
+import org.dashbuilder.displayer.client.widgets.DisplayerViewer;
 import org.dashbuilder.displayer.json.DisplayerSettingsJSONMarshaller;
-import org.dashbuilder.displayer.client.widgets.DisplayerEditor;
 import org.dashbuilder.displayer.client.widgets.DisplayerEditorPopup;
-import org.dashbuilder.displayer.client.widgets.DisplayerView;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.uberfire.client.mvp.PlaceManager;
@@ -43,6 +42,9 @@ public class DisplayerDragComponent implements PerspectiveEditorDragComponent, H
 
     @Inject
     DisplayerEditorPopup editor;
+
+    @Inject
+    DisplayerViewer viewer;
 
     @Inject
     DisplayerSettingsJSONMarshaller marshaller;
@@ -70,22 +72,23 @@ public class DisplayerDragComponent implements PerspectiveEditorDragComponent, H
     public IsWidget getShowWidget(final RenderingContext ctx) {
         Map<String, String> properties = ctx.getComponent().getProperties();
         String json = properties.get("json");
-        if (json == null) return null;
+        if (json == null) {
+            return null;
+        }
 
         final DisplayerSettings settings = marshaller.fromJsonString(json);
-        final DisplayerView displayerView = new DisplayerView(settings);
-
-        displayerView.addAttachHandler(new AttachEvent.Handler() {
+        viewer.init(settings);
+        viewer.addAttachHandler(new AttachEvent.Handler() {
             public void onAttachOrDetach(AttachEvent attachEvent) {
                 if (attachEvent.isAttached()) {
                     int containerWidth = ctx.getContainer().getOffsetWidth() - 40;
                     adjustSize(settings, containerWidth);
-                    Displayer displayer = displayerView.draw();
+                    Displayer displayer = viewer.draw();
                     perspectiveCoordinator.addDisplayer(displayer);
                 }
             }
         });
-        return displayerView;
+        return viewer;
     }
 
     @Override

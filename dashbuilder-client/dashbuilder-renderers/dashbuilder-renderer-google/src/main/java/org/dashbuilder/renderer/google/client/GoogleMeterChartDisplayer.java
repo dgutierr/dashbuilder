@@ -36,11 +36,6 @@ public class GoogleMeterChartDisplayer extends GoogleChartDisplayer {
     private Gauge chart;
 
     @Override
-    public ChartPackage getPackage() {
-        return ChartPackage.GAUGE;
-    }
-
-    @Override
     public Widget createVisualization() {
         chart = new Gauge();
         chart.draw(createTable(), createOptions());

@@ -24,6 +24,7 @@ import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.dataset.DataSetLookup;
 import org.dashbuilder.dataset.client.ClientDataSetManager;
+import org.dashbuilder.dataset.client.DataSetClientServices;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.formatter.ValueFormatter;
 import org.dashbuilder.displayer.client.formatter.ValueFormatterRegistry;
@@ -37,20 +38,18 @@ import org.jboss.errai.ioc.client.container.IOCBeanDef;
 @ApplicationScoped
 public class DisplayerLocator {
 
-    public static DisplayerLocator get() {
-        Collection<IOCBeanDef<DisplayerLocator>> beans = IOC.getBeanManager().lookupBeans(DisplayerLocator.class);
-        IOCBeanDef<DisplayerLocator> beanDef = beans.iterator().next();
-        return beanDef.getInstance();
-    }
-
+    DataSetClientServices clientServices;
     ClientDataSetManager clientDataSetManager;
     ValueFormatterRegistry formatterRegistry;
     RendererManager rendererManager;
 
     @Inject
-    public DisplayerLocator(ClientDataSetManager clientDataSetManager,
+    public DisplayerLocator(DataSetClientServices clientServices,
+                            ClientDataSetManager clientDataSetManager,
                             RendererManager rendererManager,
                             ValueFormatterRegistry formatterRegistry) {
+
+        this.clientServices = clientServices;
         this.clientDataSetManager = clientDataSetManager;
         this.rendererManager = rendererManager;
         this.formatterRegistry = formatterRegistry;
@@ -77,7 +76,7 @@ public class DisplayerLocator {
             dataSetLookup = new DataSetLookup(dataSet.getUUID());
         }
 
-        DataSetHandler handler = new DataSetHandlerImpl(dataSetLookup);
+        DataSetHandler handler = new DataSetHandlerImpl(clientServices, dataSetLookup);
         displayer.setDataSetHandler(handler);
         setValueFormatters(displayer);
         return displayer;

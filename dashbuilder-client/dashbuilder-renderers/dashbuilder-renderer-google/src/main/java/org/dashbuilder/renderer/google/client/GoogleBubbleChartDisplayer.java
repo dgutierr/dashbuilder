@@ -41,11 +41,6 @@ public class GoogleBubbleChartDisplayer extends GoogleCategoriesDisplayer {
     protected Panel filterPanel = new SimplePanel();
 
     @Override
-    public ChartPackage getPackage() {
-        return ChartPackage.CORECHART;
-    }
-
-    @Override
     public Widget createVisualization() {
         chart = new BubbleChart();
         chart.addSelectHandler(createSelectHandler(chart));

@@ -17,62 +17,102 @@ package org.dashbuilder.renderer.client.metric;
 
 import java.util.List;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.Widget;
+import org.dashbuilder.dataset.ColumnType;
+import org.dashbuilder.dataset.DataSetLookupConstraints;
 import org.dashbuilder.dataset.filter.DataSetFilter;
+import org.dashbuilder.displayer.DisplayerAttributeDef;
+import org.dashbuilder.displayer.DisplayerAttributeGroupDef;
+import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
-import org.dashbuilder.renderer.client.resources.i18n.MetricConstants;
+import org.dashbuilder.displayer.client.AbstractDisplayer;
+import org.dashbuilder.displayer.client.DisplayerView;
 
-public class MetricDisplayer extends AbstractMetricDisplayer {
+public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
 
-    protected MetricView metricView = null;
+    public interface View extends DisplayerView<MetricDisplayer> {
+
+        void show(DisplayerSettings displayerSettings);
+
+        void nodata();
+
+        void update(String value);
+
+        String getColumnsTitle();
+    }
+
+    protected View view;
     protected boolean filterOn = false;
 
-    @Override
-    protected Widget createVisualization() {
-        metricView = createMetricView();
-        metricView.applySettings(displayerSettings);
-        updateVisualization();
+    public MetricDisplayer() {
+        this(new MetricView());
+    }
 
-        // Enable filtering
-        if (displayerSettings.isFilterEnabled()) {
-            metricView.addClickHandler(new ClickHandler() {
-                @Override public void onClick(ClickEvent clickEvent) {
-                    updateFilter();
-                }
-            });
-        }
-        return metricView.asWidget();
+    public MetricDisplayer(View view) {
+        this.view = view;
+    }
+
+    @Override
+    public View getView() {
+        return view;
+    }
+
+    @Override
+    public DisplayerConstraints createDisplayerConstraints() {
+
+        DataSetLookupConstraints lookupConstraints = new DataSetLookupConstraints()
+                .setGroupAllowed(false)
+                .setMaxColumns(1)
+                .setMinColumns(1)
+                .setFunctionRequired(true)
+                .setExtraColumnsAllowed(false)
+                .setColumnsTitle(view.getColumnsTitle())
+                .setColumnTypes(new ColumnType[] {
+                        ColumnType.NUMBER});
+
+        return new DisplayerConstraints(lookupConstraints)
+                .supportsAttribute(DisplayerAttributeDef.TYPE)
+                .supportsAttribute(DisplayerAttributeDef.RENDERER)
+                .supportsAttribute(DisplayerAttributeGroupDef.COLUMNS_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.FILTER_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.REFRESH_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.GENERAL_GROUP)
+                .supportsAttribute(DisplayerAttributeDef.CHART_WIDTH)
+                .supportsAttribute(DisplayerAttributeDef.CHART_HEIGHT)
+                .supportsAttribute(DisplayerAttributeDef.CHART_BGCOLOR)
+                .supportsAttribute(DisplayerAttributeGroupDef.CHART_MARGIN_GROUP);
+    }
+
+    @Override
+    protected void createVisualization() {
+        view.show(displayerSettings);
+        updateVisualization();
     }
 
     @Override
     protected void updateVisualization() {
         if (dataSet.getRowCount() == 0) {
-            metricView.updateMetric(MetricConstants.INSTANCE.metricDisplayer_noDataAvailable());
+            view.nodata();
         } else {
             String valueStr = super.formatValue(0, 0);
-            metricView.updateMetric(valueStr);
+            view.update(valueStr);
         }
-    }
-
-    protected MetricView createMetricView() {
-        return new MetricViewImpl();
     }
 
     public boolean isFilterOn() {
         return filterOn;
     }
 
-    protected void updateFilter() {
+    public void updateFilter() {
         if (filterOn) {
             filterReset();
         } else {
-            filterApply();
+            if (displayerSettings.isFilterEnabled()) {
+                filterApply();
+            }
         }
     }
 
-    protected DataSetFilter fetchFilter() {
+    public DataSetFilter fetchFilter() {
         if (displayerSettings.getDataSetLookup() == null) {
             return null;
         }
@@ -87,15 +127,11 @@ public class MetricDisplayer extends AbstractMetricDisplayer {
         return filter;
     }
 
-    public void applySettings(DisplayerSettings displayerSettings) {
-        metricView.applySettings(displayerSettings);
-    }
-
     public void filterApply() {
         filterOn = true;
         DisplayerSettings clone = displayerSettings.cloneInstance();
         clone.setChartBackgroundColor("DDDDDD");
-        metricView.applySettings(clone);
+        view.show(clone);
 
         DataSetFilter filter = fetchFilter();
         super.filterApply(filter);
@@ -104,7 +140,7 @@ public class MetricDisplayer extends AbstractMetricDisplayer {
     @Override
     public void filterReset() {
         filterOn = false;
-        metricView.applySettings(displayerSettings);
+        view.show(displayerSettings);
 
         DataSetFilter filter = fetchFilter();
         if (filter != null) {

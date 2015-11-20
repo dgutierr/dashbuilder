@@ -16,12 +16,13 @@
 package org.dashbuilder.client.screens;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import org.dashbuilder.dataset.DataSetFactory;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.DisplayerSettings;
-import org.dashbuilder.displayer.client.widgets.DisplayerView;
+import org.dashbuilder.displayer.client.widgets.DisplayerViewer;
 import org.uberfire.client.annotations.WorkbenchPartTitle;
 import org.uberfire.client.annotations.WorkbenchPartView;
 import org.uberfire.client.annotations.WorkbenchScreen;
@@ -60,12 +61,17 @@ public class StaticChartScreen {
                 .buildDataSet())
             .buildSettings();
 
-    DisplayerView displayerView;
+    DisplayerViewer displayerViewer;
+
+    @Inject
+    public StaticChartScreen(DisplayerViewer displayerViewer) {
+        this.displayerViewer = displayerViewer;
+    }
 
     @OnStartup
     public void init() {
-        DisplayerView displayerView = new DisplayerView(displayerSettings);
-        displayerView.draw();
+        displayerViewer.init(displayerSettings);
+        displayerViewer.draw();
     }
 
     @WorkbenchPartTitle
@@ -75,6 +81,6 @@ public class StaticChartScreen {
 
     @WorkbenchPartView
     public IsWidget getView() {
-        return displayerView;
+        return displayerViewer;
     }
 }

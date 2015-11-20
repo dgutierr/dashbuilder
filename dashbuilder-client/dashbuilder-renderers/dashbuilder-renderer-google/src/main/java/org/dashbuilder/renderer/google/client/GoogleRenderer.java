@@ -16,7 +16,9 @@
 package org.dashbuilder.renderer.google.client;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 
@@ -40,6 +42,18 @@ import java.util.EnumSet;
 public class GoogleRenderer extends AbstractRendererLibrary {
 
     public static final String UUID = "gwtcharts";
+
+    private static Map<DisplayerType,ChartPackage> _packageTypes = new HashMap<DisplayerType,ChartPackage>();
+    static {
+        _packageTypes.put(BARCHART, ChartPackage.CORECHART);
+        _packageTypes.put(PIECHART, ChartPackage.CORECHART);
+        _packageTypes.put(AREACHART, ChartPackage.CORECHART);
+        _packageTypes.put(LINECHART, ChartPackage.CORECHART);
+        _packageTypes.put(BUBBLECHART, ChartPackage.CORECHART);
+        _packageTypes.put(METERCHART, ChartPackage.GAUGE);
+        _packageTypes.put(TABLE, ChartPackage.TABLE);
+        _packageTypes.put(MAP, ChartPackage.GEOCHART);
+    }
 
     private List<DisplayerType> _supportedTypes = Arrays.asList(
             BARCHART,
@@ -111,7 +125,7 @@ public class GoogleRenderer extends AbstractRendererLibrary {
         for (Displayer displayer : displayerList) {
             try {
                 GoogleDisplayer googleDisplayer = (GoogleDisplayer) displayer;
-                packageList.add( googleDisplayer.getPackage());
+                packageList.add(_packageTypes.get(googleDisplayer.getDisplayerSettings().getType()));
             } catch (ClassCastException e) {
                 // Just ignore non Google displayers.
             }

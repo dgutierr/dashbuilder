@@ -43,11 +43,6 @@ public class GoogleMapDisplayer extends GoogleChartDisplayer {
     private GeoChart chart;
     protected Panel filterPanel = new SimplePanel();
 
-    @Override
-    public ChartPackage getPackage() {
-        return ChartPackage.GEOCHART;
-    }
-
     public SelectHandler createSelectHandler() {
         return new SelectHandler() {
             public void onSelect(SelectEvent event) {
@@ -124,6 +119,7 @@ public class GoogleMapDisplayer extends GoogleChartDisplayer {
         GeoChartOptions options = GeoChartOptions.create();
         options.setWidth(displayerSettings.getChartWidth());
         options.setHeight(displayerSettings.getChartHeight());
+        options.setDisplayMode(DisplayerSubType.MAP_REGIONS.equals(displayerSettings.getSubtype()) ? DisplayMode.REGIONS : DisplayMode.MARKERS);
         options.setDisplayMode(DisplayerSubType.MAP_REGIONS.equals(displayerSettings.getSubtype()) ? DisplayMode.REGIONS : DisplayMode.MARKERS);
         // TODO legend?
         return options;
