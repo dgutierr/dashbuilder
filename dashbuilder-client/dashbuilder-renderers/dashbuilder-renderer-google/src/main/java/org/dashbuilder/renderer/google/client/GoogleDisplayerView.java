@@ -32,6 +32,7 @@ import com.googlecode.gwt.charts.client.format.DateFormat;
 import com.googlecode.gwt.charts.client.format.DateFormatOptions;
 import com.googlecode.gwt.charts.client.format.NumberFormat;
 import com.googlecode.gwt.charts.client.format.NumberFormatOptions;
+import org.dashbuilder.common.client.error.ClientRuntimeError;
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.displayer.client.AbstractDisplayerView;
 import org.dashbuilder.displayer.client.Displayer;
@@ -47,6 +48,20 @@ public abstract class GoogleDisplayerView<P extends GoogleDisplayer>
     private Panel displayerPanel = new FlowPanel();
     private HTML titleHtml = new HTML();
     private DataTable dataTable = DataTable.create();
+    private GoogleRenderer googleRenderer;
+
+    public void setRenderer(GoogleRenderer googleRenderer) {
+        this.googleRenderer = googleRenderer;
+    }
+
+    public DataTable getDataTable() {
+        return dataTable;
+    }
+
+    public void showDisplayer(Widget w) {
+        displayerPanel.clear();
+        displayerPanel.add(w);
+    }
 
     @Override
     public void init(P presenter) {
@@ -60,13 +75,19 @@ public abstract class GoogleDisplayerView<P extends GoogleDisplayer>
         filterPanel.getElement().setAttribute("cellpadding", "2");
     }
 
-    public DataTable getDataTable() {
-        return dataTable;
-    }
-
-    public void showDisplayer(Widget w) {
-        displayerPanel.clear();
-        displayerPanel.add(w);
+    /**
+     * GCharts drawing is performed asynchronously
+     */
+    @Override
+    public void draw() {
+        if (googleRenderer == null)  {
+            getPresenter().showError(new ClientRuntimeError("Google renderer not set"));
+        }
+        else if (!getPresenter().isDrawn())  {
+            List<Displayer> displayerList = new ArrayList<Displayer>();
+            displayerList.add(getPresenter());
+            googleRenderer.draw(displayerList);
+        }
     }
 
     @Override

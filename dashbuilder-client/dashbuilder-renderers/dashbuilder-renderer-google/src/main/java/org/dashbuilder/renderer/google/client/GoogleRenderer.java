@@ -104,14 +104,46 @@ public class GoogleRenderer extends AbstractRendererLibrary {
 
     public Displayer lookupDisplayer(DisplayerSettings displayerSettings) {
         DisplayerType displayerType = displayerSettings.getType();
-        if (BARCHART.equals(displayerType)) return new GoogleBarChartDisplayer().setRenderer(this);
-        if (PIECHART.equals(displayerType)) return new GooglePieChartDisplayer().setRenderer(this);
-        if (AREACHART.equals(displayerType)) return new GoogleAreaChartDisplayer().setRenderer(this);
-        if (LINECHART.equals(displayerType)) return new GoogleLineChartDisplayer().setRenderer(this);
-        if (BUBBLECHART.equals(displayerType)) return new GoogleBubbleChartDisplayer().setRenderer(this);
-        if (METERCHART.equals(displayerType)) return new GoogleMeterChartDisplayer().setRenderer(this);
-        if (TABLE.equals(displayerType)) return new GoogleTableDisplayer().setRenderer(this);
-        if (MAP.equals(displayerType)) return new GoogleMapDisplayer().setRenderer(this);
+        if (BARCHART.equals(displayerType)) {
+            GoogleBarChartDisplayer displayer = new GoogleBarChartDisplayer();
+            ((GoogleBarChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (PIECHART.equals(displayerType)) {
+            GooglePieChartDisplayer displayer = new GooglePieChartDisplayer();
+            ((GooglePieChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (AREACHART.equals(displayerType)) {
+            GoogleAreaChartDisplayer displayer = new GoogleAreaChartDisplayer();
+            ((GoogleAreaChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (LINECHART.equals(displayerType)) {
+            GoogleLineChartDisplayer displayer = new GoogleLineChartDisplayer();
+            ((GoogleLineChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (BUBBLECHART.equals(displayerType)) {
+            GoogleBubbleChartDisplayer displayer = new GoogleBubbleChartDisplayer();
+            ((GoogleBubbleChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (METERCHART.equals(displayerType)) {
+            GoogleMeterChartDisplayer displayer = new GoogleMeterChartDisplayer();
+            ((GoogleMeterChartDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (TABLE.equals(displayerType)) {
+            GoogleTableDisplayer displayer = new GoogleTableDisplayer();
+            ((GoogleTableDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
+        if (MAP.equals(displayerType)) {
+            GoogleMapDisplayer displayer = new GoogleMapDisplayer();
+            ((GoogleMapDisplayerView) displayer.getView()).setRenderer(this);
+            return displayer;
+        }
 
         return null;
     }

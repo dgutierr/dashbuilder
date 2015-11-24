@@ -148,6 +148,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
 
     // DRAW & REDRAW
 
+    @Override
     public boolean isDrawn() {
         return drawn;
     }
@@ -155,6 +156,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
     /**
      * Draw the displayer by executing first the lookup call to retrieve the target data set
      */
+    @Override
     public void draw() {
         if (displayerSettings == null) {
             getView().errorMissingSettings();
@@ -208,6 +210,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
     /**
      * Just reload the data set and make the current displayer to redraw.
      */
+    @Override
     public void redraw() {
         if (!isDrawn()) {
             draw();
@@ -247,7 +250,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         }
     }
 
-    protected void showError(ClientRuntimeError error) {
+    public void showError(ClientRuntimeError error) {
         getView().error(error);
         afterError(error);
     }
@@ -255,6 +258,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
     /**
      * Close the displayer
      */
+    @Override
     public void close() {
         getView().clear();
 
@@ -276,6 +280,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
 
     // REFRESH TIMER
 
+    @Override
     public void setRefreshOn(boolean enabled) {
         boolean changed = enabled != refreshEnabled;
         refreshEnabled = enabled;
@@ -284,6 +289,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         }
     }
 
+    @Override
     public boolean isRefreshOn() {
         return getView().isRefreshTimerOn();
     }

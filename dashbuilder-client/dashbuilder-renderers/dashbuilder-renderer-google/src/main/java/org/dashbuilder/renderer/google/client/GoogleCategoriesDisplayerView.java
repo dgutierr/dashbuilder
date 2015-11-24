@@ -20,16 +20,19 @@ import com.googlecode.gwt.charts.client.Selection;
 import com.googlecode.gwt.charts.client.corechart.CoreChartWidget;
 import com.googlecode.gwt.charts.client.event.SelectEvent;
 import com.googlecode.gwt.charts.client.event.SelectHandler;
+import com.googlecode.gwt.charts.client.geochart.GeoChart;
 import com.googlecode.gwt.charts.client.options.ChartArea;
 import com.googlecode.gwt.charts.client.options.HAxis;
+import com.googlecode.gwt.charts.client.options.Options;
 import com.googlecode.gwt.charts.client.options.VAxis;
 import org.dashbuilder.renderer.google.client.resources.i18n.GoogleDisplayerConstants;
 import org.gwtbootstrap3.client.ui.Label;
 
-public abstract class GoogleCategoriesDisplayerView<P
-        extends GoogleCategoriesDisplayer> extends GoogleChartDisplayerView<P>
+public abstract class GoogleCategoriesDisplayerView<P extends GoogleCategoriesDisplayer>
+        extends GoogleChartDisplayerView<P>
         implements GoogleCategoriesDisplayer.View<P> {
 
+    private CoreChartWidget chart = null;
     protected boolean filterEnabled = false;
     protected String bgColor = null;
     protected boolean showXLabels = false;
@@ -92,18 +95,40 @@ public abstract class GoogleCategoriesDisplayerView<P
 
     @Override
     public void drawChart() {
-        CoreChartWidget chart = createChart();
+        if (chart == null) {
+            chart = createChart();
+            super.showDisplayer(chart);
+        }
         if (filterEnabled) {
             chart.addSelectHandler(createSelectHandler(chart));
         }
-        super.showDisplayer(chart);
+        chart.draw(getDataTable(), createOptions());
     }
 
     // Common methods used in subclasses
 
-    protected abstract CoreChartWidget createChart();
+    protected CoreChartWidget createChart() {
+        return null;
+    }
+
+    protected Options createOptions() {
+        return null;
+    }
 
     protected SelectHandler createSelectHandler(final CoreChartWidget selectable) {
+        return new SelectHandler() {
+            public void onSelect(SelectEvent event) {
+                JsArray<Selection> selections = selectable.getSelection();
+                for (int i = 0; i < selections.length(); i++) {
+                    Selection selection = selections.get(i);
+                    int row = selection.getRow();
+                    getPresenter().onCategorySelected(getDataTable().getColumnId(0), row);
+                }
+            }
+        };
+    }
+
+    protected SelectHandler createSelectHandler(final GeoChart selectable) {
         return new SelectHandler() {
             public void onSelect(SelectEvent event) {
                 JsArray<Selection> selections = selectable.getSelection();

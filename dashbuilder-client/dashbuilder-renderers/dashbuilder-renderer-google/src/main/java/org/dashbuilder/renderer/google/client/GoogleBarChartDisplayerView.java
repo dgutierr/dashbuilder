@@ -15,7 +15,6 @@
  */
 package org.dashbuilder.renderer.google.client;
 
-import com.google.gwt.user.client.ui.IsWidget;
 import com.googlecode.gwt.charts.client.corechart.BarChart;
 import com.googlecode.gwt.charts.client.corechart.BarChartOptions;
 import com.googlecode.gwt.charts.client.corechart.ColumnChart;
@@ -24,6 +23,7 @@ import com.googlecode.gwt.charts.client.corechart.CoreChartWidget;
 import com.googlecode.gwt.charts.client.options.Animation;
 import com.googlecode.gwt.charts.client.options.AnimationEasing;
 import com.googlecode.gwt.charts.client.options.CoreOptions;
+import com.googlecode.gwt.charts.client.options.Options;
 
 public class GoogleBarChartDisplayerView
         extends GoogleCategoriesDisplayerView<GoogleBarChartDisplayer>
@@ -44,9 +44,12 @@ public class GoogleBarChartDisplayerView
 
     @Override
     public CoreChartWidget createChart() {
-        CoreChartWidget chart = isBar ? new BarChart() : new ColumnChart();
-        chart.draw(getDataTable(), isBar ? createBarOptions() : createColumnOptions());
-        return chart;
+        return isBar ? new BarChart() : new ColumnChart();
+    }
+
+    @Override
+    protected Options createOptions() {
+        return isBar ? createBarOptions() : createColumnOptions();
     }
 
     protected CoreOptions createBarOptions() {
@@ -81,6 +84,9 @@ public class GoogleBarChartDisplayerView
         options.setBackgroundColor(bgColor);
         options.setLegend(createChartLegend());
         options.setIsStacked(isStacked);
+        options.setChartArea(createChartArea());
+        options.setColors(colors);
+
         if (showXLabels) {
             options.setHAxis(createHAxis());
         }
@@ -93,9 +99,6 @@ public class GoogleBarChartDisplayerView
             anim.setEasing(AnimationEasing.IN_AND_OUT);
             options.setAnimation(anim);
         }
-        // TODO: options.set3D(displayerSettings.is3d());
-        options.setChartArea(createChartArea());
-        options.setColors(colors);
         return options;
     }
 }

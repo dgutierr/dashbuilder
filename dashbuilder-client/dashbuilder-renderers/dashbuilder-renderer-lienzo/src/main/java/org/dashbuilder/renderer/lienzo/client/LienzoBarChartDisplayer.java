@@ -15,26 +15,36 @@
  */
 package org.dashbuilder.renderer.lienzo.client;
 
-import com.ait.lienzo.charts.client.core.xy.XYChartData;
-import com.ait.lienzo.charts.client.core.xy.bar.BarChart;
-import com.ait.lienzo.client.core.animation.AnimationTweener;
-import com.ait.lienzo.shared.core.types.ColorName;
+import org.dashbuilder.displayer.DisplayerSubType;
 
-public class LienzoBarChartDisplayer extends LienzoXYChartDisplayer<BarChart> {
+public class LienzoBarChartDisplayer extends LienzoXYChartDisplayer<LienzoBarChartDisplayer.View> {
 
-    private static final ColorName[] DEFAULT_SERIE_COLORS = new ColorName[] {
-            ColorName.DEEPSKYBLUE, ColorName.RED, ColorName.YELLOWGREEN            
-    };
-    
-    @Override
-    public BarChart createChart() {
-        // Create the BarChart instance.
-        return new BarChart();
+    public interface View extends LienzoXYChartDisplayer.View<LienzoBarChartDisplayer> {
+
+    }
+
+    private View view;
+
+    public LienzoBarChartDisplayer() {
+        this(new LienzoBarChartDisplayerView());
+    }
+
+    public LienzoBarChartDisplayer(View view) {
+        this.view = view;
     }
 
     @Override
-    public void reloadChart(XYChartData newData) {
-        chart.reload(newData, AnimationTweener.LINEAR, ANIMATION_DURATION);
+    public View getView() {
+        return view;
     }
 
+    @Override
+    protected void createVisualization() {
+        DisplayerSubType subType = displayerSettings.getSubtype();
+        getView().setHorizontal(subType != null &&
+                        (DisplayerSubType.COLUMN.equals(subType) ||
+                        DisplayerSubType.COLUMN_STACKED.equals(subType)));
+
+        super.createVisualization();
     }
+}

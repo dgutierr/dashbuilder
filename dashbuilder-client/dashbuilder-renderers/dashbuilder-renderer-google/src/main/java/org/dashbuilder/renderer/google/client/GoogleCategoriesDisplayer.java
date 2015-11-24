@@ -83,6 +83,7 @@ public abstract class GoogleCategoriesDisplayer<V extends GoogleCategoriesDispla
         drawChart();
     }
 
+    @Override
     protected void updateVisualization() {
         super.updateFilterStatus();
         drawChart();
@@ -92,7 +93,7 @@ public abstract class GoogleCategoriesDisplayer<V extends GoogleCategoriesDispla
         if (dataSet.getRowCount() == 0) {
             getView().nodata();
         } else {
-            super.populateData();
+            super.pushDataToView();
             getView().drawChart();
         }
     }

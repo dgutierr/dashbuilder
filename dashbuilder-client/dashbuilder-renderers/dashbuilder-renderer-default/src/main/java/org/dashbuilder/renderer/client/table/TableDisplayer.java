@@ -218,19 +218,19 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
     public void sortBy(String column, SortOrder order) {
         lastOrderedColumn = column;
         lastSortOrder = order;
-        redraw();
+        super.redraw();
     }
 
     public void selectCell(String columnId, int rowIndex) {
         if (displayerSettings.isFilterEnabled()) {
             view.gotoFirstPage();
-            filterUpdate(columnId, rowIndex);
+            super.filterUpdate(columnId, rowIndex);
             updateFilterStatus();
         }
     }
 
     public void resetFilter() {
-        filterReset();
+        super.filterReset();
         view.clearFilterStatus();
     }
 

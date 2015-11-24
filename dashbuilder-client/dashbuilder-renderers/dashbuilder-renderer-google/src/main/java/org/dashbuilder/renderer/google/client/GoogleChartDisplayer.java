@@ -15,10 +15,11 @@
  */
 package org.dashbuilder.renderer.google.client;
 
+import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.Position;
 
 /**
- * Base class for all the Google chart like displayers
+ * Base class for all the Google chart displayers
  */
 public abstract class GoogleChartDisplayer<V extends GoogleChartDisplayer.View> extends GoogleDisplayer<V> {
 
@@ -38,6 +39,7 @@ public abstract class GoogleChartDisplayer<V extends GoogleChartDisplayer.View> 
 
         void setLegendPosition(Position position);
 
+        void setSubType(DisplayerSubType subType);
     }
 
     @Override
@@ -51,5 +53,6 @@ public abstract class GoogleChartDisplayer<V extends GoogleChartDisplayer.View> 
         getView().setMarginRight(displayerSettings.getChartMarginRight());
         getView().setMarginLeft(displayerSettings.getChartMarginLeft());
         getView().setLegendPosition(displayerSettings.isChartShowLegend() ? displayerSettings.getChartLegendPosition() : null);
+        getView().setSubType(displayerSettings.getSubtype());
     }
 }

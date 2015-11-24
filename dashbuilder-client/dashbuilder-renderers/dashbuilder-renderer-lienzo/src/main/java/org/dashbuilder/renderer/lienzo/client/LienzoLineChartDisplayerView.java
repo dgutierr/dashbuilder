@@ -15,24 +15,22 @@
  */
 package org.dashbuilder.renderer.lienzo.client;
 
-public class LienzoLineChartDisplayer extends LienzoXYChartDisplayer<LienzoLineChartDisplayer.View> {
+import com.ait.lienzo.charts.client.core.xy.line.LineChart;
+import com.ait.lienzo.client.core.animation.AnimationTweener;
 
-    public interface View extends LienzoXYChartDisplayer.View<LienzoLineChartDisplayer> {
+public class LienzoLineChartDisplayerView
+        extends LienzoXYChartDisplayerView<LienzoLineChartDisplayer,LineChart>
+        implements LienzoLineChartDisplayer.View {
 
-    }
-
-    private View view;
-
-    public LienzoLineChartDisplayer() {
-        this(new LienzoLineChartDisplayerView());
-    }
-
-    public LienzoLineChartDisplayer(View view) {
-        this.view = view;
+    @Override
+    protected LineChart _createChart() {
+        LineChart chart = new LineChart();
+        chart.setData(createChartData());
+        return chart;
     }
 
     @Override
-    public View getView() {
-        return view;
+    protected void _reloadChart(LineChart chart) {
+        chart.reload(createChartData(), AnimationTweener.LINEAR, ANIMATION_DURATION);
     }
 }

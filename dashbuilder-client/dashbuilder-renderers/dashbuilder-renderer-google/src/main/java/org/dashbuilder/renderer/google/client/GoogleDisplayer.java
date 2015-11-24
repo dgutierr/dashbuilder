@@ -17,7 +17,6 @@ package org.dashbuilder.renderer.google.client;
 
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 
 import org.dashbuilder.dataset.ColumnType;
@@ -25,12 +24,13 @@ import org.dashbuilder.dataset.DataColumn;
 import org.dashbuilder.dataset.group.Interval;
 import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
-import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerView;
 
 public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends AbstractDisplayer<V> {
 
     public interface View<P extends GoogleDisplayer> extends DisplayerView<P> {
+
+        void draw();
 
         void dataClear();
 
@@ -61,6 +61,22 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
         void addFilterReset();
     }
 
+    /**
+     * GCharts drawing is done asynchronously via the GoogleRenderer (see ready() method below)
+     */
+    @Override
+    public void draw() {
+        getView().draw();
+    }
+
+    /**
+     * Invoked asynchronously by the GoogleRenderer when the displayer is ready for display
+     */
+    void ready() {
+        super.draw();
+    }
+
+
     @Override
     protected void createVisualization() {
         if (displayerSettings.isTitleVisible()) {
@@ -87,7 +103,7 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
 
     // Data generation
 
-    public void populateData() {
+    public void pushDataToView() {
 
         getView().dataClear();
         getView().dataRowCount(dataSet.getRowCount());
@@ -106,12 +122,7 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
                 Object value = columnValues.get(j);
 
                 if (ColumnType.DATE.equals(columnType)) {
-                    if (value == null) {
-                        getView().dataSetValue(j, i, new Date());
-                    }
-                    else {
-                        getView().dataSetValue(j, i, (Date) value);
-                    }
+                    getView().dataSetValue(j, i, value == null ? new Date() : (Date) value);
                 }
                 else if (ColumnType.NUMBER.equals(columnType)) {
                     if (value == null) {
@@ -153,38 +164,5 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
         if (!displayerSettings.isFilterSelfApplyEnabled()) {
             updateVisualization();
         }
-    }
-
-
-
-
-
-    protected GoogleRendrer googleRenderer;
-
-    public GoogleDisplayer setRenderer(GoogleRenderer googleRenderer) {
-        this.googleRenderer = googleRenderer;
-        return this;
-    }
-
-    /**
-     * GCharts drawing is done asynchronously via its renderer (see ready() method below)
-     */
-    @Override
-    public void draw() {
-        if (googleRenderer == null)  {
-            afterError("Google renderer not set");
-        }
-        else if (!isDrawn())  {
-            List<Displayer> displayerList = new ArrayList<Displayer>();
-            displayerList.add(this);
-            googleRenderer.draw(displayerList);
-        }
-    }
-
-    /**
-     * Invoked asynchronously by the GoogleRenderer when the displayer is ready for being displayed
-     */
-    void ready() {
-        super.draw();
     }
 }

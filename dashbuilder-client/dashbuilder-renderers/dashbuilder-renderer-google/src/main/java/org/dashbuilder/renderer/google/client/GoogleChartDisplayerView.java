@@ -18,9 +18,8 @@ package org.dashbuilder.renderer.google.client;
 import com.googlecode.gwt.charts.client.options.Legend;
 import com.googlecode.gwt.charts.client.options.LegendAlignment;
 import com.googlecode.gwt.charts.client.options.LegendPosition;
+import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.Position;
-
-import static org.dashbuilder.displayer.Position.*;
 
 /**
  * Base class for all the Google chart like displayers
@@ -36,6 +35,7 @@ public abstract class GoogleChartDisplayerView<P extends GoogleChartDisplayer>
     protected int marginRight = 10;
     protected int marginLeft = 10;
     protected Position legendPosition = null;
+    protected DisplayerSubType subType = null;
 
     @Override
     public void setWidth(int width) {
@@ -70,6 +70,11 @@ public abstract class GoogleChartDisplayerView<P extends GoogleChartDisplayer>
     @Override
     public void setLegendPosition(Position legendPosition) {
         this.legendPosition = legendPosition;
+    }
+
+    @Override
+    public void setSubType(DisplayerSubType subType) {
+        this.subType = subType;
     }
 
     protected Legend createChartLegend() {
