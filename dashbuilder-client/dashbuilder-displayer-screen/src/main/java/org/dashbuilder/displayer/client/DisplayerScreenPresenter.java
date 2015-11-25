@@ -298,7 +298,7 @@ public class DisplayerScreenPresenter {
                     dataSetClientServices.exportDataSetCSV(currentLookup, new DataSetExportReadyCallback() {
                         @Override
                         public void exportReady(Path exportFilePath) {
-                            final String u = DataSetClientServices.get().getDownloadFileUrl(exportFilePath);
+                            final String u = dataSetClientServices.getDownloadFileUrl(exportFilePath);
                             Window.open(u,
                                         "downloading",
                                         "resizable=no,scrollbars=yes,status=no");
@@ -324,7 +324,7 @@ public class DisplayerScreenPresenter {
                     dataSetClientServices.exportDataSetExcel(currentLookup, new DataSetExportReadyCallback() {
                         @Override
                         public void exportReady(Path exportFilePath) {
-                            final String u = DataSetClientServices.get().getDownloadFileUrl(exportFilePath);
+                            final String u = dataSetClientServices.getDownloadFileUrl(exportFilePath);
                             Window.open(u,
                                         "downloading",
                                         "resizable=no,scrollbars=yes,status=no");

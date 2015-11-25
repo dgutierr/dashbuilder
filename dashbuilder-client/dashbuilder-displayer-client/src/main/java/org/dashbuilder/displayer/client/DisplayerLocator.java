@@ -15,7 +15,6 @@
  */
 package org.dashbuilder.displayer.client;
 
-import java.util.Collection;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -29,8 +28,6 @@ import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.formatter.ValueFormatter;
 import org.dashbuilder.displayer.client.formatter.ValueFormatterRegistry;
 import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
-import org.jboss.errai.ioc.client.container.IOC;
-import org.jboss.errai.ioc.client.container.IOCBeanDef;
 
 /**
  * The locator service for Displayer implementations.
@@ -38,10 +35,10 @@ import org.jboss.errai.ioc.client.container.IOCBeanDef;
 @ApplicationScoped
 public class DisplayerLocator {
 
-    DataSetClientServices clientServices;
-    ClientDataSetManager clientDataSetManager;
-    ValueFormatterRegistry formatterRegistry;
-    RendererManager rendererManager;
+    private DataSetClientServices clientServices;
+    private ClientDataSetManager clientDataSetManager;
+    private ValueFormatterRegistry formatterRegistry;
+    private RendererManager rendererManager;
 
     @Inject
     public DisplayerLocator(DataSetClientServices clientServices,
@@ -66,7 +63,7 @@ public class DisplayerLocator {
             if (StringUtils.isBlank(rendererUuid)) throw new RuntimeException(CommonConstants.INSTANCE.displayerlocator_default_renderer_undeclared(target.getType().toString()));
             throw new RuntimeException(CommonConstants.INSTANCE.displayerlocator_unsupported_displayer_renderer(target.getType().toString(), rendererUuid));
         }
-        displayer.setDisplayerSettings( target );
+        displayer.setDisplayerSettings(target);
 
         // Check if a DataSet has been set instead of a DataSetLookup.
         DataSetLookup dataSetLookup = target.getDataSetLookup();

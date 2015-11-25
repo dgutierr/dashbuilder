@@ -35,7 +35,12 @@ import org.dashbuilder.dataset.engine.index.DataSetIndex;
 @ApplicationScoped
 public class ClientDataSetManager implements DataSetManager {
 
-    @Inject SharedDataSetOpEngine dataSetOpEngine;
+    SharedDataSetOpEngine dataSetOpEngine;
+
+    @Inject
+    public ClientDataSetManager(SharedDataSetOpEngine dataSetOpEngine) {
+        this.dataSetOpEngine = dataSetOpEngine;
+    }
 
     public DataSet createDataSet(String uuid) {
         DataSet dataSet = DataSetFactory.newEmptyDataSet();

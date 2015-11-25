@@ -221,17 +221,20 @@ public class DataSetHandlerImpl implements DataSetHandler {
 
     @Override
     public Interval getInterval(String columnId, int row) {
-        if (lastLookedUpDataSet == null) return null;
+        if (lastLookedUpDataSet == null) {
+            return null;
+        }
 
         DataColumn column = lastLookedUpDataSet.getColumnById(columnId);
-        if (column == null) return null;
+        if (column == null) {
+            return null;
+        }
 
         // For grouped by date data sets, locate the interval corresponding to the row specified
         ColumnGroup cg = column.getColumnGroup();
-        DataSetClientServices dataServices = DataSetClientServices.get();
-        DataSetMetadata metadata = dataServices.getMetadata(lookupBase.getDataSetUUID());
+        DataSetMetadata metadata = clientServices.getMetadata(lookupBase.getDataSetUUID());
         if (cg != null && metadata != null) {
-            IntervalBuilderLocator intervalBuilderLocator = dataServices.getIntervalBuilderLocator();
+            IntervalBuilderLocator intervalBuilderLocator = clientServices.getIntervalBuilderLocator();
             ColumnType columnType = metadata.getColumnType(cg.getSourceId());
             IntervalBuilder intervalBuilder = intervalBuilderLocator.lookup(columnType, cg.getStrategy());
             Interval target = intervalBuilder.locate(column, row);
@@ -246,10 +249,13 @@ public class DataSetHandlerImpl implements DataSetHandler {
 
         // Return the interval by name.
         List values = column.getValues();
-        if (row >= values.size()) return null;
-
+        if (row >= values.size()) {
+            return null;
+        }
         Object value = values.get(row);
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
 
         return new Interval(value.toString());
     }
@@ -349,7 +355,9 @@ public class DataSetHandlerImpl implements DataSetHandler {
         for (List<GroupOpFilter> currentSelections : _groupOpsSelected.values()) {
             for (GroupOpFilter groupOpFilter : currentSelections) {
                 GroupFunction gf = groupOpFilter.groupOp.getGroupFunction(columnId);
-                if (gf != null) return gf.getSourceId();
+                if (gf != null) {
+                    return gf.getSourceId();
+                }
             }
         }
         return columnId;

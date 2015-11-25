@@ -19,10 +19,6 @@ import javax.enterprise.context.ApplicationScoped;
 
 import com.google.gwt.dom.client.Document;
 import org.dashbuilder.dataset.uuid.UUIDGenerator;
-import org.jboss.errai.ioc.client.container.IOC;
-import org.jboss.errai.ioc.client.container.IOCBeanDef;
-
-import java.util.Collection;
 
 @ApplicationScoped
 public class ClientUUIDGenerator implements UUIDGenerator {

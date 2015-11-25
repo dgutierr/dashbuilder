@@ -155,11 +155,17 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
                 boolean ok = false;
                 ValidationError error = null;
                 for (ColumnType[] types : columnTypeList) {
-                    if (currentColumns < 0 || currentColumns < types.length) currentColumns = types.length;
+                    if (currentColumns < 0 || currentColumns < types.length) {
+                        currentColumns = types.length;
+                    }
                     error = checkTypes(metadata, groupOp, types);
-                    if (!ok && error == null) ok = true;
+                    if (!ok && error == null) {
+                        ok = true;
+                    }
                 }
-                if (!ok) return error;
+                if (!ok) {
+                    return error;
+                }
 
                 // Check extra columns type
                 if (currentColumns > 0 && extraColumnsAllowed && extraColumnsType != null && groupFunctions.size() > currentColumns) {
@@ -181,17 +187,22 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
         ColumnGroup columnGroup = groupOp.getColumnGroup();
         List<GroupFunction> groupFunctions = groupOp.getGroupFunctions();
         for (int i = 0; i < groupFunctions.size(); i++) {
+
             GroupFunction gf = groupFunctions.get(i);
             ColumnType columnType = metadata.getColumnType(gf.getSourceId());
             if (i < types.length && !columnType.equals(types[i])) {
-                if (columnGroup == null || (columnGroup.getSourceId().equals(gf.getSourceId()) && columnType.equals(ColumnType.LABEL))) {
+
+                boolean isGroupColumn = (columnGroup != null && columnGroup.getSourceId().equals(gf.getSourceId()));
+                boolean isGroupLabel = (isGroupColumn && types[i].equals(ColumnType.LABEL));
+                boolean isFunctionColumn = (gf.getFunction() != null && !columnType.equals(ColumnType.NUMBER));
+
+                if (!isGroupLabel && !isFunctionColumn) {
                     return super.createValidationError(ERROR_COLUMN_TYPE, i, types[i], columnType);
                 }
             }
         }
         return null;
     }
-
 
     protected ValidationError createValidationError(int error) {
         switch (error) {
@@ -229,8 +240,12 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
         ColumnType[] types = getColumnTypes();
         if (types == null || types.length == 0) {
 
-            if (maxColumns > 0 && maxColumns < metatada.getNumberOfColumns()) types = new ColumnType[maxColumns];
-            else types = new ColumnType[metatada.getNumberOfColumns()];
+            if (maxColumns > 0 && maxColumns < metatada.getNumberOfColumns()) {
+                types = new ColumnType[maxColumns];
+            }
+            else {
+                types = new ColumnType[metatada.getNumberOfColumns()];
+            }
 
             for (int i = 0; i < types.length; i++) {
                 types[i] = metatada.getColumnType(i);
