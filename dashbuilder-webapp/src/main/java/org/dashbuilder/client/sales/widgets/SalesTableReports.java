@@ -15,6 +15,9 @@
  */
 package org.dashbuilder.client.sales.widgets;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -25,8 +28,8 @@ import org.dashbuilder.client.resources.i18n.AppConstants;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerCoordinator;
-import org.dashbuilder.displayer.client.DisplayerHelper;
 import org.dashbuilder.dataset.group.DateIntervalType;
+import org.dashbuilder.displayer.client.DisplayerLocator;
 
 import static org.dashbuilder.shared.sales.SalesConstants.*;
 import static org.dashbuilder.dataset.sort.SortOrder.*;
@@ -56,7 +59,8 @@ public class SalesTableReports extends Composite implements GalleryWidget {
     @UiField(provided = true)
     Displayer tableAll;
 
-    DisplayerCoordinator displayerCoordinator = new DisplayerCoordinator();
+    DisplayerCoordinator displayerCoordinator;
+    DisplayerLocator displayerLocator;
 
     @Override
     public String getTitle() {
@@ -78,11 +82,18 @@ public class SalesTableReports extends Composite implements GalleryWidget {
         displayerCoordinator.redrawAll();
     }
 
-    public SalesTableReports() {
+    @Inject
+    public SalesTableReports(DisplayerCoordinator displayerCoordinator, DisplayerLocator displayerLocator) {
+        this.displayerCoordinator = displayerCoordinator;
+        this.displayerLocator = displayerLocator;
+    }
+
+    @PostConstruct
+    public void init() {
 
         // Create the chart definitions
 
-        tableAll = DisplayerHelper.lookupDisplayer(
+        tableAll = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                 .dataset(SALES_OPPS)
                 .title(AppConstants.INSTANCE.sales_tablereports_all_title())
@@ -102,7 +113,7 @@ public class SalesTableReports extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        tableByCountry = DisplayerHelper.lookupDisplayer(
+        tableByCountry = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                 .dataset(SALES_OPPS)
                 .group(COUNTRY)
@@ -120,7 +131,7 @@ public class SalesTableReports extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        tableByProduct = DisplayerHelper.lookupDisplayer(
+        tableByProduct = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                 .dataset(SALES_OPPS)
                 .group(PRODUCT)
@@ -138,7 +149,7 @@ public class SalesTableReports extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        tableBySalesman = DisplayerHelper.lookupDisplayer(
+        tableBySalesman = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                 .dataset(SALES_OPPS)
                 .group(SALES_PERSON)
@@ -156,7 +167,7 @@ public class SalesTableReports extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        tableByYear = DisplayerHelper.lookupDisplayer(
+        tableByYear = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                 .dataset(SALES_OPPS)
                 .group(CREATION_DATE).dynamic(DateIntervalType.YEAR, true)

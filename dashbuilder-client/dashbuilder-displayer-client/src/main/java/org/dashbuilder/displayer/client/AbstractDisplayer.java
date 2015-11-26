@@ -291,16 +291,17 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
 
     @Override
     public boolean isRefreshOn() {
-        return getView().isRefreshTimerOn();
+        return refreshEnabled;
     }
 
     protected void updateRefreshTimer() {
-        int seconds = displayerSettings.getRefreshInterval();
-        if (refreshEnabled && seconds > 0) {
-            getView().enableRefreshTimer(seconds);
-        }
-        else {
-            getView().cancelRefreshTimer();
+        if (isDrawn()) {
+            int seconds = displayerSettings.getRefreshInterval();
+            if (refreshEnabled && seconds > 0) {
+                getView().enableRefreshTimer(seconds);
+            } else {
+                getView().cancelRefreshTimer();
+            }
         }
     }
 
@@ -476,34 +477,39 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
      * @param maxSelections The number of different selectable values available.
      */
     public void filterUpdate(String columnId, int row, Integer maxSelections) {
-        if (!displayerSettings.isFilterEnabled()) return;
+        if (displayerSettings.isFilterEnabled()) {
 
-        Interval intervalSelected = dataSetHandler.getInterval(columnId, row);
-        if (intervalSelected == null) return;
+            Interval intervalSelected = dataSetHandler.getInterval(columnId, row);
+            if (intervalSelected != null) {
 
-        List<Interval> selectedIntervals = columnSelectionMap.get(columnId);
-        if (selectedIntervals == null) {
-            selectedIntervals = new ArrayList<Interval>();
-            selectedIntervals.add(intervalSelected);
-            columnSelectionMap.put(columnId, selectedIntervals);
-            filterApply(columnId, selectedIntervals);
-        }
-        else if (selectedIntervals.contains(intervalSelected)) {
-            selectedIntervals.remove(intervalSelected);
-            if (!selectedIntervals.isEmpty()) {
-                filterApply(columnId, selectedIntervals);
-            } else {
-                filterReset(columnId);
-            }
-        } else {
-            if (displayerSettings.isFilterSelfApplyEnabled()) {
-                columnSelectionMap.put(columnId, selectedIntervals = new ArrayList<Interval>());
-            }
-            selectedIntervals.add(intervalSelected);
-            if (maxSelections != null && maxSelections > 0 && selectedIntervals.size() >= maxSelections) {
-                filterReset(columnId);
-            } else {
-                filterApply(columnId, selectedIntervals);
+                List<Interval> selectedIntervals = columnSelectionMap.get(columnId);
+                if (selectedIntervals == null) {
+                    selectedIntervals = new ArrayList<Interval>();
+                    selectedIntervals.add(intervalSelected);
+                    columnSelectionMap.put(columnId, selectedIntervals);
+                    filterApply(columnId, selectedIntervals);
+                }
+                else if (selectedIntervals.contains(intervalSelected)) {
+                    selectedIntervals.remove(intervalSelected);
+                    if (!selectedIntervals.isEmpty()) {
+                        filterApply(columnId, selectedIntervals);
+                    }
+                    else {
+                        filterReset(columnId);
+                    }
+                }
+                else {
+                    if (displayerSettings.isFilterSelfApplyEnabled()) {
+                        columnSelectionMap.put(columnId, selectedIntervals = new ArrayList<Interval>());
+                    }
+                    selectedIntervals.add(intervalSelected);
+                    if (maxSelections != null && maxSelections > 0 && selectedIntervals.size() >= maxSelections) {
+                        filterReset(columnId);
+                    }
+                    else {
+                        filterApply(columnId, selectedIntervals);
+                    }
+                }
             }
         }
     }
@@ -515,22 +521,23 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
      * @param intervalList A list of interval selections to filter for.
      */
     public void filterApply(String columnId, List<Interval> intervalList) {
-        if (!displayerSettings.isFilterEnabled()) return;
+        if (displayerSettings.isFilterEnabled()) {
 
-        // For string column filters, init the group interval selection operation.
-        DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
-        groupOp.setSelectedIntervalList(intervalList);
+            // For string column filters, init the group interval selection operation.
+            DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
+            groupOp.setSelectedIntervalList(intervalList);
 
-        // Notify to those interested parties the selection event.
-        if (displayerSettings.isFilterNotificationEnabled()) {
-            for (DisplayerListener listener : listenerList) {
-                listener.onFilterEnabled(this, groupOp);
+            // Notify to those interested parties the selection event.
+            if (displayerSettings.isFilterNotificationEnabled()) {
+                for (DisplayerListener listener : listenerList) {
+                    listener.onFilterEnabled(this, groupOp);
+                }
             }
-        }
-        // Drill-down support
-        if (displayerSettings.isFilterSelfApplyEnabled()) {
-            dataSetHandler.drillDown(groupOp);
-            redraw();
+            // Drill-down support
+            if (displayerSettings.isFilterSelfApplyEnabled()) {
+                dataSetHandler.drillDown(groupOp);
+                redraw();
+            }
         }
     }
 
@@ -540,20 +547,21 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
      * @param filter A filter
      */
     public void filterApply(DataSetFilter filter) {
-        if (!displayerSettings.isFilterEnabled()) return;
+        if (displayerSettings.isFilterEnabled()) {
 
-        this.currentFilter = filter;
+            this.currentFilter = filter;
 
-        // Notify to those interested parties the selection event.
-        if (displayerSettings.isFilterNotificationEnabled()) {
-            for (DisplayerListener listener : listenerList) {
-                listener.onFilterEnabled(this, filter);
+            // Notify to those interested parties the selection event.
+            if (displayerSettings.isFilterNotificationEnabled()) {
+                for (DisplayerListener listener : listenerList) {
+                    listener.onFilterEnabled(this, filter);
+                }
             }
-        }
-        // Drill-down support
-        if (displayerSettings.isFilterSelfApplyEnabled()) {
-            dataSetHandler.filter(filter);
-            redraw();
+            // Drill-down support
+            if (displayerSettings.isFilterSelfApplyEnabled()) {
+                dataSetHandler.filter(filter);
+                redraw();
+            }
         }
     }
 
@@ -563,21 +571,22 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
      * @param columnId The name of the column to reset.
      */
     public void filterReset(String columnId) {
-        if (!displayerSettings.isFilterEnabled()) return;
+        if (displayerSettings.isFilterEnabled()) {
 
-        columnSelectionMap.remove(columnId);
-        DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
+            columnSelectionMap.remove(columnId);
+            DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
 
-        // Notify to those interested parties the reset event.
-        if (displayerSettings.isFilterNotificationEnabled()) {
-            for (DisplayerListener listener : listenerList) {
-                listener.onFilterReset(this, Arrays.asList(groupOp));
+            // Notify to those interested parties the reset event.
+            if (displayerSettings.isFilterNotificationEnabled()) {
+                for (DisplayerListener listener : listenerList) {
+                    listener.onFilterReset(this, Arrays.asList(groupOp));
+                }
             }
-        }
-        // Apply the selection to this displayer
-        if (displayerSettings.isFilterSelfApplyEnabled()) {
-            dataSetHandler.drillUp(groupOp);
-            redraw();
+            // Apply the selection to this displayer
+            if (displayerSettings.isFilterSelfApplyEnabled()) {
+                dataSetHandler.drillUp(groupOp);
+                redraw();
+            }
         }
     }
 
@@ -585,47 +594,46 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
      * Clear any filter.
      */
     public void filterReset() {
-        if (!displayerSettings.isFilterEnabled()) {
-            return;
-        }
+        if (displayerSettings.isFilterEnabled()) {
 
-        List<DataSetGroup> groupOpList = new ArrayList<DataSetGroup>();
-        for (String columnId : columnSelectionMap.keySet()) {
-            DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
-            groupOpList.add(groupOp);
+            List<DataSetGroup> groupOpList = new ArrayList<DataSetGroup>();
+            for (String columnId : columnSelectionMap.keySet()) {
+                DataSetGroup groupOp = dataSetHandler.getGroupOperation(columnId);
+                groupOpList.add(groupOp);
 
-        }
-        columnSelectionMap.clear();
+            }
+            columnSelectionMap.clear();
 
-        // Notify to those interested parties the reset event.
-        if (displayerSettings.isFilterNotificationEnabled()) {
-            for (DisplayerListener listener : listenerList) {
+            // Notify to those interested parties the reset event.
+            if (displayerSettings.isFilterNotificationEnabled()) {
+                for (DisplayerListener listener : listenerList) {
+                    if (currentFilter != null) {
+                        listener.onFilterReset(this, currentFilter);
+                    }
+                    listener.onFilterReset(this, groupOpList);
+                }
+            }
+            // Apply the selection to this displayer
+            if (displayerSettings.isFilterSelfApplyEnabled()) {
+                boolean applied = false;
+
                 if (currentFilter != null) {
-                    listener.onFilterReset(this, currentFilter);
+                    if (dataSetHandler.unfilter(currentFilter)) {
+                        applied = true;
+                    }
                 }
-                listener.onFilterReset(this, groupOpList);
+                for (DataSetGroup groupOp : groupOpList) {
+                    if (dataSetHandler.drillUp(groupOp)) {
+                        applied = true;
+                    }
+                }
+                if (applied) {
+                    redraw();
+                }
             }
-        }
-        // Apply the selection to this displayer
-        if (displayerSettings.isFilterSelfApplyEnabled()) {
-            boolean applied = false;
-
             if (currentFilter != null) {
-                if (dataSetHandler.unfilter(currentFilter)) {
-                    applied = true;
-                }
+                currentFilter = null;
             }
-            for (DataSetGroup groupOp : groupOpList) {
-                if (dataSetHandler.drillUp(groupOp)) {
-                    applied = true;
-                }
-            }
-            if (applied) {
-                redraw();
-            }
-        }
-        if (currentFilter != null) {
-            currentFilter = null;
         }
     }
 

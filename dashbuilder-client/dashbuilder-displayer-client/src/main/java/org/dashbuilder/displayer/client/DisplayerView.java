@@ -52,8 +52,6 @@ public interface DisplayerView<P extends Displayer> extends UberView<P> {
 
     String formatMonth(Month month);
 
-    boolean isRefreshTimerOn();
-
     void enableRefreshTimer(int seconds);
 
     void cancelRefreshTimer();

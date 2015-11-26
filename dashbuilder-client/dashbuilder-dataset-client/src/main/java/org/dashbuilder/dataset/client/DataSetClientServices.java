@@ -130,7 +130,9 @@ public class DataSetClientServices {
                 dataSetLookupServices.call(
                         new RemoteCallback<DataSetMetadata>() {
                             public void callback(DataSetMetadata result) {
-                                if (result == null) listener.notFound();
+                                if (result == null) {
+                                    listener.notFound();
+                                }
                                 else {
                                     remoteMetadataMap.put(uuid, result);
                                     listener.callback(result);

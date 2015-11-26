@@ -13,19 +13,7 @@
 
   <g:FlowPanel ui:field="mainPanel" addStyleNames="{style.mainPanelStyle}" title="{i18n.renderer_selector_title}">
 
-    <!-- List box selector widget. -->
-    <g:FlowPanel ui:field="listPanel" visible="false">
-      <g:ListBox ui:field="listBox"/>
-    </g:FlowPanel>
-
-    <!-- Radio buttons selector widget. -->
-    <g:HorizontalPanel ui:field="radioButtonsPanel" visible="false" spacing="10"/>
-
-    <!-- Tab list selector widget. -->
-    <b:TabPanel ui:field="tabPanel" visible="false" tabPosition="TOP">
-      <b:TabContent ui:field="tabContent"/>
-      <b:NavTabs ui:field="navTabs"/>
-    </b:TabPanel>
+    <g:ListBox ui:field="listBox"/>
 
   </g:FlowPanel>
 </ui:UiBinder>

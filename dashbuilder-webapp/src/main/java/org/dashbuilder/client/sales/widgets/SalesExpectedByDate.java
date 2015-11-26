@@ -15,6 +15,9 @@
  */
 package org.dashbuilder.client.sales.widgets;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -25,7 +28,7 @@ import org.dashbuilder.client.resources.i18n.AppConstants;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerCoordinator;
-import org.dashbuilder.displayer.client.DisplayerHelper;
+import org.dashbuilder.displayer.client.DisplayerLocator;
 
 import static org.dashbuilder.dataset.group.DateIntervalType.*;
 import static org.dashbuilder.dataset.date.DayOfWeek.*;
@@ -69,7 +72,8 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
     @UiField(provided = true)
     Displayer salesmanSelector;
 
-    DisplayerCoordinator displayerCoordinator = new DisplayerCoordinator();
+    DisplayerCoordinator displayerCoordinator;
+    DisplayerLocator displayerLocator;
 
     @Override
     public String getTitle() {
@@ -91,11 +95,18 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
         displayerCoordinator.redrawAll();
     }
 
-    public SalesExpectedByDate() {
+    @Inject
+    public SalesExpectedByDate(DisplayerCoordinator displayerCoordinator, DisplayerLocator displayerLocator) {
+        this.displayerCoordinator = displayerCoordinator;
+        this.displayerLocator = displayerLocator;
+    }
+
+    @PostConstruct
+    public void init() {
 
         // Create the chart definitions
 
-        areaChartByDate = DisplayerHelper.lookupDisplayer(
+        areaChartByDate = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newAreaChartSettings()
                 .dataset(SALES_OPPS)
                 .group(CREATION_DATE).dynamic(80, DAY, true)
@@ -108,7 +119,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                 .filterOn(true, true, true)
                 .buildSettings());
 
-        pieChartYears = DisplayerHelper.lookupDisplayer(
+        pieChartYears = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newPieChartSettings()
                 .dataset(SALES_OPPS)
                 .group(CREATION_DATE).dynamic(YEAR, true)
@@ -121,7 +132,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                 .filterOn(false, true, false)
                 .buildSettings());
 
-        pieChartQuarters = DisplayerHelper.lookupDisplayer(
+        pieChartQuarters = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newPieChartSettings()
                 .dataset(SALES_OPPS)
                 .group(CREATION_DATE).fixed(QUARTER, true)
@@ -134,7 +145,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                 .filterOn(false, true, false)
                 .buildSettings());
 
-        barChartDayOfWeek = DisplayerHelper.lookupDisplayer(
+        barChartDayOfWeek = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newBarChartSettings()
                 .subType_Bar()
                 .dataset(SALES_OPPS)
@@ -149,7 +160,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                 .buildSettings());
 
 
-        pieChartByPipeline = DisplayerHelper.lookupDisplayer(
+        pieChartByPipeline = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newPieChartSettings()
                         .dataset(SALES_OPPS)
                         .group(PIPELINE)
@@ -162,7 +173,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                         .filterOn(false, true, true)
                         .buildSettings());
 
-        tableAll = DisplayerHelper.lookupDisplayer(
+        tableAll = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newTableSettings()
                         .dataset(SALES_OPPS)
                         .title(AppConstants.INSTANCE.sales_bydate_title())
@@ -184,7 +195,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
 
         // Create the selectors
 
-        countrySelector = DisplayerHelper.lookupDisplayer(
+        countrySelector = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newSelectorSettings()
                         .dataset(SALES_OPPS)
                         .group(COUNTRY)
@@ -195,7 +206,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                         .filterOn(false, true, true)
                         .buildSettings());
 
-        salesmanSelector = DisplayerHelper.lookupDisplayer(
+        salesmanSelector = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newSelectorSettings()
                         .dataset(SALES_OPPS)
                         .group(SALES_PERSON)
@@ -206,7 +217,7 @@ public class SalesExpectedByDate extends Composite implements GalleryWidget {
                         .filterOn(false, true, true)
                         .buildSettings());
 
-        customerSelector = DisplayerHelper.lookupDisplayer(
+        customerSelector = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newSelectorSettings()
                         .dataset(SALES_OPPS)
                         .group(CUSTOMER)

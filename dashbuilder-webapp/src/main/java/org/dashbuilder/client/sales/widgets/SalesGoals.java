@@ -15,6 +15,9 @@
  */
 package org.dashbuilder.client.sales.widgets;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -25,7 +28,7 @@ import org.dashbuilder.client.resources.i18n.AppConstants;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.DisplayerCoordinator;
-import org.dashbuilder.displayer.client.DisplayerHelper;
+import org.dashbuilder.displayer.client.DisplayerLocator;
 
 import static org.dashbuilder.shared.sales.SalesConstants.*;
 import static org.dashbuilder.dataset.group.DateIntervalType.*;
@@ -56,7 +59,8 @@ public class SalesGoals extends Composite implements GalleryWidget {
     @UiField(provided = true)
     Displayer bubbleByCountry;
 
-    DisplayerCoordinator displayerCoordinator = new DisplayerCoordinator();
+    DisplayerCoordinator displayerCoordinator;
+    DisplayerLocator displayerLocator;
 
     @Override
     public String getTitle() {
@@ -78,11 +82,18 @@ public class SalesGoals extends Composite implements GalleryWidget {
         displayerCoordinator.redrawAll();
     }
 
-    public SalesGoals() {
+    @Inject
+    public SalesGoals(DisplayerCoordinator displayerCoordinator, DisplayerLocator displayerLocator) {
+        this.displayerCoordinator = displayerCoordinator;
+        this.displayerLocator = displayerLocator;
+    }
+
+    @PostConstruct
+    public void init() {
 
         // Create the chart definitions
 
-        meterChartAmount = DisplayerHelper.lookupDisplayer(
+        meterChartAmount = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newMeterChartSettings()
                 .dataset(SALES_OPPS)
                 .column(AMOUNT, SUM)
@@ -95,7 +106,7 @@ public class SalesGoals extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        lineChartByDate = DisplayerHelper.lookupDisplayer(
+        lineChartByDate = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newLineChartSettings()
                 .dataset(SALES_OPPS)
                 .group(CLOSING_DATE).dynamic(80, MONTH, true)
@@ -109,7 +120,7 @@ public class SalesGoals extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        barChartByProduct = DisplayerHelper.lookupDisplayer(
+        barChartByProduct = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newBarChartSettings()
                 .subType_Column()
                 .dataset(SALES_OPPS)
@@ -124,7 +135,7 @@ public class SalesGoals extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        barChartByEmployee = DisplayerHelper.lookupDisplayer(
+        barChartByEmployee = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newBarChartSettings()
                 .subType_Column()
                 .dataset(SALES_OPPS)
@@ -139,7 +150,7 @@ public class SalesGoals extends Composite implements GalleryWidget {
                 .filterOn(false, true, true)
                 .buildSettings());
 
-        bubbleByCountry = DisplayerHelper.lookupDisplayer(
+        bubbleByCountry = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newBubbleChartSettings()
                 .dataset(SALES_OPPS)
                 .group(COUNTRY)

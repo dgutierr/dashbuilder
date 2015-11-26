@@ -121,11 +121,6 @@ public abstract class AbstractDisplayerView<P extends AbstractDisplayer> extends
     }
 
     @Override
-    public boolean isRefreshTimerOn() {
-        return refreshTimer != null;
-    }
-
-    @Override
     public void enableRefreshTimer(int seconds) {
         if (refreshTimer == null) {
             refreshTimer = new Timer() {

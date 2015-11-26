@@ -30,7 +30,6 @@ import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.DisplayerType;
 import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
-import org.jboss.errai.ioc.client.container.IOC;
 import org.jboss.errai.ioc.client.container.IOCBeanDef;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 
@@ -40,18 +39,16 @@ import org.jboss.errai.ioc.client.container.SyncBeanManager;
 @ApplicationScoped
 public class RendererManager {
 
-    public static RendererManager get() {
-        Collection<IOCBeanDef<RendererManager>> beans = IOC.getBeanManager().lookupBeans(RendererManager.class);
-        IOCBeanDef<RendererManager> beanDef = beans.iterator().next();
-        return beanDef.getInstance();
-    }
-
-    @Inject SyncBeanManager beanManager;
-
+    private SyncBeanManager beanManager;
     private List<RendererLibrary> renderersList = new ArrayList<RendererLibrary>();
     private Map<DisplayerType, RendererLibrary> renderersDefault = new EnumMap<DisplayerType, RendererLibrary>(DisplayerType.class);
     private Map<DisplayerType, List<RendererLibrary>> renderersByType = new EnumMap<DisplayerType, List<RendererLibrary>>(DisplayerType.class);
     private Map<DisplayerSubType, List<RendererLibrary>> renderersBySubType = new EnumMap<DisplayerSubType, List<RendererLibrary>>(DisplayerSubType.class);
+
+    @Inject
+    public RendererManager(SyncBeanManager beanManager) {
+        this.beanManager = beanManager;
+    }
 
     @PostConstruct
     private void init() {

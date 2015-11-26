@@ -14,9 +14,11 @@
  */
 package org.dashbuilder.displayer.client;
 
+import java.util.List;
 import javax.enterprise.event.Event;
 
 import org.dashbuilder.dataset.DataSet;
+import org.dashbuilder.dataset.DataSetMetadata;
 import org.dashbuilder.dataset.ExpenseReportsData;
 import org.dashbuilder.dataset.client.ClientDataSetManager;
 import org.dashbuilder.dataset.client.DataSetClientServices;
@@ -30,8 +32,11 @@ import org.dashbuilder.dataset.service.DataSetLookupServices;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.formatter.ValueFormatterRegistry;
 import org.jboss.errai.common.client.api.Caller;
+import org.jboss.errai.common.client.api.RemoteCallback;
 import org.junit.Before;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.mockito.Mockito.*;
 
@@ -47,13 +52,16 @@ public abstract class AbstractDisplayerTest {
     Event<DataSetModifiedEvent> dataSetModifiedEvent;
 
     @Mock
-    Caller<DataSetLookupServices> dataSetLookupServices;
+    Caller<DataSetLookupServices> dataSetLookupServicesCaller;
 
     @Mock
-    Caller<DataSetDefServices> dataSetDefServices;
+    DataSetLookupServices dataSetLookupServices;
 
     @Mock
-    Caller<DataSetExportServices> dataSetExportServices;
+    Caller<DataSetDefServices> dataSetDefServicesCaller;
+
+    @Mock
+    Caller<DataSetExportServices> dataSetExportServicesCaller;
 
     @Mock
     RendererManager rendererManager;
@@ -63,6 +71,9 @@ public abstract class AbstractDisplayerTest {
 
     @Mock
     ValueFormatterRegistry formatterRegistry;
+
+    @Mock
+    DisplayerMock.View view;
 
     ClientFactory clientFactory;
     DataSetClientServices clientServices;
@@ -90,9 +101,9 @@ public abstract class AbstractDisplayerTest {
                 dataSetPushingEvent,
                 dataSetPushOkEvent,
                 dataSetModifiedEvent,
-                dataSetLookupServices,
-                dataSetDefServices,
-                dataSetExportServices);
+                dataSetLookupServicesCaller,
+                dataSetDefServicesCaller,
+                dataSetExportServicesCaller);
     }
 
     public void initDisplayerLocator() {
@@ -118,7 +129,20 @@ public abstract class AbstractDisplayerTest {
 
         when(rendererManager.getRendererForDisplayer(any(DisplayerSettings.class))).thenReturn(rendererLibrary);
         when(rendererLibrary.lookupDisplayer(any(DisplayerSettings.class))).thenReturn(createNewDisplayer());
+        when(dataSetLookupServicesCaller.call(any(RemoteCallback.class))).thenReturn(dataSetLookupServices);
+
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                List<Displayer> displayerList = (List<Displayer>) invocationOnMock.getArguments()[0];
+                for (Displayer displayer : displayerList) {
+                    displayer.draw();
+                }
+                return null;
+            }
+        }).when(rendererLibrary).draw(anyListOf(Displayer.class));
     }
 
-    public abstract Displayer createNewDisplayer();
+    public Displayer createNewDisplayer() {
+        return new DisplayerMock(view, null);
+    }
 }

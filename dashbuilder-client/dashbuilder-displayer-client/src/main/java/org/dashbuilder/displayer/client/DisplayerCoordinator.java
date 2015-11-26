@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.Callback;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
 import org.dashbuilder.dataset.filter.DataSetFilter;
@@ -30,12 +33,19 @@ import org.dashbuilder.dataset.group.DataSetGroup;
  * all of them is properly synced. This means every time a data display modification request comes from any
  * of the displayer components the rest are updated to reflect those changes.
  */
+@Dependent
 public class DisplayerCoordinator {
 
     protected List<Displayer> displayerList = new ArrayList<Displayer>();
     protected Map<RendererLibrary,List<Displayer>> rendererMap = new HashMap<RendererLibrary,List<Displayer>>();
     protected CoordinatorListener displayerListener = new CoordinatorListener();
     protected Map<Displayer,List<Displayer>> notificationVetoMap = new HashMap<Displayer, List<Displayer>>();
+    protected RendererManager rendererManager;
+
+    @Inject
+    public DisplayerCoordinator(RendererManager rendererManager) {
+        this.rendererManager = rendererManager;
+    }
 
     public void addListener(DisplayerListener... listeners) {
         for (Displayer displayer : displayerList) {
@@ -43,22 +53,26 @@ public class DisplayerCoordinator {
         }
     }
 
-    public void addDisplayers(List<Displayer> displayers) {
-        for (Displayer displayer : displayers) {
-            addDisplayer(displayer);
+    public void addDisplayers(Displayer... displayers) {
+        if (displayers != null) {
+            for (Displayer displayer : displayers) {
+                addDisplayer(displayer);
+            }
         }
     }
 
     public void addDisplayer(Displayer displayer) {
-        if (displayer == null) return;
+        if (displayer != null) {
+            displayerList.add(displayer);
+            displayer.addListener(displayerListener);
 
-        displayerList.add(displayer);
-        displayer.addListener(displayerListener);
-
-        RendererLibrary renderer = RendererManager.get().getRendererForDisplayer(displayer.getDisplayerSettings());
-        List<Displayer> rendererGroup = rendererMap.get(renderer);
-        if (rendererGroup == null) rendererMap.put(renderer, rendererGroup = new ArrayList<Displayer>());
-        rendererGroup.add(displayer);
+            RendererLibrary renderer = rendererManager.getRendererForDisplayer(displayer.getDisplayerSettings());
+            List<Displayer> rendererGroup = rendererMap.get(renderer);
+            if (rendererGroup == null) {
+                rendererMap.put(renderer, rendererGroup = new ArrayList<Displayer>());
+            }
+            rendererGroup.add(displayer);
+        }
     }
 
     public List<Displayer> getDisplayerList() {
@@ -66,8 +80,10 @@ public class DisplayerCoordinator {
     }
 
     public boolean removeDisplayer(Displayer displayer) {
-        if (displayer == null) return false;
-        RendererLibrary renderer = RendererManager.get().getRendererForDisplayer(displayer.getDisplayerSettings());
+        if (displayer == null) {
+            return false;
+        }
+        RendererLibrary renderer = rendererManager.getRendererForDisplayer(displayer.getDisplayerSettings());
         List<Displayer> rendererGroup = rendererMap.get(renderer);
         if (rendererGroup != null) rendererGroup.remove(displayer);
 
@@ -102,6 +118,13 @@ public class DisplayerCoordinator {
         for (Displayer displayer : displayerList) {
             displayer.close();
         }
+    }
+
+    public void clear() {
+        closeAll();
+        displayerList.clear();
+        rendererMap.clear();
+        notificationVetoMap.clear();
     }
 
     public void addNotificationVeto(Displayer target, List<Displayer> vetoedDisplayers) {

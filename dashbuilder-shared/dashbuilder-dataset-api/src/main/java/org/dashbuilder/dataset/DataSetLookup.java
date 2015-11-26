@@ -255,6 +255,9 @@ public class DataSetLookup {
     public boolean equals(Object obj) {
         try {
             DataSetLookup other = (DataSetLookup) obj;
+            if (other == this) {
+                return true;
+            }
             if (other == null) {
                 return false;
             }

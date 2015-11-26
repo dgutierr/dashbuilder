@@ -15,20 +15,23 @@
  */
 package org.dashbuilder.displayer.client.widgets;
 
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.*;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayerListener;
 import org.dashbuilder.displayer.client.Displayer;
-import org.dashbuilder.displayer.client.DisplayerHelper;
 import org.dashbuilder.displayer.client.DisplayerListener;
+import org.dashbuilder.displayer.client.DisplayerLocator;
+import org.uberfire.mvp.Command;
 
 import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull;
 
+@Dependent
 public class DisplayerViewer extends Composite {
-
-    private static final String RENDERER_SELECTOR_WIDTH = "300px";
 
     protected DisplayerSettings displayerSettings;
     protected Panel container = new FlowPanel();
@@ -37,6 +40,8 @@ public class DisplayerViewer extends Composite {
     protected Boolean isShowRendererSelector = false;
     protected DisplayerError errorWidget = new DisplayerError();
     protected boolean error = true;
+    protected DisplayerLocator displayerLocator;
+    protected RendererSelector rendererSelector;
 
     DisplayerListener displayerListener = new AbstractDisplayerListener() {
         public void onDraw(Displayer displayer) {
@@ -54,7 +59,10 @@ public class DisplayerViewer extends Composite {
         }
     };
 
-    public DisplayerViewer() {
+    @Inject
+    public DisplayerViewer(DisplayerLocator displayerLocator, RendererSelector rendererSelector) {
+        this.displayerLocator = displayerLocator;
+        this.rendererSelector = rendererSelector;
         initWidget(container);
     }
 
@@ -75,7 +83,7 @@ public class DisplayerViewer extends Composite {
             // Lookup the displayer
             checkNotNull("displayerSettings", displayerSettings);
             this.displayerSettings = displayerSettings;
-            this.displayer = DisplayerHelper.lookupDisplayer(displayerSettings);
+            this.displayer = displayerLocator.lookupDisplayer(displayerSettings);
             this.displayer.addListener(displayerListener);
 
             // Make the displayer visible
@@ -94,19 +102,16 @@ public class DisplayerViewer extends Composite {
 
         // Add the renderer selector (if enabled)
         if (isShowRendererSelector) {
-            RendererSelector rendererSelector = new RendererSelector(displayerSettings, RendererSelector.SelectorType.TAB, new RendererSelector.RendererSelectorEventHandler() {
-
-                public void onRendererSelected(RendererSelector.RendererSelectorEvent event) {
-                    displayerSettings.setRenderer(event.getRenderer());
-                    displayer = DisplayerHelper.lookupDisplayer(displayerSettings);
+            rendererSelector.init(displayerSettings, RendererSelector.SelectorType.TAB, 300, new Command() {
+                public void execute() {
+                    displayerSettings.setRenderer(rendererSelector.getRendererLibrary().getUUID());
+                    displayer = displayerLocator.lookupDisplayer(displayerSettings);
                     displayer.draw();
 
                     displayerContainer.clear();
                     displayerContainer.add(displayer);
                 }
             });
-
-            rendererSelector.setWidth(RENDERER_SELECTOR_WIDTH);
             container.add(rendererSelector);
         }
         container.add(displayerContainer);
