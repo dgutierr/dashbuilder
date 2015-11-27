@@ -107,7 +107,7 @@ public class DataSetHandlerImpl implements DataSetHandler {
         DataSetGroup clone = op.cloneInstance();
         //clone.getGroupFunctions().clear();
         int idx = lookupCurrent.getFirstGroupOpIndex(0, null, null);
-        _filter(idx, clone, false);
+        _filter(idx < 0 ? 0 : idx, clone, false);
         return true;
     }
 

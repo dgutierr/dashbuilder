@@ -66,26 +66,28 @@ public class GoogleBarChartDisplayer extends GoogleCategoriesDisplayer<GoogleBar
                 .supportsAttribute(DisplayerAttributeDef.TYPE)
                 .supportsAttribute(DisplayerAttributeDef.SUBTYPE)
                 .supportsAttribute(DisplayerAttributeDef.RENDERER)
-                .supportsAttribute( DisplayerAttributeGroupDef.COLUMNS_GROUP)
-                .supportsAttribute( DisplayerAttributeGroupDef.FILTER_GROUP)
-                .supportsAttribute( DisplayerAttributeGroupDef.REFRESH_GROUP)
-                .supportsAttribute( DisplayerAttributeGroupDef.GENERAL_GROUP)
-                .supportsAttribute( DisplayerAttributeDef.CHART_WIDTH)
-                .supportsAttribute( DisplayerAttributeDef.CHART_HEIGHT)
+                .supportsAttribute(DisplayerAttributeGroupDef.COLUMNS_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.FILTER_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.REFRESH_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.GENERAL_GROUP)
+                .supportsAttribute(DisplayerAttributeDef.CHART_WIDTH)
+                .supportsAttribute(DisplayerAttributeDef.CHART_HEIGHT)
                 .supportsAttribute(DisplayerAttributeDef.CHART_BGCOLOR)
                 .supportsAttribute(DisplayerAttributeGroupDef.CHART_MARGIN_GROUP)
-                .supportsAttribute( DisplayerAttributeGroupDef.CHART_LEGEND_GROUP)
-                .supportsAttribute( DisplayerAttributeGroupDef.AXIS_GROUP);
+                .supportsAttribute(DisplayerAttributeGroupDef.CHART_LEGEND_GROUP)
+                .supportsAttribute(DisplayerAttributeGroupDef.AXIS_GROUP);
     }
 
     public boolean isBarChart() {
-        return DisplayerSubType.BAR.equals(displayerSettings.getSubtype()) ||
+        return displayerSettings.getSubtype() == null ||
+                DisplayerSubType.BAR.equals(displayerSettings.getSubtype()) ||
                 DisplayerSubType.BAR_STACKED.equals(displayerSettings.getSubtype());
     }
 
     public boolean isStacked() {
-        return DisplayerSubType.BAR_STACKED.equals(displayerSettings.getSubtype()) ||
-                DisplayerSubType.COLUMN_STACKED.equals(displayerSettings.getSubtype());
+        return displayerSettings.getSubtype() != null &&
+                (DisplayerSubType.BAR_STACKED.equals(displayerSettings.getSubtype()) ||
+                DisplayerSubType.COLUMN_STACKED.equals(displayerSettings.getSubtype()));
     }
 
     @Override

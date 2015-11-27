@@ -16,6 +16,7 @@ package org.dashbuilder.displayer.client;
 
 import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.dataset.group.DataSetGroup;
+import org.dashbuilder.dataset.sort.SortOrder;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.DisplayerSettingsFactory;
 import org.junit.Test;
@@ -42,6 +43,7 @@ public class DisplayerFilterTest extends AbstractDisplayerTest {
     DisplayerSettings allRows = DisplayerSettingsFactory.newTableSettings()
             .dataset(EXPENSES)
             .filterOn(true, false, true)
+            .sort(COLUMN_DEPARTMENT, SortOrder.ASCENDING)
             .buildSettings();
 
     @Test
@@ -62,6 +64,10 @@ public class DisplayerFilterTest extends AbstractDisplayerTest {
         deptPieChart.filterUpdate(COLUMN_DEPARTMENT, 0);
         verify(listener).onFilterEnabled(eq(deptPieChart), any(DataSetGroup.class));
         verify(listener, never()).onRedraw(deptPieChart);
+
+        deptPieChart.filterReset();
+        verify(listener).onFilterReset(eq(deptPieChart), anyList());
+        verify(listener, never()).onRedraw(deptPieChart);
     }
 
     @Test
@@ -72,7 +78,6 @@ public class DisplayerFilterTest extends AbstractDisplayerTest {
         allRowsTable.draw();
 
         // Filter by "Engineering"
-        reset(view);
         reset(listener);
         allRowsTable.filterUpdate(COLUMN_DEPARTMENT, 0);
         DataSet dataSet = allRowsTable.getDataSetHandler().getLastDataSet();
@@ -94,7 +99,6 @@ public class DisplayerFilterTest extends AbstractDisplayerTest {
         allRowsTable.addListener(listener);
         allRowsTable.draw();
 
-        reset(view);
         reset(listener);
         allRowsTable.filterUpdate(COLUMN_DEPARTMENT, 0);
         DataSet dataSet = allRowsTable.getDataSetHandler().getLastDataSet();

@@ -43,43 +43,43 @@ import static org.mockito.Mockito.*;
 public abstract class AbstractDisplayerTest {
 
     @Mock
-    Event<DataSetPushingEvent> dataSetPushingEvent;
+    protected Event<DataSetPushingEvent> dataSetPushingEvent;
 
     @Mock
-    Event<DataSetPushOkEvent> dataSetPushOkEvent;
+    protected Event<DataSetPushOkEvent> dataSetPushOkEvent;
 
     @Mock
-    Event<DataSetModifiedEvent> dataSetModifiedEvent;
+    protected Event<DataSetModifiedEvent> dataSetModifiedEvent;
 
     @Mock
-    Caller<DataSetLookupServices> dataSetLookupServicesCaller;
+    protected Caller<DataSetLookupServices> dataSetLookupServicesCaller;
 
     @Mock
-    DataSetLookupServices dataSetLookupServices;
+    protected DataSetLookupServices dataSetLookupServices;
 
     @Mock
-    Caller<DataSetDefServices> dataSetDefServicesCaller;
+    protected Caller<DataSetDefServices> dataSetDefServicesCaller;
 
     @Mock
-    Caller<DataSetExportServices> dataSetExportServicesCaller;
+    protected Caller<DataSetExportServices> dataSetExportServicesCaller;
 
     @Mock
-    RendererManager rendererManager;
+    protected RendererManager rendererManager;
 
     @Mock
-    RendererLibrary rendererLibrary;
+    protected RendererLibrary rendererLibrary;
 
     @Mock
-    ValueFormatterRegistry formatterRegistry;
+    protected ValueFormatterRegistry formatterRegistry;
 
     @Mock
-    DisplayerMock.View view;
+    protected DisplayerViewMock view;
 
-    ClientFactory clientFactory;
-    DataSetClientServices clientServices;
-    ClientDataSetManager clientDataSetManager;
-    DisplayerLocator displayerLocator;
-    DataSet expensesDataSet;
+    protected ClientFactory clientFactory;
+    protected DataSetClientServices clientServices;
+    protected ClientDataSetManager clientDataSetManager;
+    protected DisplayerLocator displayerLocator;
+    protected DataSet expensesDataSet;
 
     public static final String EXPENSES = "expenses";
 
@@ -128,7 +128,7 @@ public abstract class AbstractDisplayerTest {
         registerExpensesDataSet();
 
         when(rendererManager.getRendererForDisplayer(any(DisplayerSettings.class))).thenReturn(rendererLibrary);
-        when(rendererLibrary.lookupDisplayer(any(DisplayerSettings.class))).thenReturn(createNewDisplayer());
+        when(rendererLibrary.lookupDisplayer(any(DisplayerSettings.class))).thenReturn(new DisplayerMock(view, null));
         when(dataSetLookupServicesCaller.call(any(RemoteCallback.class))).thenReturn(dataSetLookupServices);
 
         doAnswer(new Answer() {
@@ -142,7 +142,10 @@ public abstract class AbstractDisplayerTest {
         }).when(rendererLibrary).draw(anyListOf(Displayer.class));
     }
 
-    public Displayer createNewDisplayer() {
-        return new DisplayerMock(view, null);
+    public AbstractDisplayer createNewDisplayer(DisplayerSettings settings) {
+        AbstractDisplayer displayer = new DisplayerMock(spy(new DisplayerViewMock()), null);
+        displayer.setDisplayerSettings(settings);
+        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
+        return displayer;
     }
 }

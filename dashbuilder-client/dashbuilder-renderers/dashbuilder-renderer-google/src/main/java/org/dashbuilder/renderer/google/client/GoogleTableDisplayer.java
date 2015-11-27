@@ -93,8 +93,8 @@ public class GoogleTableDisplayer extends GoogleDisplayer<GoogleTableDisplayer.V
                 .setMaxColumns(-1)
                 .setMinColumns(1)
                 .setExtraColumnsAllowed(true)
-                .setGroupsTitle(GoogleDisplayerConstants.INSTANCE.common_Rows())
-                .setColumnsTitle(GoogleDisplayerConstants.INSTANCE.common_Columns());
+                .setGroupsTitle(view.getGroupsTitle())
+                .setColumnsTitle(view.getColumnsTitle());
 
         return new DisplayerConstraints(lookupConstraints)
                    .supportsAttribute( DisplayerAttributeDef.TYPE)
@@ -155,7 +155,7 @@ public class GoogleTableDisplayer extends GoogleDisplayer<GoogleTableDisplayer.V
 
     @Override
     protected void updateVisualization() {
-        view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCount());
+        view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCountNonTrimmed());
         view.setCurrentPage(currentPage);
         view.setTotalRows(numberOfRows);
         view.setTotalPages(numberOfPages);
@@ -171,9 +171,11 @@ public class GoogleTableDisplayer extends GoogleDisplayer<GoogleTableDisplayer.V
     }
 
     public void sortBy(String column) {
-        lastOrderedColumn = column;
-        lastSortOrder = lastSortOrder != null ? lastSortOrder.reverse() : SortOrder.ASCENDING;
-        super.redraw();
+        if (displayerSettings.isTableSortEnabled()) {
+            lastOrderedColumn = column;
+            lastSortOrder = lastSortOrder != null ? lastSortOrder.reverse() : SortOrder.ASCENDING;
+            super.redraw();
+        }
     }
 
     public void gotoPage(int pageNumber) {
@@ -193,6 +195,10 @@ public class GoogleTableDisplayer extends GoogleDisplayer<GoogleTableDisplayer.V
         int page = getLeftMostPageNumber() + pageSelectorSize - 1;
         if (page > numberOfPages) return numberOfPages;
         return page;
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
     }
 
     // Reset the current navigation status on filter requests from external displayers.

@@ -128,13 +128,13 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
                     if (value == null) {
                         getView().dataSetValue(j, i, 0d);
                     } else {
-                        value = getView().applyExpression(value.toString(), columnSettings.getValueExpression());
-                        getView().dataSetValue(j, i, Double.parseDouble(value.toString()));
+                        String valueStr = getView().applyExpression(value.toString(), columnSettings.getValueExpression());
+                        getView().dataSetValue(j, i, Double.parseDouble(valueStr));
                     }
                 }
                 else {
-                    value = super.formatValue(j, i);
-                    getView().dataSetValue(j, i, value.toString());
+                    String valueStr = super.formatValue(j, i);
+                    getView().dataSetValue(j, i, valueStr);
                 }
             }
         }

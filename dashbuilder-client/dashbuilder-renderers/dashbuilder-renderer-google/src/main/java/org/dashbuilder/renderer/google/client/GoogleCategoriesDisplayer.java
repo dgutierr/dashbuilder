@@ -105,7 +105,7 @@ public abstract class GoogleCategoriesDisplayer<V extends GoogleCategoriesDispla
         filterUpdate(columnId, row, maxSelections);
 
         // Update the displayer in order to reflect the current selection
-        // (only if not has already been redrawn in the previous filterUpdate() call)
+        // (only if not has already been redrawn as part of the drill-down processing in the above filterUpdate() call)
         if (!displayerSettings.isFilterSelfApplyEnabled()) {
             updateVisualization();
         }
