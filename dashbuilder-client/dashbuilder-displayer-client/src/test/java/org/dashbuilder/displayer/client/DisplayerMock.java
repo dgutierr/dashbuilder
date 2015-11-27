@@ -16,18 +16,18 @@ package org.dashbuilder.displayer.client;
 
 import org.dashbuilder.displayer.DisplayerConstraints;
 
-public class DisplayerMock extends AbstractDisplayer<DisplayerViewMock> {
+public class DisplayerMock extends AbstractDisplayer<AbstractDisplayer.View> {
 
-    private DisplayerViewMock view;
+    private AbstractDisplayer.View view;
     private DisplayerConstraints constraints;
 
-    public DisplayerMock(DisplayerViewMock view, DisplayerConstraints constraints) {
+    public DisplayerMock(AbstractDisplayer.View view, DisplayerConstraints constraints) {
         this.view = view;
         this.constraints = constraints;
     }
 
     @Override
-    public DisplayerViewMock getView() {
+    public AbstractDisplayer.View getView() {
         return view;
     }
 

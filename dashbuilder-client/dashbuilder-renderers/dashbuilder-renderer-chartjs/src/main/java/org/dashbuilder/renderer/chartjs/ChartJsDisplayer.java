@@ -22,11 +22,10 @@ import org.dashbuilder.dataset.DataColumn;
 import org.dashbuilder.dataset.group.Interval;
 import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
-import org.dashbuilder.displayer.client.DisplayerView;
 
 public abstract class ChartJsDisplayer<V extends ChartJsDisplayer.View> extends AbstractDisplayer<V> {
 
-    public interface View<P extends ChartJsDisplayer> extends DisplayerView<P> {
+    public interface View<P extends ChartJsDisplayer> extends AbstractDisplayer.View<P> {
 
         void setWidth(int width);
 

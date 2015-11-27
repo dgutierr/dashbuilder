@@ -15,53 +15,24 @@
  */
 package org.dashbuilder.displayer.client;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
-import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
-import org.dashbuilder.dataset.ColumnType;
-import org.dashbuilder.dataset.DataColumn;
-import org.dashbuilder.dataset.client.resources.i18n.DayOfWeekConstants;
-import org.dashbuilder.dataset.client.resources.i18n.MonthConstants;
-import org.dashbuilder.dataset.date.DayOfWeek;
-import org.dashbuilder.dataset.date.Month;
-import org.dashbuilder.dataset.filter.DataSetFilter;
-import org.dashbuilder.dataset.group.ColumnGroup;
-import org.dashbuilder.dataset.group.DataSetGroup;
-import org.dashbuilder.dataset.group.DateIntervalType;
-import org.dashbuilder.dataset.group.GroupStrategy;
-import org.dashbuilder.dataset.group.Interval;
-import org.dashbuilder.dataset.sort.SortOrder;
-import org.dashbuilder.displayer.ColumnSettings;
-import org.dashbuilder.displayer.client.formatter.ValueFormatter;
 import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
 import org.dashbuilder.displayer.client.resources.i18n.DisplayerConstants;
 
-public abstract class AbstractDisplayerView<P extends AbstractDisplayer> extends Composite implements DisplayerView<P> {
+public abstract class AbstractDisplayerView<P extends AbstractDisplayer>
+        extends Composite
+        implements AbstractDisplayer.View<P> {
 
     private FlowPanel panel = new FlowPanel();
     private Label label = new Label();
     private Timer refreshTimer = null;
     private P presenter = null;
-
-    protected static Map<String,NumberFormat> numberPatternMap = new HashMap<String, NumberFormat>();
-    protected static Map<String,DateTimeFormat> datePatternMap = new HashMap<String, DateTimeFormat>();
-
-    public static final String[] _jsMalicious = {"document.", "window.", "alert(", "eval(", ".innerHTML"};
 
     public AbstractDisplayerView() {
         initWidget(panel);
@@ -139,80 +110,6 @@ public abstract class AbstractDisplayerView<P extends AbstractDisplayer> extends
         if (refreshTimer != null) {
             refreshTimer.cancel();
         }
-    }
-
-    @Override
-    public String applyExpression(String val, String expr) {
-        if (StringUtils.isBlank(expr)) {
-            return val;
-        }
-        for (String keyword : _jsMalicious) {
-            if (expr.contains(keyword)) {
-                presenter.afterError(DisplayerConstants.INSTANCE.displayer_keyword_not_allowed(expr));
-                throw new RuntimeException(DisplayerConstants.INSTANCE.displayer_keyword_not_allowed(expr));
-            }
-        }
-        try {
-            return evalExpression(val, expr);
-        } catch (Exception e) {
-            presenter.afterError(DisplayerConstants.INSTANCE.displayer_expr_invalid_syntax(expr), e);
-            throw new RuntimeException(DisplayerConstants.INSTANCE.displayer_expr_invalid_syntax(expr));
-        }
-    }
-
-    protected native String evalExpression(String val, String expr) /*-{
-        value = val;
-        return eval(expr) + '';
-    }-*/;
-
-    @Override
-    public Date parseDate(String pattern, String d) {
-        DateTimeFormat df = getDateFormat(pattern);
-        return df.parse(d);
-    }
-
-    @Override
-    public String formatDate(String pattern, Date d) {
-        DateTimeFormat df = getDateFormat(pattern);
-        return df.format(d);
-    }
-
-    @Override
-    public String formatNumber(String pattern, Number n) {
-        NumberFormat f = getNumberFormat(pattern);
-        return f.format(n);
-    }
-
-    @Override
-    public String formatDayOfWeek(DayOfWeek dayOfWeek) {
-        return DayOfWeekConstants.INSTANCE.getString(dayOfWeek.name());
-    }
-
-    @Override
-    public String formatMonth(Month month) {
-        return MonthConstants.INSTANCE.getString(month.name());
-    }
-
-    protected NumberFormat getNumberFormat(String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return getNumberFormat(ColumnSettings.NUMBER_PATTERN);
-        }
-        NumberFormat format = numberPatternMap.get(pattern);
-        if (format == null) {
-            numberPatternMap.put(pattern, format = NumberFormat.getFormat(pattern));
-        }
-        return format;
-    }
-
-    protected DateTimeFormat getDateFormat(String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return getDateFormat(ColumnSettings.DATE_PATTERN);
-        }
-        DateTimeFormat format = datePatternMap.get(pattern);
-        if (format == null) {
-            datePatternMap.put(pattern, format = DateTimeFormat.getFormat(pattern));
-        }
-        return format;
     }
 
     public void displayMessage(String msg) {

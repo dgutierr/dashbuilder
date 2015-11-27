@@ -45,6 +45,7 @@ import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.formatter.ValueFormatter;
+import org.uberfire.client.mvp.UberView;
 
 /**
  * Base class for implementing custom displayers.
@@ -54,7 +55,47 @@ import org.dashbuilder.displayer.client.formatter.ValueFormatter;
  *     <li>The capture of events coming from the DisplayerListener interface.</li>
  * </ul>
  */
-public abstract class AbstractDisplayer<V extends DisplayerView> implements Displayer {
+public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implements Displayer {
+
+    public interface View<P extends Displayer> extends UberView<P> {
+
+        void errorMissingSettings();
+
+        void errorMissingHandler();
+
+        void showLoading();
+
+        void clear();
+
+        void setId(String id);
+
+        void errorDataSetNotFound(String uuid);
+
+        void error(ClientRuntimeError error);
+
+        void enableRefreshTimer(int seconds);
+
+        void cancelRefreshTimer();
+    }
+
+    public interface Formatter {
+
+        String formatDate(String pattern, Date d);
+
+        Date parseDate(String pattern, String d);
+
+        String formatNumber(String pattern, Number n);
+
+        String formatDayOfWeek(DayOfWeek dayOfWeek);
+
+        String formatMonth(Month month);
+    }
+
+    public interface ExpressionEval {
+
+        String evalExpression(String value, String expression);
+    }
+
 
     protected DataSet dataSet;
     protected DataSetHandler dataSetHandler;
@@ -63,6 +104,8 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
     protected List<DisplayerListener> listenerList = new ArrayList<DisplayerListener>();
     protected Map<String,List<Interval>> columnSelectionMap = new HashMap<String,List<Interval>>();
     protected Map<String,ValueFormatter> formatterMap = new HashMap<String, ValueFormatter>();
+    protected Formatter formatter = null;
+    protected ExpressionEval evaluator = null;
     protected DataSetFilter currentFilter = null;
     protected boolean refreshEnabled = true;
     protected boolean drawn = false;
@@ -73,22 +116,28 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
     }
 
     /**
-     * The implementation of the DisplayerView interface (to be provide by the displayer implementation)
+     * It returns the actual implementation of the View
+     * <p>- To be provided by the concrete displayer implementation -</p>
      */
     public abstract V getView();
 
     /**
-     * The constrains of this displayer (to be provide by the displayer implementation)
+     * It initializes the constraints this displayer conforms to
+     * <p>- To be provided by the concrete displayer implementation -</p>
      */
     public abstract DisplayerConstraints createDisplayerConstraints();
 
     /**
-     * The Create the widget used by concrete displayer implementation.
+     * The required logic in charge of rendering the visualization
+     * once the data has been retrieved during a call to draw()
+     * <p>- To be provided by the concrete displayer implementation -</p>
      */
     protected abstract void createVisualization();
 
     /**
-     * Update the widget used by concrete Google displayer implementation.
+     * The required logic in charge of updating a visualization
+     * once the data has been retrieved during a call to redraw()
+     * <p>- To be provided by the concrete displayer implementation -</p>
      */
     protected abstract void updateVisualization();
 
@@ -124,6 +173,29 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
 
     public void setDataSetHandler(DataSetHandler dataSetHandler) {
         this.dataSetHandler = dataSetHandler;
+    }
+
+
+    public Formatter getFormatter() {
+        if (formatter == null) {
+            formatter = new DisplayerGwtFormatter();
+        }
+        return formatter;
+    }
+
+    public void setFormatter(Formatter formatter) {
+        this.formatter = formatter;
+    }
+
+    public ExpressionEval getEvaluator() {
+        if (evaluator == null) {
+            evaluator = new DisplayerGwtExprEval(this);
+        }
+        return evaluator;
+    }
+
+    public void setEvaluator(ExpressionEval evaluator) {
+        this.evaluator = evaluator;
     }
 
     public void addListener(DisplayerListener... listeners) {
@@ -235,7 +307,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
                     public void notFound() {
                         String uuid = displayerSettings.getDataSetLookup().getDataSetUUID();
                         getView().errorDataSetNotFound(uuid);
-                        afterError("Data set not found: " + uuid);
+                        handleError("Data set not found: " + uuid);
                     }
 
                     @Override
@@ -252,7 +324,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
 
     public void showError(ClientRuntimeError error) {
         getView().error(error);
-        afterError(error);
+        handleError(error);
     }
 
     /**
@@ -335,18 +407,18 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         }
     }
 
-    protected void afterError(final String message) {
-        afterError(new ClientRuntimeError(message, null));
+    public void handleError(final String message) {
+        handleError(new ClientRuntimeError(message, null));
     }
 
-    protected void afterError(final String message, final Throwable error) {
-        afterError(new ClientRuntimeError(message, error));
+    public void handleError(final String message, final Throwable error) {
+        handleError(new ClientRuntimeError(message, error));
     }
-    protected void afterError(final Throwable error) {
-        afterError(new ClientRuntimeError(error));
+    public void handleError(final Throwable error) {
+        handleError(new ClientRuntimeError(error));
     }
 
-    protected void afterError(final ClientRuntimeError error) {
+    public void handleError(final ClientRuntimeError error) {
         for (DisplayerListener listener : listenerList) {
             listener.onError(this, error);
         }
@@ -683,7 +755,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         ColumnSettings columnSettings = displayerSettings.getColumnSettings(column);
         String expression = columnSettings.getValueExpression();
         if (StringUtils.isBlank(expression)) return interval.getName();
-        return getView().applyExpression(interval.getName(), expression);
+        return getEvaluator().evalExpression(interval.getName(), expression);
     }
 
     public void addFormatter(String columnId, ValueFormatter formatter) {
@@ -734,25 +806,25 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
             ColumnType columnType = column.getColumnType();
             if (ColumnType.DATE.equals(columnType)) {
                 Date d = (Date) value;
-                return getView().formatDate(pattern, d);
+                return getFormatter().formatDate(pattern, d);
             }
             else if (ColumnType.NUMBER.equals(columnType)) {
                 double n = ((Number) value).doubleValue();
                 if (!StringUtils.isBlank(expression)) {
-                    String r = getView().applyExpression(value.toString(), expression);
+                    String r = getEvaluator().evalExpression(value.toString(), expression);
                     try {
                         n = Double.parseDouble(r);
                     } catch (NumberFormatException e) {
                         return r;
                     }
                 }
-                return getView().formatNumber(pattern, n);
+                return getFormatter().formatNumber(pattern, n);
             }
             else {
                 if (StringUtils.isBlank(expression)) {
                     return value.toString();
                 }
-                return getView().applyExpression(value.toString(), expression);
+                return getEvaluator().evalExpression(value.toString(), expression);
             }
         }
     }
@@ -767,7 +839,7 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         if (StringUtils.isBlank(expression)) {
             return str;
         }
-        return getView().applyExpression(str, expression);
+        return getEvaluator().evalExpression(str, expression);
     }
 
     protected String formatDateFixed(DateIntervalType type, String date) {
@@ -777,23 +849,25 @@ public abstract class AbstractDisplayer<V extends DisplayerView> implements Disp
         int index = Integer.parseInt(date);
         if (DateIntervalType.DAY_OF_WEEK.equals(type)) {
             DayOfWeek dayOfWeek = DayOfWeek.getByIndex(index);
-            return getView().formatDayOfWeek(dayOfWeek);
+            return getFormatter().formatDayOfWeek(dayOfWeek);
         }
         if (DateIntervalType.MONTH.equals(type)) {
             Month month = Month.getByIndex(index);
-            return getView().formatMonth(month);
+            return getFormatter().formatMonth(month);
         }
         return date;
     }
 
     protected String formatDateDynamic(DateIntervalType type, String date, String pattern) {
-        if (date == null) return null;
+        if (date == null) {
+            return null;
+        }
         Date d = parseDynamicGroupDate(type, date);
-        return getView().formatDate(pattern, d);
+        return getFormatter().formatDate(pattern, d);
     }
 
     protected Date parseDynamicGroupDate(DateIntervalType type, String date) {
         String pattern = DateIntervalPattern.getPattern(type);
-        return getView().parseDate(pattern, date);
+        return getFormatter().parseDate(pattern, date);
     }
 }

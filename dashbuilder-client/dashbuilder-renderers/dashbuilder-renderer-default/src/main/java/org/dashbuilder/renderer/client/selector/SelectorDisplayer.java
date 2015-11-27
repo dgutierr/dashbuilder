@@ -26,14 +26,12 @@ import org.dashbuilder.displayer.DisplayerAttributeGroupDef;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
 import org.dashbuilder.displayer.client.Displayer;
-import org.dashbuilder.displayer.client.DisplayerView;
-import org.dashbuilder.renderer.client.resources.i18n.SelectorConstants;
 
 import java.util.List;
 
 public class SelectorDisplayer extends AbstractDisplayer<SelectorDisplayer.View> {
 
-    public interface View extends DisplayerView<SelectorDisplayer> {
+    public interface View extends AbstractDisplayer.View<SelectorDisplayer> {
 
         void showSelectHint(String column);
 

@@ -16,23 +16,16 @@ package org.dashbuilder.renderer.google.client;
 
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayerTest;
-import org.dashbuilder.displayer.client.DataSetHandlerImpl;
 
 import static org.mockito.Mockito.*;
 
 public abstract class GoogleDisplayerTest extends AbstractDisplayerTest {
 
     public GoogleBarChartDisplayer createBarChartDisplayer(DisplayerSettings settings) {
-        GoogleBarChartDisplayer displayer = new GoogleBarChartDisplayer(spy(new GoogleBarChartDisplayerViewMock()));
-        displayer.setDisplayerSettings(settings);
-        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
-        return displayer;
+        return initDisplayer(new GoogleBarChartDisplayer(mock(GoogleBarChartDisplayer.View.class)), settings);
     }
 
     public GoogleTableDisplayer createTableDisplayer(DisplayerSettings settings) {
-        GoogleTableDisplayer displayer = new GoogleTableDisplayer(spy(new GoogleTableDisplayerViewMock()));
-        displayer.setDisplayerSettings(settings);
-        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
-        return displayer;
+        return initDisplayer(new GoogleTableDisplayer(mock(GoogleTableDisplayer.View.class)), settings);
     }
 }

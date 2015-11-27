@@ -32,10 +32,7 @@ import static org.dashbuilder.dataset.ExpenseReportsData.*;
 public class MetricDisplayerTest extends AbstractDisplayerTest {
 
     public MetricDisplayer createMetricDisplayer(DisplayerSettings settings) {
-        MetricDisplayer displayer = new MetricDisplayer(spy(new MetricViewMock()));
-        displayer.setDisplayerSettings(settings);
-        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
-        return displayer;
+        return initDisplayer(new MetricDisplayer(mock(MetricDisplayer.View.class)), settings);
     }
 
     @Test

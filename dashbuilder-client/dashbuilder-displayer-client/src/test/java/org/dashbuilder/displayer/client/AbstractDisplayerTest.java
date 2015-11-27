@@ -73,7 +73,7 @@ public abstract class AbstractDisplayerTest {
     protected ValueFormatterRegistry formatterRegistry;
 
     @Mock
-    protected DisplayerViewMock view;
+    protected AbstractDisplayer.View view;
 
     protected ClientFactory clientFactory;
     protected DataSetClientServices clientServices;
@@ -143,9 +143,14 @@ public abstract class AbstractDisplayerTest {
     }
 
     public AbstractDisplayer createNewDisplayer(DisplayerSettings settings) {
-        AbstractDisplayer displayer = new DisplayerMock(spy(new DisplayerViewMock()), null);
+        return initDisplayer(new DisplayerMock(mock(AbstractDisplayer.View.class), null), settings);
+    }
+
+    public <D extends AbstractDisplayer> D initDisplayer(D displayer, DisplayerSettings settings) {
         displayer.setDisplayerSettings(settings);
         displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
+        displayer.setEvaluator(new DisplayerEvaluatorMock());
+        displayer.setFormatter(new DisplayerFormatterMock());
         return displayer;
     }
 }

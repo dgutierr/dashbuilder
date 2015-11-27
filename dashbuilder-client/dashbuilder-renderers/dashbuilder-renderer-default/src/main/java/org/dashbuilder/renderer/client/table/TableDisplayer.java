@@ -36,12 +36,11 @@ import org.dashbuilder.dataset.DataSet;
 
 import org.dashbuilder.dataset.sort.SortOrder;
 import org.dashbuilder.displayer.client.Displayer;
-import org.dashbuilder.displayer.client.DisplayerView;
 import org.uberfire.client.callbacks.Callback;
 
 public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
 
-    public interface View extends DisplayerView<TableDisplayer> {
+    public interface View extends AbstractDisplayer.View<TableDisplayer> {
 
         String getGroupsTitle();
 

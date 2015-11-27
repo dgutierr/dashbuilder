@@ -33,7 +33,6 @@ import org.dashbuilder.dataset.group.Interval;
 import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
-import org.dashbuilder.displayer.client.DisplayerView;
 
 import java.util.Date;
 import java.util.List;
@@ -41,7 +40,7 @@ import java.util.Set;
 
 public abstract class LienzoDisplayer<V extends LienzoDisplayer.View> extends AbstractDisplayer<V> {
 
-    public interface View<P extends LienzoDisplayer> extends DisplayerView<P> {
+    public interface View<P extends LienzoDisplayer> extends AbstractDisplayer.View<P> {
 
         void showTitle(String  title);
 

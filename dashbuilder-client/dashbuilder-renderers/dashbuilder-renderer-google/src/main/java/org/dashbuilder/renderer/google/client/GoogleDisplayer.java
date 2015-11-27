@@ -24,11 +24,10 @@ import org.dashbuilder.dataset.DataColumn;
 import org.dashbuilder.dataset.group.Interval;
 import org.dashbuilder.displayer.ColumnSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
-import org.dashbuilder.displayer.client.DisplayerView;
 
 public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends AbstractDisplayer<V> {
 
-    public interface View<P extends GoogleDisplayer> extends DisplayerView<P> {
+    public interface View<P extends GoogleDisplayer> extends AbstractDisplayer.View<P> {
 
         void draw();
 
@@ -128,7 +127,7 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
                     if (value == null) {
                         getView().dataSetValue(j, i, 0d);
                     } else {
-                        String valueStr = getView().applyExpression(value.toString(), columnSettings.getValueExpression());
+                        String valueStr = getEvaluator().evalExpression(value.toString(), columnSettings.getValueExpression());
                         getView().dataSetValue(j, i, Double.parseDouble(valueStr));
                     }
                 }

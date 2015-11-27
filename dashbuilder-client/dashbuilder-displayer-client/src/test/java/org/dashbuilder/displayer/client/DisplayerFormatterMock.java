@@ -15,42 +15,14 @@
 package org.dashbuilder.displayer.client;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.google.gwt.user.client.ui.Widget;
-import org.dashbuilder.common.client.error.ClientRuntimeError;
 import org.dashbuilder.dataset.date.DayOfWeek;
 import org.dashbuilder.dataset.date.Month;
 
-public class DisplayerViewMock<P extends Displayer> implements DisplayerView<P> {
-
-    @Override
-    public Widget asWidget() {
-        return null;
-    }
-
-    @Override
-    public void init(P presenter) {
-
-    }
-
-    @Override
-    public String applyExpression(String value, String expression) {
-        return value;
-    }
-
-    @Override
-    public void cancelRefreshTimer() {
-
-    }
-
-    @Override
-    public void enableRefreshTimer(int seconds) {
-
-    }
+public class DisplayerFormatterMock implements AbstractDisplayer.Formatter {
 
     @Override
     public String formatMonth(Month month) {
@@ -82,40 +54,5 @@ public class DisplayerViewMock<P extends Displayer> implements DisplayerView<P> 
     public String formatDate(String pattern, Date d) {
         SimpleDateFormat df = new SimpleDateFormat(pattern);
         return df.format(d);
-    }
-
-    @Override
-    public void error(ClientRuntimeError error) {
-
-    }
-
-    @Override
-    public void errorDataSetNotFound(String uuid) {
-
-    }
-
-    @Override
-    public void setId(String id) {
-
-    }
-
-    @Override
-    public void clear() {
-
-    }
-
-    @Override
-    public void showLoading() {
-
-    }
-
-    @Override
-    public void errorMissingHandler() {
-
-    }
-
-    @Override
-    public void errorMissingSettings() {
-
     }
 }

@@ -25,11 +25,10 @@ import org.dashbuilder.displayer.DisplayerAttributeGroupDef;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
-import org.dashbuilder.displayer.client.DisplayerView;
 
 public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
 
-    public interface View extends DisplayerView<MetricDisplayer> {
+    public interface View extends AbstractDisplayer.View<MetricDisplayer> {
 
         void show(DisplayerSettings displayerSettings);
 

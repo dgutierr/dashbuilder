@@ -35,10 +35,7 @@ import static org.mockito.Mockito.*;
 public class TableDisplayerTest extends AbstractDisplayerTest {
 
     public TableDisplayer createTableDisplayer(DisplayerSettings settings) {
-        TableDisplayer displayer = new TableDisplayer(spy(new TableDisplayerViewMock()));
-        displayer.setDisplayerSettings(settings);
-        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
-        return displayer;
+        return initDisplayer(new TableDisplayer(mock(TableDisplayer.View.class)), settings);
     }
 
     @Test

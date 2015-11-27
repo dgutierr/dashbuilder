@@ -33,10 +33,7 @@ import static org.mockito.Mockito.*;
 public class SelectorDisplayerTest extends AbstractDisplayerTest {
 
     public SelectorDisplayer createSelectorDisplayer(DisplayerSettings settings) {
-        SelectorDisplayer displayer = new SelectorDisplayer(spy(new SelectorDisplayerViewMock()));
-        displayer.setDisplayerSettings(settings);
-        displayer.setDataSetHandler(new DataSetHandlerImpl(clientServices, settings.getDataSetLookup()));
-        return displayer;
+        return initDisplayer(new SelectorDisplayer(mock(SelectorDisplayer.View.class)), settings);
     }
 
     @Test

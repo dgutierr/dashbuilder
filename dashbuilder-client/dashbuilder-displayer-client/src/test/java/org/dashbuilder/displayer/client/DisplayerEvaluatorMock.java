@@ -12,32 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dashbuilder.renderer.client.metric;
+package org.dashbuilder.displayer.client;
 
-import org.dashbuilder.displayer.DisplayerSettings;
-import org.dashbuilder.displayer.client.DisplayerViewMock;
-
-public class MetricViewMock
-        extends DisplayerViewMock<MetricDisplayer>
-        implements MetricDisplayer.View {
+public class DisplayerEvaluatorMock implements AbstractDisplayer.ExpressionEval {
 
     @Override
-    public void show(DisplayerSettings displayerSettings) {
-
-    }
-
-    @Override
-    public void nodata() {
-
-    }
-
-    @Override
-    public void update(String value) {
-
-    }
-
-    @Override
-    public String getColumnsTitle() {
-        return null;
+    public String evalExpression(String value, String expression) {
+        return value;
     }
 }
