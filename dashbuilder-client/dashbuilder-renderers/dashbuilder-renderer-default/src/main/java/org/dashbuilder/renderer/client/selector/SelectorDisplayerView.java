@@ -72,11 +72,6 @@ public class SelectorDisplayerView extends AbstractDisplayerView<SelectorDisplay
     }
 
     @Override
-    public String getSelectedValue() {
-        return listBox.getSelectedValue();
-    }
-
-    @Override
     public int getItemCount() {
         return listBox.getItemCount() - (hintEnabled ? 1 : 0);
     }
@@ -100,5 +95,15 @@ public class SelectorDisplayerView extends AbstractDisplayerView<SelectorDisplay
                 }
             });
         }
+    }
+
+    @Override
+    public String getGroupsTitle() {
+        return SelectorConstants.INSTANCE.selectorDisplayer_groupsTitle();
+    }
+
+    @Override
+    public String getColumnsTitle() {
+        return SelectorConstants.INSTANCE.selectorDisplayer_columnsTitle();
     }
 }

@@ -166,7 +166,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         view.setSortEnabled(displayerSettings.isTableSortEnabled());
         view.setTotalRows(totalRows);
         view.setCurrentPageRows(dataSet.getRowCount());
-        view.setPagerEnabled(displayerSettings.getTablePageSize() >= dataSet.getRowCount());
+        view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCountNonTrimmed());
 
         for ( int i = 0; i < dataColumns.size(); i++ ) {
             DataColumn dataColumn = dataColumns.get(i);
@@ -216,9 +216,11 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
     }
 
     public void sortBy(String column, SortOrder order) {
-        lastOrderedColumn = column;
-        lastSortOrder = order;
-        super.redraw();
+        if (displayerSettings.isTableSortEnabled()) {
+            lastOrderedColumn = column;
+            lastSortOrder = order;
+            super.redraw();
+        }
     }
 
     public void selectCell(String columnId, int rowIndex) {

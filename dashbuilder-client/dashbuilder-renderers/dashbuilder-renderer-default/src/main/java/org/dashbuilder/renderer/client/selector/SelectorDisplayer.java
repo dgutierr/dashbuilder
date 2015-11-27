@@ -45,13 +45,15 @@ public class SelectorDisplayer extends AbstractDisplayer<SelectorDisplayer.View>
 
         int getSelectedIndex();
 
-        String getSelectedValue();
-
         int getItemCount();
 
         void setItemTitle(int id, String title);
 
         void setFilterEnabled(boolean enabled);
+
+        String getGroupsTitle();
+
+        String getColumnsTitle();
     }
 
     protected View view;
@@ -79,8 +81,8 @@ public class SelectorDisplayer extends AbstractDisplayer<SelectorDisplayer.View>
                 .setMaxColumns(-1)
                 .setMinColumns(1)
                 .setExtraColumnsAllowed(true)
-                .setGroupsTitle(SelectorConstants.INSTANCE.selectorDisplayer_groupsTitle())
-                .setColumnsTitle(SelectorConstants.INSTANCE.selectorDisplayer_columnsTitle())
+                .setGroupsTitle(view.getGroupsTitle())
+                .setColumnsTitle(view.getColumnsTitle())
                 .setColumnTypes(new ColumnType[] {
                         ColumnType.LABEL});
 
@@ -164,11 +166,10 @@ public class SelectorDisplayer extends AbstractDisplayer<SelectorDisplayer.View>
 
         ColumnSettings columnSettings = displayerSettings.getColumnSettings(firstColumn);
         String firstColumnName = columnSettings.getColumnName();
-        String selected = view.getSelectedValue();
-        if (selected != null) {
+        int selected = view.getSelectedIndex();
+        if (selected >= 0) {
             // Filter by the selected value (if any)
-            int selDatasetIdx = Integer.parseInt(selected);
-            filterUpdate(firstColumnId, selDatasetIdx);
+            filterUpdate(firstColumnId, selected);
             view.showResetHint(firstColumnName);
         } else {
             view.showSelectHint(firstColumnName);
