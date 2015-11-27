@@ -30,7 +30,6 @@ import org.uberfire.lifecycle.OnStartup;
 
 import static org.dashbuilder.dataset.date.Month.*;
 
-@ApplicationScoped
 @WorkbenchScreen(identifier = "StaticChartScreen")
 public class StaticChartScreen {
 

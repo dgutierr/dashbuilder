@@ -16,6 +16,7 @@
 package org.dashbuilder.client.expenses;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import com.google.gwt.core.client.GWT;
@@ -41,6 +42,7 @@ import static org.dashbuilder.dataset.group.AggregateFunctionType.*;
  * <p>The data set that feeds this dashboard is a CSV file stored into an specific server folder so
  * that is auto-deployed during server start up: <code>dashbuilder-webapp/src/main/webapp/datasets/expenseReports.csv</code></p>
  */
+@Dependent
 public class ExpensesDashboard extends Composite implements GalleryWidget {
 
     interface ExpensesDashboardBinder extends UiBinder<Widget, ExpensesDashboard>{}

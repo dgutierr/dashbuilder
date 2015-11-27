@@ -70,7 +70,6 @@ public class DisplayerEditorView extends Composite
     protected DisplayerEditor presenter;
     protected DisplayerError errorWidget = new DisplayerError();
 
-    @Inject
     public void init(DisplayerEditor presenter) {
         this.presenter = presenter;
         initWidget(uiBinder.createAndBindUi(this));

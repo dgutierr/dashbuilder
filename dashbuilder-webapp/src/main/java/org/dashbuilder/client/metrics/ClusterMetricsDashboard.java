@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import com.google.gwt.core.client.Callback;
@@ -59,6 +60,7 @@ import static org.dashbuilder.dataset.filter.FilterFactory.*;
  * A composite widget that represents an entire dashboard sample composed using an UI binder template.
  * <p>The dashboard itself is composed by a set of Displayer instances.</p>
  */
+@Dependent
 public class ClusterMetricsDashboard extends Composite implements GalleryWidget {
 
     interface Binder extends UiBinder<Widget, ClusterMetricsDashboard> {}
@@ -97,10 +99,10 @@ public class ClusterMetricsDashboard extends Composite implements GalleryWidget 
     Timer refreshTimer = new Timer() {
         public void run() {
             displayerCoordinator.redrawAll(new Callback() {
-                public void onFailure(Object reason) {
-                }
                 public void onSuccess(Object result) {
                     refreshTimer.schedule(1000);
+                }
+                public void onFailure(Object reason) {
                 }
             });
         }
@@ -272,7 +274,7 @@ public class ClusterMetricsDashboard extends Composite implements GalleryWidget 
                 .titleVisible(false)
                 .width(700).height(200)
                 .margins(30, 5, 60, 10)
-                .legendOn("top")
+                .legendOff()
                 .filterOff(true)
                 .dataset("clusterMetrics");
 

@@ -16,7 +16,6 @@
 package org.dashbuilder.renderer.lienzo.client;
 
 import java.util.Date;
-import java.util.List;
 
 import com.ait.lienzo.charts.client.core.model.DataTable;
 import com.ait.lienzo.charts.client.core.model.DataTableColumn;
@@ -29,8 +28,6 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.dataset.ColumnType;
-import org.dashbuilder.dataset.DataColumn;
-import org.dashbuilder.dataset.DataSet;
 import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.client.AbstractDisplayerView;
 import org.dashbuilder.renderer.lienzo.client.resources.i18n.LienzoDisplayerConstants;
@@ -71,7 +68,7 @@ public abstract class LienzoDisplayerView<P extends LienzoDisplayer>
     @Override
     public void init(P presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(container);
+        super.setVisualization(container);
 
         container.add(titleHtml);
         container.add(filterPanel);

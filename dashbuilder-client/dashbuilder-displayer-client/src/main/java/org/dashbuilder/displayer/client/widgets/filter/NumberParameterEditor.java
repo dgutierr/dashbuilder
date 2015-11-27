@@ -26,7 +26,7 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class NumberParameterEditor implements IsWidget {
 
-    interface View extends UberView<NumberParameterEditor> {
+    public interface View extends UberView<NumberParameterEditor> {
         Double getCurrentValue();
         void setCurrentValue(Double value);
     }

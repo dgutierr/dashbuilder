@@ -25,7 +25,7 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class RendererSelectorListBoxView extends Composite implements RendererSelector.View {
+public class RendererSelectorListBoxView extends Composite implements RendererSelector.ListBoxView {
 
     interface RendererSelectorBinder extends UiBinder<Widget, RendererSelectorListBoxView> {}
     private static final RendererSelectorBinder uiBinder = GWT.create(RendererSelectorBinder.class);

@@ -30,8 +30,11 @@ import org.uberfire.client.mvp.UberView;
 public class DisplayerTypeSelector implements IsWidget {
 
     public interface View extends UberView<DisplayerTypeSelector> {
+
         void clear();
+
         void show(DisplayerType type);
+
         void select(DisplayerType type);
     }
 

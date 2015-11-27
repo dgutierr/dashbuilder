@@ -39,6 +39,7 @@ public class GoogleBarChartDisplayer extends GoogleCategoriesDisplayer<GoogleBar
 
     public GoogleBarChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

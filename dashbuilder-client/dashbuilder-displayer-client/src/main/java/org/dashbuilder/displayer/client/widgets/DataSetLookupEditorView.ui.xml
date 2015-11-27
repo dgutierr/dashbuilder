@@ -50,7 +50,7 @@
       <b:ListBox ui:field="dataSetListBox" width="200px" />
     </g:FlowPanel>
     <g:FlowPanel ui:field="filtersControlPanel" visible="false" styleName="{style.cellPaddingPanel}">
-      <b:Label styleName="{style.sectionLabel}" text="{i18n.dataset_filters}"/>
+      <g:Label styleName="{style.sectionLabel}" text="{i18n.dataset_filters}"/>
       <df:DataSetFilterEditor ui:field="filterEditor" />
     </g:FlowPanel>
     <g:FlowPanel ui:field="groupControlPanel" visible="false" styleName="{style.cellPaddingPanel}">

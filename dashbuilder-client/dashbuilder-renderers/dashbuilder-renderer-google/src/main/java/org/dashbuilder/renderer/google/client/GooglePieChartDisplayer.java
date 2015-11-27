@@ -35,6 +35,7 @@ public class GooglePieChartDisplayer extends GoogleCategoriesDisplayer<GooglePie
 
     public GooglePieChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

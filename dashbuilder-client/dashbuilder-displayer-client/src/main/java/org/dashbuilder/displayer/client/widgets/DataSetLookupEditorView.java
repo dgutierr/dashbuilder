@@ -51,7 +51,7 @@ public class DataSetLookupEditorView extends Composite
     ListBox dataSetListBox;
 
     @UiField
-    Label statusLabel;
+    org.gwtbootstrap3.client.ui.Label statusLabel;
 
     @UiField
     Panel groupControlPanel;

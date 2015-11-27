@@ -35,6 +35,7 @@ public class ChartJsBarChartDisplayer extends ChartJsDisplayer<ChartJsBarChartDi
 
     public ChartJsBarChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

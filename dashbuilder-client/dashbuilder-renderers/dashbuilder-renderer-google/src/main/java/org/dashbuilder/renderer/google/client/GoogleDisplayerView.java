@@ -47,7 +47,7 @@ public abstract class GoogleDisplayerView<P extends GoogleDisplayer>
     private Panel filterPanel = new HorizontalPanel();
     private Panel displayerPanel = new FlowPanel();
     private HTML titleHtml = new HTML();
-    private DataTable dataTable = DataTable.create();
+    private DataTable dataTable ;
     private GoogleRenderer googleRenderer;
 
     public void setRenderer(GoogleRenderer googleRenderer) {
@@ -66,7 +66,7 @@ public abstract class GoogleDisplayerView<P extends GoogleDisplayer>
     @Override
     public void init(P presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(container);
+        super.setVisualization(container);
 
         container.add(titleHtml);
         container.add(filterPanel);
@@ -107,17 +107,17 @@ public abstract class GoogleDisplayerView<P extends GoogleDisplayer>
 
     @Override
     public void dataSetValue(int row, int column, Date value) {
-        dataTable.setValue(column, row, value);
+        dataTable.setValue(row, column, value);
     }
 
     @Override
     public void dataSetValue(int row, int column, double value) {
-        dataTable.setValue(column, row, value);
+        dataTable.setValue(row, column, value);
     }
 
     @Override
     public void dataSetValue(int row, int column, String value) {
-        dataTable.setValue(column, row, value);
+        dataTable.setValue(row, column, value);
     }
 
     @Override

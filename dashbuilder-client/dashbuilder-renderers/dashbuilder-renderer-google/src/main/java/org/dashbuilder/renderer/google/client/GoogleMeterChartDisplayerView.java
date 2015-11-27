@@ -68,6 +68,7 @@ public class GoogleMeterChartDisplayerView
     protected GaugeOptions createMeterOptions() {
         GaugeOptions options = GaugeOptions.create();
         options.setWidth(width);
+        options.setWidth(width);
         options.setHeight(height);
         options.setMin(meterStart);
         options.setMax(meterEnd);

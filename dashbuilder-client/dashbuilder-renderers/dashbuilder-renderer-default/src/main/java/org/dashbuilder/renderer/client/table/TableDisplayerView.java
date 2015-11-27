@@ -56,7 +56,7 @@ public class TableDisplayerView extends AbstractDisplayerView<TableDisplayer> im
     @Override
     public void init(TableDisplayer presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(rootPanel);
+        super.setVisualization(rootPanel);
         rootPanel.add(titleHtml);
     }
 
@@ -111,16 +111,10 @@ public class TableDisplayerView extends AbstractDisplayerView<TableDisplayer> im
     }
 
     @Override
-    public void setCurrentPageRows(int rows) {
-        table.pager.setVisible(table.getPageSize() < rows);
-
-        int height = 42 + 37 * (rows == 0 ? 1 : rows);
-        table.setHeight((height > (Window.getClientHeight() - this.getAbsoluteTop()) ? (Window.getClientHeight() - this.getAbsoluteTop()) : height) + "px");
-    }
-
-    @Override
     public void setPagerEnabled(boolean enabled) {
-        table.pager.setVisible(true);
+        table.pager.setVisible(enabled);
+        int rows = table.getRowCount() > table.getPageSize() ? table.getPageSize() : table.getRowCount();
+        table.setHeight(calculateHeight(rows) + "px");
     }
 
     @Override
@@ -173,6 +167,14 @@ public class TableDisplayerView extends AbstractDisplayerView<TableDisplayer> im
 
 
     // Table internals
+
+    public int calculateHeight(int rows) {
+        int rowHeight = 39 - rows;
+        int offset = 20 - rows;
+        rowHeight = rowHeight < 30 ? 30 : rowHeight;
+        offset = offset < 0 ? 0 : offset;
+        return offset + (rowHeight * (rows == 0 ? 1 : rows));
+    }
 
     protected Column<Integer,?> createColumn(ColumnType type,
                                              String columnId,
@@ -295,8 +297,7 @@ public class TableDisplayerView extends AbstractDisplayerView<TableDisplayer> im
                 getPresenter().lookupCurrentPage(new Callback<Integer>() {
                     public void callback(Integer rowsFetched) {
                         updateRowData(lastOffset, rows);
-                        int height = 42 + 37 * (rowsFetched == 0 ? 1 : rowsFetched);
-                        table.setHeight(height + "px");
+                        table.setHeight(calculateHeight(rowsFetched) + "px");
                     }
                 });
             }

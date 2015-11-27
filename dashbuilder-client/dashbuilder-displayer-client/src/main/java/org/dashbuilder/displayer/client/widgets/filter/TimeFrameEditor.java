@@ -31,7 +31,7 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class TimeFrameEditor implements IsWidget {
 
-    interface View extends UberView<TimeFrameEditor> {
+    public interface View extends UberView<TimeFrameEditor> {
 
         void hideFirstMonthSelector();
 

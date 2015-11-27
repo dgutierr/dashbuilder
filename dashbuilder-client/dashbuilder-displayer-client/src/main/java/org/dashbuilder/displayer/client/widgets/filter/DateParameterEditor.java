@@ -30,8 +30,10 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class DateParameterEditor implements IsWidget {
 
-    interface View extends UberView<DateParameterEditor> {
+    public interface View extends UberView<DateParameterEditor> {
+
         Date getCurrentValue();
+
         void setCurrentValue(Date value);
     }
 

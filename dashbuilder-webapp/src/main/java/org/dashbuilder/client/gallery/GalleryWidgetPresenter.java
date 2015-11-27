@@ -45,7 +45,6 @@ import static org.uberfire.commons.validation.PortablePreconditions.checkNotNull
 import static org.uberfire.workbench.events.NotificationEvent.NotificationType.INFO;
 
 @WorkbenchScreen(identifier = "GalleryWidgetScreen")
-@ApplicationScoped
 public class GalleryWidgetPresenter {
 
     private GalleryWidget widget;

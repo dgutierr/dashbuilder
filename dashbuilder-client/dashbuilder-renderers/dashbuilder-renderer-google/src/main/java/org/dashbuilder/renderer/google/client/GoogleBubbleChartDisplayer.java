@@ -42,6 +42,7 @@ public class GoogleBubbleChartDisplayer extends GoogleCategoriesDisplayer<Google
 
     public GoogleBubbleChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

@@ -35,6 +35,7 @@ public class GoogleLineChartDisplayer extends GoogleCategoriesDisplayer<GoogleLi
 
     public GoogleLineChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

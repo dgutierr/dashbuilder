@@ -31,6 +31,7 @@ public abstract class AbstractDisplayerView<P extends AbstractDisplayer>
 
     private FlowPanel panel = new FlowPanel();
     private Label label = new Label();
+    private Widget visualization = null;
     private Timer refreshTimer = null;
     private P presenter = null;
 
@@ -46,8 +47,8 @@ public abstract class AbstractDisplayerView<P extends AbstractDisplayer>
         return presenter;
     }
 
-    public void setRootWidget(Widget widget) {
-        panel.add(widget);
+    public void setVisualization(Widget widget) {
+        visualization = widget;
     }
 
     @Override
@@ -63,6 +64,14 @@ public abstract class AbstractDisplayerView<P extends AbstractDisplayer>
     @Override
     public void showLoading() {
         displayMessage(DisplayerConstants.INSTANCE.initializing());
+    }
+
+    @Override
+    public void showVisualization() {
+        if (visualization != null) {
+            panel.clear();
+            panel.add(visualization);
+        }
     }
 
     @Override

@@ -35,6 +35,7 @@ public class GoogleMapDisplayer extends GoogleCategoriesDisplayer<GoogleMapDispl
 
     public GoogleMapDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

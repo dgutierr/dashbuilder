@@ -65,6 +65,8 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
 
         void showLoading();
 
+        void showVisualization();
+
         void clear();
 
         void setId(String id);
@@ -249,6 +251,7 @@ public abstract class AbstractDisplayer<V extends AbstractDisplayer.View> implem
                             dataSet = result;
                             afterDataSetLookup(result);
                             createVisualization();
+                            getView().showVisualization();
 
                             // Set the id of the container panel so that the displayer can be easily located
                             // by testing tools for instance.

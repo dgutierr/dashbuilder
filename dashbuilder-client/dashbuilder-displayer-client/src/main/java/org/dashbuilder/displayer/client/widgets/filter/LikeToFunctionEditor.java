@@ -26,10 +26,14 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class LikeToFunctionEditor implements IsWidget {
 
-    interface View extends UberView<LikeToFunctionEditor> {
+    public interface View extends UberView<LikeToFunctionEditor> {
+
         void setPattern(String pattern);
+
         void setCaseSensitive(boolean caseSensitive);
+
         String getPattern();
+
         boolean isCaseSensitive();
     }
 

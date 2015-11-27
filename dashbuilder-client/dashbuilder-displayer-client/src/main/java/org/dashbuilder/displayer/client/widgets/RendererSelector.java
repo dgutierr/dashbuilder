@@ -48,8 +48,20 @@ public class RendererSelector implements IsWidget {
         void setSelectedRendererIndex(int index);
 
         String getRendererSelected();
+    }
+
+    public interface TabListView extends View {
 
     }
+
+    public interface ListBoxView extends View {
+
+    }
+
+    public interface RadioListView extends View {
+
+    }
+
     View tabListView;
     View listBoxView;
     View radioListView;
@@ -60,9 +72,9 @@ public class RendererSelector implements IsWidget {
     Command selectCommand;
 
     @Inject
-    public RendererSelector(View tabListView,
-                            View listBoxView,
-                            View radioListView,
+    public RendererSelector(TabListView tabListView,
+                            ListBoxView listBoxView,
+                            RadioListView radioListView,
                             RendererManager rendererManager) {
         this.tabListView = tabListView;
         this.listBoxView = listBoxView;

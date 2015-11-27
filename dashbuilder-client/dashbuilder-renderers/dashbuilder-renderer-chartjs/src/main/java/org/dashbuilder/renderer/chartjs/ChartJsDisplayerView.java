@@ -70,7 +70,7 @@ public abstract class ChartJsDisplayerView<P extends ChartJsDisplayer>
     @Override
     public void init(P presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(container);
+        super.setVisualization(container);
 
         container.add(titleHtml);
         container.add(filterPanel);

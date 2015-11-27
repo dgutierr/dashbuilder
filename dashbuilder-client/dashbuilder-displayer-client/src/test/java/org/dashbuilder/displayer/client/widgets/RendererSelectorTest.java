@@ -40,13 +40,13 @@ import static org.junit.Assert.*;
 public class RendererSelectorTest {
 
     @Mock
-    RendererSelector.View radioListView;
+    RendererSelector.RadioListView radioListView;
 
     @Mock
-    RendererSelector.View tabListView;
+    RendererSelector.TabListView tabListView;
 
     @Mock
-    RendererSelector.View listBoxView;
+    RendererSelector.ListBoxView listBoxView;
 
     @Mock
     RendererManager rendererManager;

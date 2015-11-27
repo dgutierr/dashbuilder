@@ -58,8 +58,6 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
 
         void setTotalRows(int rows);
 
-        void setCurrentPageRows(int rows);
-
         void setPagerEnabled(boolean enabled);
 
         void addColumn(ColumnType columnType, String columnId, String columnName, int index, boolean selectEnabled, boolean sortEnabled);
@@ -86,6 +84,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
 
     public TableDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override
@@ -164,7 +163,6 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
         view.setWidth(width == 0 ? dataColumns.size() * 100 + 40 : width);
         view.setSortEnabled(displayerSettings.isTableSortEnabled());
         view.setTotalRows(totalRows);
-        view.setCurrentPageRows(dataSet.getRowCount());
         view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCountNonTrimmed());
 
         for ( int i = 0; i < dataColumns.size(); i++ ) {
@@ -190,8 +188,7 @@ public class TableDisplayer extends AbstractDisplayer<TableDisplayer.View> {
     @Override
     protected void updateVisualization() {
         view.setTotalRows(totalRows);
-        view.setCurrentPageRows(dataSet.getRowCount());
-        view.setPagerEnabled(displayerSettings.getTablePageSize() >= dataSet.getRowCount());
+        view.setPagerEnabled(displayerSettings.getTablePageSize() < dataSet.getRowCountNonTrimmed());
         view.gotoFirstPage();
         view.redrawTable();
         updateFilterStatus();

@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import org.gwtbootstrap3.client.ui.RadioButton;
 
-public class RendererSelectorRadioListView extends Composite implements RendererSelector.View {
+public class RendererSelectorRadioListView extends Composite implements RendererSelector.RadioListView {
 
     interface RendererSelectorBinder extends UiBinder<Widget, RendererSelectorRadioListView> {}
     private static final RendererSelectorBinder uiBinder = GWT.create(RendererSelectorBinder.class);

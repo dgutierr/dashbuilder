@@ -16,6 +16,7 @@
 package org.dashbuilder.client.sales.widgets;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import com.google.gwt.core.client.GWT;
@@ -39,6 +40,7 @@ import static org.dashbuilder.dataset.group.AggregateFunctionType.*;
  * A composite widget that represents an entire dashboard sample composed using an UI binder template.
  * <p>The dashboard itself is composed by a set of Displayer instances.</p>
  */
+@Dependent
 public class SalesTableReports extends Composite implements GalleryWidget {
 
     interface SalesDashboardBinder extends UiBinder<Widget, SalesTableReports>{}

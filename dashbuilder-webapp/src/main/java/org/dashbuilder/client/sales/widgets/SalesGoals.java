@@ -16,6 +16,7 @@
 package org.dashbuilder.client.sales.widgets;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import com.google.gwt.core.client.GWT;
@@ -39,6 +40,7 @@ import static org.dashbuilder.dataset.group.AggregateFunctionType.*;
  * A composite widget that represents an entire dashboard sample composed using an UI binder template.
  * <p>The dashboard itself is composed by a set of Displayer instances.</p>
  */
+@Dependent
 public class SalesGoals extends Composite implements GalleryWidget {
 
     interface SalesDashboardBinder extends UiBinder<Widget, SalesGoals>{}
@@ -86,17 +88,13 @@ public class SalesGoals extends Composite implements GalleryWidget {
     public SalesGoals(DisplayerCoordinator displayerCoordinator, DisplayerLocator displayerLocator) {
         this.displayerCoordinator = displayerCoordinator;
         this.displayerLocator = displayerLocator;
-    }
-
-    @PostConstruct
-    public void init() {
 
         // Create the chart definitions
 
         meterChartAmount = displayerLocator.lookupDisplayer(
                 DisplayerSettingsFactory.newMeterChartSettings()
                 .dataset(SALES_OPPS)
-                .column(AMOUNT, SUM)
+                .column(AMOUNT, SUM, AppConstants.INSTANCE.sales_goals_meter_column1())
                 .expression("value/1000")
                 .format(AppConstants.INSTANCE.sales_goals_meter_column1(), "$ #,### K")
                 .title(AppConstants.INSTANCE.sales_goals_meter_title())

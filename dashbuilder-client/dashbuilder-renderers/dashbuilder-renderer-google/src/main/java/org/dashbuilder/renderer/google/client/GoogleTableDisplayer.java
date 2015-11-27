@@ -78,6 +78,7 @@ public class GoogleTableDisplayer extends GoogleDisplayer<GoogleTableDisplayer.V
 
     public GoogleTableDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

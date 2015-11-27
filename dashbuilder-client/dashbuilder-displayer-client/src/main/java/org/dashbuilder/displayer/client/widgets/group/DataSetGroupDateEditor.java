@@ -87,6 +87,7 @@ public class DataSetGroupDateEditor implements IsWidget {
     public DataSetGroupDateEditor(View view, Event<DataSetGroupDateChanged> changeEvent) {
         this.view = view;
         this.changeEvent = changeEvent;
+        view.init(this);
     }
 
     @Override

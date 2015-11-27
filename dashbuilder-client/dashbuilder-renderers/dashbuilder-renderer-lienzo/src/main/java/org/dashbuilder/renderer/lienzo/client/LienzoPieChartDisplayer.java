@@ -35,6 +35,7 @@ public class LienzoPieChartDisplayer extends LienzoDisplayer<LienzoPieChartDispl
 
     public LienzoPieChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

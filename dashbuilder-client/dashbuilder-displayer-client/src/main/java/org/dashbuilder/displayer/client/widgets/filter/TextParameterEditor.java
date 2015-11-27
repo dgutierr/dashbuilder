@@ -26,8 +26,10 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class TextParameterEditor implements IsWidget {
 
-    interface View extends UberView<TextParameterEditor> {
+    public interface View extends UberView<TextParameterEditor> {
+
         String getCurrentValue();
+
         void setCurrentValue(String value);
     }
 

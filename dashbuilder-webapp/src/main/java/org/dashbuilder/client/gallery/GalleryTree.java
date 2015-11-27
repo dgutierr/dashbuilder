@@ -374,7 +374,7 @@ public class GalleryTree {
                 DisplayerSettingsFactory.newMeterChartSettings()
                         .title(AppConstants.INSTANCE.gallerytree_meter_basic_title())
                         .dataset(SALES_OPPS)
-                        .column(AMOUNT, SUM)
+                        .column(AMOUNT, SUM, AppConstants.INSTANCE.gallerytree_meter_basic_column1())
                         .expression("value/1000")
                         .format(AppConstants.INSTANCE.gallerytree_meter_basic_column1(), "$ #,### K")
                         .width(400).height(200)

@@ -57,7 +57,6 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
         verify(tableView).setWidth(1000);
         verify(tableView).setSortEnabled(true);
         verify(tableView).setTotalRows(50);
-        verify(tableView).setCurrentPageRows(10);
         verify(tableView).createTable(10);
         verify(tableView).addColumn(ColumnType.NUMBER, COLUMN_ID, COLUMN_ID, 0, false, true);
         verify(tableView).addColumn(ColumnType.LABEL, COLUMN_CITY, COLUMN_CITY, 1, true, true);
@@ -84,6 +83,11 @@ public class TableDisplayerTest extends AbstractDisplayerTest {
         verify(tableView).createTable(10);
         verify(tableView).setTotalRows(0);
         verify(tableView).setPagerEnabled(false);
+        verify(tableView, never()).setPagerEnabled(true);
+
+        reset(tableView);
+        table.redraw();
+        verify(tableView, never()).setPagerEnabled(true);
     }
 
     @Test

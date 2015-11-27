@@ -48,6 +48,7 @@ public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
 
     public MetricDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

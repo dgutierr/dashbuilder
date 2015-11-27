@@ -31,6 +31,7 @@ public class LienzoBarChartDisplayer extends LienzoXYChartDisplayer<LienzoBarCha
 
     public LienzoBarChartDisplayer(View view) {
         this.view = view;
+        this.view.init(this);
     }
 
     @Override

@@ -32,7 +32,7 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class TimeInstantEditor implements IsWidget {
 
-    interface View extends UberView<TimeInstantEditor> {
+    public interface View extends UberView<TimeInstantEditor> {
 
         void clearTimeModeSelector();
 

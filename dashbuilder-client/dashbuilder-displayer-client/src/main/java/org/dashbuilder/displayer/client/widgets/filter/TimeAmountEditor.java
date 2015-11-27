@@ -32,7 +32,7 @@ import org.uberfire.mvp.Command;
 @Dependent
 public class TimeAmountEditor implements IsWidget {
 
-    interface View extends UberView<TimeAmountEditor> {
+    public interface View extends UberView<TimeAmountEditor> {
 
         void setQuantity(long quantity);
 

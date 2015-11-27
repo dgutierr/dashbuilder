@@ -19,10 +19,8 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
@@ -57,7 +55,7 @@ public class MetricView extends AbstractDisplayerView<MetricDisplayer> implement
     @Override
     public void init(MetricDisplayer presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(uiBinder.createAndBindUi(this));
+        super.setVisualization(uiBinder.createAndBindUi(this));
     }
 
     @Override

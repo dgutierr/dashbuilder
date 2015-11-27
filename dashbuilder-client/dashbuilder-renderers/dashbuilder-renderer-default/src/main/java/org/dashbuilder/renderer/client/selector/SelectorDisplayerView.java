@@ -32,7 +32,7 @@ public class SelectorDisplayerView extends AbstractDisplayerView<SelectorDisplay
     @Override
     public void init(SelectorDisplayer presenter) {
         super.setPresenter(presenter);
-        super.setRootWidget(listBox);
+        super.setVisualization(listBox);
     }
 
     @Override

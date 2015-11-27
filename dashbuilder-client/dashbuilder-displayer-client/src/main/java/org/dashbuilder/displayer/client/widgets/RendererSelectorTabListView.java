@@ -28,7 +28,7 @@ import org.gwtbootstrap3.client.ui.TabListItem;
 import org.gwtbootstrap3.client.ui.TabPane;
 import org.gwtbootstrap3.client.ui.TabPanel;
 
-public class RendererSelectorTabListView extends Composite implements RendererSelector.View {
+public class RendererSelectorTabListView extends Composite implements RendererSelector.TabListView {
 
     interface RendererSelectorBinder extends UiBinder<Widget, RendererSelectorTabListView> {}
     private static final RendererSelectorBinder uiBinder = GWT.create(RendererSelectorBinder.class);
