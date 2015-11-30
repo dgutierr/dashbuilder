@@ -16,7 +16,6 @@
 package org.dashbuilder.displayer.client.widgets.filter;
 
 import java.util.Date;
-import javax.enterprise.context.Dependent;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -45,7 +44,6 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     private static Binder uiBinder = GWT.create(Binder.class);
 
     ColumnFilterEditor presenter;
-    boolean functionSelected = false;
 
     @UiField
     ListBox filterListBox;
@@ -83,16 +81,20 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     }
 
     @Override
-    public void addToFunctionSelector(CoreFunctionType ft) {
+    public void addFunctionItem(CoreFunctionType ft) {
         String function = CoreFunctionTypeConstants.INSTANCE.getString(ft.name());
         filterListBox.addItem(function);
         filterExpandIcon.setVisible(true);
     }
 
     @Override
-    public void setCurrentFunctionSelected(String function) {
+    public void setFunctionSelected(String function) {
         filterListBox.insertItem(function, 0);
-        functionSelected = true;
+    }
+
+    @Override
+    public int getSelectedFunctionIndex() {
+        return filterListBox.getSelectedIndex() - 1;
     }
 
     @Override
@@ -124,10 +126,7 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
 
     @UiHandler(value = "filterListBox")
     public void onFilterSelected(ChangeEvent changeEvent) {
-        int selectedIdx = filterListBox.getSelectedIndex();
-        if (selectedIdx > 0) {
-            presenter.selectFilterFunction(selectedIdx - (functionSelected ? 1 : 0));
-        }
+        presenter.onSelectFilterFunction();
     }
 
     public void onExpandCollapseDetails() {
@@ -139,7 +138,7 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     }
 
     protected void onDeleteFilter() {
-        presenter.deleteFilter();
+        presenter.onDeleteFilter();
     }
 
     // Internals

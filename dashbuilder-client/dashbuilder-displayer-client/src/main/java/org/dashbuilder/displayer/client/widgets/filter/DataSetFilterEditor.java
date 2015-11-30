@@ -98,6 +98,7 @@ public class DataSetFilterEditor implements IsWidget {
                 ColumnFilterEditor columnFilterEditor = beanManager.lookupBean(ColumnFilterEditor.class).newInstance();
                 columnFilterEditor.init(metadata, columnFilter);
                 view.addColumnFilterEditor(columnFilterEditor);
+                _editorsMap.put(_editorsMap.size(), columnFilterEditor);
             }
         }
     }
@@ -125,7 +126,7 @@ public class DataSetFilterEditor implements IsWidget {
 
         ColumnFilterEditor columnFilterEditor = beanManager.lookupBean(ColumnFilterEditor.class).newInstance();
         columnFilterEditor.init(metadata, columnFilter);
-        columnFilterEditor.showFilterConfig();
+        columnFilterEditor.expand();
 
         _editorsMap.put(_editorsMap.size(), columnFilterEditor);
         view.addColumnFilterEditor(columnFilterEditor);
@@ -139,12 +140,11 @@ public class DataSetFilterEditor implements IsWidget {
     }
 
     protected void onColumnFilterDeleted(@Observes final ColumnFilterDeletedEvent event) {
-
        Integer index = filter.getColumnFilterIdx(event.getColumnFilter());
         if (index != null && index >=0) {
             filter.getColumnFilterList().remove(index.intValue());
 
-            ColumnFilterEditor editor = _editorsMap.get(index);
+            ColumnFilterEditor editor = _editorsMap.remove(index);
             view.removeColumnFilterEditor(editor);
             view.showNewFilterHome();
 

@@ -46,6 +46,7 @@ import org.gwtbootstrap3.client.ui.DropDownMenu;
 import org.gwtbootstrap3.client.ui.constants.ButtonSize;
 import org.gwtbootstrap3.client.ui.constants.Pull;
 import org.gwtbootstrap3.client.ui.constants.Toggle;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.annotations.WorkbenchMenu;
 import org.uberfire.client.annotations.WorkbenchPartTitle;
@@ -70,9 +71,9 @@ import org.uberfire.workbench.model.menu.impl.BaseMenuCustom;
 @Dependent
 public class DisplayerScreenPresenter {
 
+    private SyncBeanManager beanManager;
     private DataSetClientServices dataSetClientServices;
     private DisplayerViewer displayerViewer;
-    private DisplayerEditorPopup displayerEditor;
     private PerspectiveCoordinator perspectiveCoordinator;
     private PerspectiveManager perspectiveManager;
     private PanelManager panelManager;
@@ -94,17 +95,18 @@ public class DisplayerScreenPresenter {
     private static final int MAX_EXPORT_LIMIT = 100000;
 
     @Inject
-    public DisplayerScreenPresenter(DataSetClientServices dataSetClientServices,
+    public DisplayerScreenPresenter(SyncBeanManager beanManager,
+                                    DataSetClientServices dataSetClientServices,
                                     UUIDGenerator uuidGenerator,
                                     PerspectiveManager perspectiveManager,
                                     PlaceManager placeManager,
                                     DisplayerViewer displayerViewer,
                                     PanelManager panelManager,
-                                    DisplayerEditorPopup displayerEditor,
                                     PerspectiveCoordinator perspectiveCoordinator,
                                     DisplayerSettingsJSONMarshaller jsonMarshaller,
                                     Event<ChangeTitleWidgetEvent> changeTitleEvent) {
 
+        this.beanManager = beanManager;
         this.dataSetClientServices = dataSetClientServices;
         this.uuidGenerator = uuidGenerator;
         this.placeManager = placeManager;
@@ -113,7 +115,6 @@ public class DisplayerScreenPresenter {
         this.panelManager = panelManager;
         this.perspectiveCoordinator = perspectiveCoordinator;
         this.jsonMarshaller = jsonMarshaller;
-        this.displayerEditor =  displayerEditor;
         this.menuActionsButton = getMenuActionsButton();
         this.changeTitleEvent = changeTitleEvent;
     }
@@ -220,9 +221,10 @@ public class DisplayerScreenPresenter {
                 perspectiveCoordinator.editOn();
 
                 String currentTitle = displayerSettings.getTitle();
+                DisplayerEditorPopup displayerEditor = beanManager.lookupBean(DisplayerEditorPopup.class).newInstance();
                 displayerEditor.init(displayerSettings.cloneInstance());
-                displayerEditor.setOnSaveCommand(getSaveCommand(currentTitle));
-                displayerEditor.setOnCloseCommand(getCloseCommand());
+                displayerEditor.setOnSaveCommand(getSaveCommand(displayerEditor, currentTitle));
+                displayerEditor.setOnCloseCommand(getCloseCommand(displayerEditor));
             }
         };
     }
@@ -235,14 +237,15 @@ public class DisplayerScreenPresenter {
                 DisplayerSettings clonedSettings = displayerSettings.cloneInstance();
                 clonedSettings.setUUID(uuidGenerator.newUuid());
                 clonedSettings.setTitle("Copy of " + clonedSettings.getTitle());
+                DisplayerEditorPopup displayerEditor = beanManager.lookupBean(DisplayerEditorPopup.class).newInstance();
                 displayerEditor.init(clonedSettings);
-                displayerEditor.setOnSaveCommand(getSaveCloneCommand());
-                displayerEditor.setOnCloseCommand(getCloseCommand());
+                displayerEditor.setOnSaveCommand(getSaveCloneCommand(displayerEditor));
+                displayerEditor.setOnCloseCommand(getCloseCommand(displayerEditor));
             }
         };
     }
 
-    protected Command getSaveCommand(final String currentTitle) {
+    protected Command getSaveCommand(final DisplayerEditorPopup displayerEditor, final String currentTitle) {
         return new Command() {
             public void execute() {
                 // On save
@@ -256,6 +259,7 @@ public class DisplayerScreenPresenter {
                     }
 
                     PanelDefinition panelDefinition = panelManager.getPanelForPlace(placeRequest);
+                    beanManager.destroyBean(displayerEditor);
                     placeManager.goTo(createPlaceRequest(newSettings), panelDefinition);
                     placeManager.closePlace(placeRequest);
                     perspectiveManager.savePerspectiveState(new Command() {
@@ -267,11 +271,13 @@ public class DisplayerScreenPresenter {
         };
     }
 
-    protected Command getSaveCloneCommand() {
+    protected Command getSaveCloneCommand(final DisplayerEditorPopup displayerEditor) {
         return new Command() {
             public void execute() {
                 perspectiveCoordinator.editOff();
-                PanelDefinition panelDefinition = panelManager.getPanelForPlace( placeRequest );
+                beanManager.destroyBean(displayerEditor);
+
+                PanelDefinition panelDefinition = panelManager.getPanelForPlace(placeRequest);
                 placeManager.goTo(createPlaceRequest(displayerEditor.getDisplayerSettings()), panelDefinition);
                 perspectiveManager.savePerspectiveState(new Command() {
                     public void execute() {
@@ -281,10 +287,11 @@ public class DisplayerScreenPresenter {
         };
     }
 
-    protected Command getCloseCommand() {
+    protected Command getCloseCommand(final DisplayerEditorPopup displayerEditor) {
         return new Command() {
             public void execute() {
                 perspectiveCoordinator.editOff();
+                beanManager.destroyBean(displayerEditor);
             }
         };
     }
@@ -357,8 +364,9 @@ public class DisplayerScreenPresenter {
 
     protected void removeDisplayer() {
         Displayer displayer = displayerViewer.getDisplayer();
-        perspectiveCoordinator.removeDisplayer( displayer );
+        perspectiveCoordinator.removeDisplayer(displayer);
         displayer.close();
+        beanManager.destroyBean(displayerViewer);
     }
 
     protected PlaceRequest createPlaceRequest( DisplayerSettings displayerSettings ) {

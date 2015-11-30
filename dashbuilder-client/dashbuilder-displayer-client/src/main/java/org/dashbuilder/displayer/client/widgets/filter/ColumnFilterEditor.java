@@ -17,6 +17,7 @@ package org.dashbuilder.displayer.client.widgets.filter;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.enterprise.context.Dependent;
@@ -45,9 +46,11 @@ public class ColumnFilterEditor implements IsWidget {
 
         void clearFunctionSelector();
 
-        void addToFunctionSelector(CoreFunctionType function);
+        void addFunctionItem(CoreFunctionType function);
 
-        void setCurrentFunctionSelected(String function);
+        void setFunctionSelected(String function);
+
+        int getSelectedFunctionIndex();
 
         void showFilterConfig();
 
@@ -99,28 +102,33 @@ public class ColumnFilterEditor implements IsWidget {
         return view.asWidget();
     }
 
-    // Presenter interface
-
-    public void selectFilterFunction(int index) {
-        CoreFunctionFilter coreFilter = getCoreFilter();
-        ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
-        List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
-        CoreFunctionType functionType = functionTypes.get(index);
-        List params = FilterFactory.createParameters(columnType, functionType);
-        coreFilter.setType(functionType);
-        coreFilter.setParameters(params);
-
-        initFilterSelector();
-        if (!initFilterConfig().isEmpty()) {
-            view.showFilterConfig();
-        }
-    }
-
-    public void showFilterConfig() {
+    public void expand() {
         view.showFilterConfig();
     }
 
-    public void deleteFilter() {
+    // View notifications
+
+    public void onSelectFilterFunction() {
+        int selectedIdx = view.getSelectedFunctionIndex();
+        if (selectedIdx >= 0) {
+            CoreFunctionFilter coreFilter = getCoreFilter();
+            CoreFunctionType functionType = getAvailableFunctions(coreFilter).get(selectedIdx);
+
+            ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
+            List params = FilterFactory.createParameters(columnType, functionType);
+            coreFilter.setType(functionType);
+            coreFilter.setParameters(params);
+
+            initFilterSelector();
+            fireFilterChanged();
+
+            if (!initFilterConfig().isEmpty()) {
+                view.showFilterConfig();
+            }
+        }
+    }
+
+    public void onDeleteFilter() {
         deletedEvent.fire(new ColumnFilterDeletedEvent(filter));
     }
 
@@ -156,15 +164,26 @@ public class ColumnFilterEditor implements IsWidget {
         if (coreFilter != null) {
             view.clearFunctionSelector();
             String currentFunction = formatFilterFunction(coreFilter);
-            view.setCurrentFunctionSelected(currentFunction);
+            view.setFunctionSelected(currentFunction);
 
-            ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
-            List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
-            for (int i = 0; i < functionTypes.size(); i++) {
-                CoreFunctionType ft = functionTypes.get(i);
-                view.addToFunctionSelector(ft);
+            List<CoreFunctionType> calculateAvailableFunctions = getAvailableFunctions(coreFilter);
+            for (CoreFunctionType functionType : calculateAvailableFunctions) {
+                view.addFunctionItem(functionType);
             }
         }
+    }
+
+    protected List<CoreFunctionType> getAvailableFunctions(CoreFunctionFilter coreFilter) {
+        ColumnType columnType = metadata.getColumnType(coreFilter.getColumnId());
+        List<CoreFunctionType> functionTypes = CoreFunctionType.getSupportedTypes(columnType);
+        Iterator<CoreFunctionType> it = functionTypes.iterator();
+        while (it.hasNext()) {
+            CoreFunctionType next = it.next();
+            if (next.equals(coreFilter.getType())) {
+                it.remove();
+            }
+        }
+        return functionTypes;
     }
 
     protected List<IsWidget> initFilterConfig() {

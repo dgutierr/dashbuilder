@@ -30,6 +30,7 @@ import org.dashbuilder.displayer.json.DisplayerSettingsJSONMarshaller;
 import org.dashbuilder.displayer.client.widgets.DisplayerEditorPopup;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TextBox;
+import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.PlaceManager;
 import org.uberfire.ext.layout.editor.client.components.HasModalConfiguration;
 import org.uberfire.ext.layout.editor.client.components.ModalConfigurationContext;
@@ -41,7 +42,7 @@ import org.uberfire.mvp.Command;
 public class DisplayerDragComponent implements PerspectiveEditorDragComponent, HasModalConfiguration {
 
     @Inject
-    DisplayerEditorPopup editor;
+    SyncBeanManager beanManager;
 
     @Inject
     DisplayerViewer viewer;
@@ -96,26 +97,29 @@ public class DisplayerDragComponent implements PerspectiveEditorDragComponent, H
         Map<String, String> properties = ctx.getComponentProperties();
         String json = properties.get("json");
         DisplayerSettings settings = json != null ? marshaller.fromJsonString(json) : null;
+        DisplayerEditorPopup editor = beanManager.lookupBean(DisplayerEditorPopup.class).newInstance();
         editor.init(settings);
-        editor.setOnSaveCommand(getSaveCommand(ctx));
-        editor.setOnCloseCommand(getCloseCommand(ctx));
+        editor.setOnSaveCommand(getSaveCommand(editor, ctx));
+        editor.setOnCloseCommand(getCloseCommand(editor, ctx));
         return editor;
     }
 
-    protected Command getSaveCommand(final ModalConfigurationContext ctx) {
+    protected Command getSaveCommand(final DisplayerEditorPopup editor, final ModalConfigurationContext ctx) {
         return new Command() {
             public void execute() {
                 String json = marshaller.toJsonString(editor.getDisplayerSettings());
                 ctx.setComponentProperty("json", json);
                 ctx.configurationFinished();
+                beanManager.destroyBean(editor);
             }
         };
     }
 
-    protected Command getCloseCommand(final ModalConfigurationContext ctx) {
+    protected Command getCloseCommand(final DisplayerEditorPopup editor, final ModalConfigurationContext ctx) {
         return new Command() {
             public void execute() {
                 ctx.configurationCancelled();
+                beanManager.destroyBean(editor);
             }
         };
     }

@@ -114,7 +114,7 @@ public abstract class GoogleDisplayer<V extends GoogleDisplayer.View> extends Ab
             ColumnType columnType = dataColumn.getColumnType();
             ColumnSettings columnSettings = displayerSettings.getColumnSettings(dataColumn);
 
-            getView().dataAddColumn(dataColumn.getColumnType(), columnSettings.getColumnName(), columnId);
+            getView().dataAddColumn(dataColumn.getColumnType(), columnId, columnSettings.getColumnName());
 
             List columnValues = dataColumn.getValues();
             for (int j = 0; j < columnValues.size(); j++) {
