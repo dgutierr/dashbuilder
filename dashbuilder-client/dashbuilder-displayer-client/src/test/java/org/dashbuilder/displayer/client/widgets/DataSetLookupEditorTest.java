@@ -304,6 +304,25 @@ public class DataSetLookupEditorTest {
     }
 
     @Test
+    public void testDeleteColumns() {
+        DataSetLookup lookup = DataSetFactory.newDataSetLookupBuilder()
+                .dataset(POPULATION_UUID)
+                .column("year")
+                .column("population")
+                .buildLookup();
+
+        GroupFunction year = lookup.getFirstGroupOp().getGroupFunction("year");
+        presenter.init(DATA_MULTIPLE, lookup);
+        presenter.onColumnFunctionDeleted(new GroupFunctionDeletedEvent(year));
+        presenter.onAddColumn();
+
+        verify(columnFunctionEditor).setDeleteOptionEnabled(false);
+        verify(beanManager).destroyBean(anyObject());
+        verify(view).setAddColumnOptionEnabled(true);
+        verify(event).fire(any(DataSetLookupChangedEvent.class));
+    }
+
+    @Test
     public void testGroupNotAllowed() {
         presenter.init(DATA_MULTIPLE_NO_GROUP, DataSetFactory.newDataSetLookupBuilder()
                 .dataset(POPULATION_UUID)
@@ -393,6 +412,7 @@ public class DataSetLookupEditorTest {
         assertEquals(presenter.getFirstGroupFunctions().get(0).getFunction(), null);
         assertEquals(presenter.getFirstGroupFunctions().get(1).getFunction(), null);
     }
+
     @Test
     public void testExtraColumnsAllowed() {
         presenter.init(DATA_2D_MULTIPLE, DataSetFactory.newDataSetLookupBuilder()

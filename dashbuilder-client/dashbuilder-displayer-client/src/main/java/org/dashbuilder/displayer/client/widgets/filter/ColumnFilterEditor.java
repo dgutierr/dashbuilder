@@ -195,6 +195,12 @@ public class ColumnFilterEditor implements IsWidget {
         return inputs;
     }
 
+    protected void updateSelectedFilter() {
+        String currentFunction = formatFilterFunction(getCoreFilter());
+        view.setFunctionSelected(currentFunction);
+        fireFilterChanged();
+    }
+
     protected void fireFilterChanged() {
         changedEvent.fire(new ColumnFilterChangedEvent(filter));
     }
@@ -223,7 +229,7 @@ public class ColumnFilterEditor implements IsWidget {
         input.setOnChangeCommand(new Command() {
             public void execute() {
                 paramList.set(paramIndex, input.getCurrentValue());
-                fireFilterChanged();
+                updateSelectedFilter();
             }
         });
         return input;
@@ -237,7 +243,7 @@ public class ColumnFilterEditor implements IsWidget {
         input.setOnChangeCommand(new Command() {
             public void execute() {
                 paramList.set(paramIndex, input.getCurrentValue());
-                fireFilterChanged();
+                updateSelectedFilter();
             }
         });
         return input;
@@ -252,7 +258,7 @@ public class ColumnFilterEditor implements IsWidget {
             @Override
             public void execute() {
                 paramList.set(paramIndex, input.getCurrentValue());
-                fireFilterChanged();
+                updateSelectedFilter();
             }
         });
         return input;
@@ -262,11 +268,10 @@ public class ColumnFilterEditor implements IsWidget {
         TimeFrame timeFrame = TimeFrame.parse((String) paramList.get(paramIndex));
 
         final TimeFrameEditor input = beanManager.lookupBean(TimeFrameEditor.class).newInstance();
-        input.setTimeFrame(timeFrame);
-        input.setOnChangeCommand(new Command() {
+        input.init(timeFrame, new Command() {
             public void execute() {
                 paramList.set(paramIndex, input.getTimeFrame().toString());
-                fireFilterChanged();
+                updateSelectedFilter();
             }
         });
         return input;
@@ -288,7 +293,7 @@ public class ColumnFilterEditor implements IsWidget {
                     // Only add if disabled since case sensitive is enabled by default.
                     paramList.add(input.isCaseSensitive());
                 }
-                fireFilterChanged();
+                updateSelectedFilter();
             }
         });
         return input;

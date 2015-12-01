@@ -87,22 +87,21 @@ public class TimeInstantEditor implements IsWidget {
         return timeInstant;
     }
 
-    public void setTimeInstant(TimeInstant ti) {
+    public void init(final TimeInstant ti, final Command onChangeCommand) {
         this.timeInstant = ti != null ? ti : new TimeInstant();
-        this.timeAmountEditor.setTimeAmount(timeInstant.getTimeAmount());
+        this.onChangeCommand = onChangeCommand;
+        this.timeAmountEditor.init(timeInstant.getTimeAmount(), new Command() {
+            public void execute() {
+                timeInstant.setTimeAmount(timeAmountEditor.getTimeAmount());
+                onChangeCommand.execute();
+            }
+        });
         initTimeModeSelector();
         initIntervalTypeSelector();
     }
 
     public TimeAmountEditor getTimeAmountEditor() {
         return timeAmountEditor;
-    }
-
-    public void setOnChangeCommand(Command onChangeCommand) {
-        this.onChangeCommand = onChangeCommand;
-
-        // Propagate any changes coming from composites
-        timeAmountEditor.setOnChangeCommand(onChangeCommand);
     }
 
     protected void initTimeModeSelector() {

@@ -59,8 +59,6 @@ public class DataSetFilterEditorView extends Composite implements DataSetFilterE
                 onNewFilterClosed(event);
             }
         }, ClickEvent.getType());
-
-        newFilterListBox.addItem(CommonConstants.INSTANCE.filter_editor_selectcolumn());
     }
 
     @Override
@@ -72,6 +70,12 @@ public class DataSetFilterEditorView extends Composite implements DataSetFilterE
     public void showNewFilterHome() {
         addFilterButton.setVisible(true);
         addFilterPanel.setVisible(false);
+    }
+
+    @Override
+    public void clearColumnSelector() {
+        newFilterListBox.clear();
+        newFilterListBox.addItem(CommonConstants.INSTANCE.filter_editor_selectcolumn());
     }
 
     @Override
@@ -96,6 +100,11 @@ public class DataSetFilterEditorView extends Composite implements DataSetFilterE
     }
 
     @Override
+    public void clearColumnFilterEditors() {
+        filterListPanel.clear();
+    }
+
+    @Override
     public void addColumnFilterEditor(ColumnFilterEditor editor) {
         filterListPanel.add(editor);
     }
@@ -109,15 +118,15 @@ public class DataSetFilterEditorView extends Composite implements DataSetFilterE
 
     @UiHandler(value = "addFilterButton")
     public void onAddFilterClicked(ClickEvent event) {
-        presenter.newFilterStart();
+        presenter.onNewFilterStart();
     }
 
     public void onNewFilterClosed(ClickEvent event) {
-        presenter.newFilterCancel();
+        presenter.onNewFilterCancel();
     }
 
     @UiHandler(value = "newFilterListBox")
     public void onNewFilterSelected(ChangeEvent changeEvent) {
-        presenter.createFilter();
+        presenter.onCreateFilter();
     }
 }

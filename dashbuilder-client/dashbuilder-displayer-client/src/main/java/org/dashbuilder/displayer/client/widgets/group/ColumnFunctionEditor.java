@@ -90,6 +90,10 @@ public class ColumnFunctionEditor implements IsWidget {
         return groupFunction;
     }
 
+    public ColumnType getTargetType() {
+        return targetType;
+    }
+
     public ColumnDetailsEditor getColumnDetailsEditor() {
         return columnDetailsEditor;
     }
@@ -106,8 +110,8 @@ public class ColumnFunctionEditor implements IsWidget {
         this.metadata = metadata;
 
         columnDetailsEditor.init(metadata, this.groupFunction);
-        view.setDeleteOptionEnabled(canDelete);
         view.setColumnSelectorTitle(columnTitle);
+        setDeleteOptionEnabled(canDelete);
         initColumnListBox();
 
         if (functionsEnabled && (targetType == null || isColumnNumeric())) {
@@ -118,12 +122,22 @@ public class ColumnFunctionEditor implements IsWidget {
         }
     }
 
+    public void setDeleteOptionEnabled(boolean enabled) {
+        view.setDeleteOptionEnabled(enabled);
+    }
+
     public void delete() {
         deleteEvent.fire(new GroupFunctionDeletedEvent(groupFunction));
     }
 
     void onColumnSelected() {
         groupFunction.setSourceId(view.getSelectedColumnId());
+        if (!isColumnNumeric()) {
+            groupFunction.setFunction(null);
+        } else {
+            groupFunction.setFunction(getSupportedFunctionTypes().get(0));
+        }
+        initFunctionListBox();
         changeEvent.fire(new GroupFunctionChangedEvent(groupFunction));
     }
 
@@ -175,11 +189,15 @@ public class ColumnFunctionEditor implements IsWidget {
         }
     }
 
-    protected List<AggregateFunctionType> getSupportedFunctionTypes() {
-        ColumnType targetType = metadata.getColumnType(groupFunction.getSourceId());
+    public List<AggregateFunctionType> getSupportedFunctionTypes() {
+        ColumnType columnType = metadata.getColumnType(groupFunction.getSourceId());
+        return getSupportedFunctionTypes(columnType);
+    }
+
+    public List<AggregateFunctionType> getSupportedFunctionTypes(ColumnType columnType) {
         List<AggregateFunctionType> result = new ArrayList<AggregateFunctionType>();
         for (AggregateFunctionType function : AggregateFunctionType.values()) {
-            if (function.supportType(targetType)) {
+            if (function.supportType(columnType)) {
                 result.add(function);
             }
         }

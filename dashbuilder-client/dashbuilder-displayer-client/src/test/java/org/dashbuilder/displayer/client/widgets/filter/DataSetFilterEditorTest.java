@@ -14,15 +14,9 @@
  */
 package org.dashbuilder.displayer.client.widgets.filter;
 
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.dataset.DataSetMetadata;
-import org.dashbuilder.dataset.date.TimeFrame;
 import org.dashbuilder.dataset.filter.ColumnFilter;
-import org.dashbuilder.dataset.filter.CoreFunctionFilter;
 import org.dashbuilder.dataset.filter.CoreFunctionType;
 import org.dashbuilder.dataset.filter.DataSetFilter;
 import org.dashbuilder.dataset.filter.FilterFactory;
@@ -32,13 +26,9 @@ import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.uberfire.mocks.EventSourceMock;
-import org.uberfire.mvp.Command;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -101,10 +91,10 @@ public class DataSetFilterEditorTest {
         filterEditor.init(null, metadata);
         reset(filterView);
 
-        filterEditor.newFilterStart();
+        filterEditor.onNewFilterStart();
         verify(filterView).showColumnSelector();
 
-        filterEditor.newFilterCancel();
+        filterEditor.onNewFilterCancel();
         verify(filterView).showNewFilterHome();
     }
 
@@ -115,7 +105,7 @@ public class DataSetFilterEditorTest {
         reset(filterView);
         when(filterView.getSelectedColumnIndex()).thenReturn(0);
 
-        filterEditor.createFilter();
+        filterEditor.onCreateFilter();
         verify(changedEvent).fire(any(DataSetFilterChangedEvent.class));
 
         DataSetFilter filter = filterEditor.getFilter();
@@ -133,7 +123,7 @@ public class DataSetFilterEditorTest {
         reset(filterView);
         when(filterView.getSelectedColumnIndex()).thenReturn(2);
 
-        filterEditor.createFilter();
+        filterEditor.onCreateFilter();
         verify(changedEvent).fire(any(DataSetFilterChangedEvent.class));
 
         DataSetFilter filter = filterEditor.getFilter();

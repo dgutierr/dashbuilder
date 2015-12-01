@@ -63,6 +63,9 @@ public class ColumnFunctionEditorTest {
         when(metadata.getColumnType(0)).thenReturn(ColumnType.LABEL);
         when(metadata.getColumnType(1)).thenReturn(ColumnType.NUMBER);
         when(metadata.getColumnType(2)).thenReturn(ColumnType.DATE);
+        when(metadata.getColumnType("column1")).thenReturn(ColumnType.LABEL);
+        when(metadata.getColumnType("column2")).thenReturn(ColumnType.NUMBER);
+        when(metadata.getColumnType("column3")).thenReturn(ColumnType.DATE);
     }
 
     @Test
@@ -135,6 +138,30 @@ public class ColumnFunctionEditorTest {
         presenter.onColumnSelected();
 
         assertEquals(presenter.getGroupFunction().getSourceId(), "column2");
+        verify(changeEvent).fire(any(GroupFunctionChangedEvent.class));
+    }
+
+    @Test
+    public void testUpdateFunctionsAvailable() {
+        GroupFunction groupFunction = new GroupFunction("column1", "column1", AggregateFunctionType.COUNT);
+        presenter.init(metadata, groupFunction, null, "Title", true, true);
+
+        List<AggregateFunctionType> typeListColumn1 = presenter.getSupportedFunctionTypes();
+        List<AggregateFunctionType> typeListLabel = presenter.getSupportedFunctionTypes(ColumnType.LABEL);
+        assertEquals(typeListColumn1.size(), typeListLabel.size());
+        verify(view).clearFunctionSelector();
+        verify(view, times(typeListLabel.size())).addFunctionItem(any(AggregateFunctionType.class));
+
+        reset(view);
+        when(view.getSelectedColumnId()).thenReturn("column2");
+        presenter.onColumnSelected();
+
+        List<AggregateFunctionType> typeListColumn2 = presenter.getSupportedFunctionTypes();
+        List<AggregateFunctionType> typeListNumber = presenter.getSupportedFunctionTypes(ColumnType.NUMBER);
+        assertEquals(typeListColumn2.size(), typeListNumber.size());
+        assertEquals(presenter.getGroupFunction().getSourceId(), "column2");
+        verify(view).clearFunctionSelector();
+        verify(view, times(typeListNumber.size())).addFunctionItem(any(AggregateFunctionType.class));
         verify(changeEvent).fire(any(GroupFunctionChangedEvent.class));
     }
 

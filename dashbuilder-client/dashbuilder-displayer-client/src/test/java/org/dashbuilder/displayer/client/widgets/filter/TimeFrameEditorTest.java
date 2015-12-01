@@ -16,6 +16,7 @@ package org.dashbuilder.displayer.client.widgets.filter;
 
 import org.dashbuilder.dataset.date.Month;
 import org.dashbuilder.dataset.date.TimeFrame;
+import org.dashbuilder.dataset.group.DateIntervalType;
 import org.jboss.errai.ioc.client.container.IOCBeanDef;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.junit.Before;
@@ -32,19 +33,25 @@ import static org.mockito.Mockito.*;
 public class TimeFrameEditorTest {
 
     @Mock
-    TimeFrameEditor.View timeFrameView;
-
-    @Mock
     SyncBeanManager beanManager;
 
     @Mock
-    IOCBeanDef<TimeInstantEditor> timeInstantEditorBeanDef;
-
-    @Mock
-    TimeInstantEditor timeInstantEditor;
-
-    @Mock
     Command changeCommand;
+
+    @Mock
+    TimeFrameEditor.View timeFrameView;
+
+    @Mock
+    TimeAmountEditor.View timeAmountView;
+
+    @Mock
+    TimeInstantEditor.View timeInstantView;
+
+    TimeAmountEditor fromAmountEditor;
+    TimeAmountEditor toAmountEditor;
+    TimeInstantEditor fromInstantEditor;
+    TimeInstantEditor toInstantEditor;
+    TimeFrameEditor timeFrameEditor;
 
     public static final TimeFrame TEN_DAYS = TimeFrame.parse("begin[year March] till 10day");
     public static final TimeFrame LAST_DAY = TimeFrame.parse("now -1day till now");
@@ -53,15 +60,20 @@ public class TimeFrameEditorTest {
 
     @Before
     public void init() {
-        when(beanManager.lookupBean(TimeInstantEditor.class)).thenReturn(timeInstantEditorBeanDef);
-        when(timeInstantEditorBeanDef.newInstance()).thenReturn(timeInstantEditor);
+        fromAmountEditor = new TimeAmountEditor(timeAmountView);
+        toAmountEditor = new TimeAmountEditor(timeAmountView);
+        fromInstantEditor = new TimeInstantEditor(timeInstantView, fromAmountEditor);
+        toInstantEditor = new TimeInstantEditor(timeInstantView, toAmountEditor);
+        timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
+
+        IOCBeanDef tieBeanDef = mock(IOCBeanDef.class);
+        when(beanManager.lookupBean(TimeInstantEditor.class)).thenReturn(tieBeanDef);
+        when(tieBeanDef.newInstance()).thenReturn(fromInstantEditor, toInstantEditor);
     }
 
     @Test
     public void testViewInitialization() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
-        timeFrameEditor.setTimeFrame(TEN_DAYS);
-        timeFrameEditor.setOnChangeCommand(changeCommand);
+        timeFrameEditor.init(TEN_DAYS, changeCommand);
 
         assertEquals(timeFrameView, timeFrameEditor.view);
         verify(timeFrameView).init(timeFrameEditor);
@@ -72,9 +84,7 @@ public class TimeFrameEditorTest {
 
     @Test
     public void testNullInitialization() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
-        timeFrameEditor.setTimeFrame(UNDEFINED);
-        timeFrameEditor.setOnChangeCommand(changeCommand);
+        timeFrameEditor.init(UNDEFINED, changeCommand);
 
         assertEquals(timeFrameView, timeFrameEditor.view);
         verify(timeFrameView).init(timeFrameEditor);
@@ -84,18 +94,52 @@ public class TimeFrameEditorTest {
     }
 
     @Test
+    public void testChangeTimeAmountQuantity() {
+        TimeFrame timeFrame = TimeFrame.parse("now -1year till now");
+        timeFrameEditor.init(timeFrame, changeCommand);
+
+        long qb = timeFrame.getFrom().getTimeAmount().getQuantity();
+        fromAmountEditor.decreaseQuantity();
+        long qa = timeFrame.getFrom().getTimeAmount().getQuantity();
+
+        verify(changeCommand).execute();
+        assertEquals(qb - 1, qa);
+    }
+
+    @Test
+    public void testChangeTimeAmountType() {
+        TimeFrame timeFrame = TimeFrame.parse("now -1year till now");
+        timeFrameEditor.init(timeFrame, changeCommand);
+
+        when(timeAmountView.getSelectedTypeIndex()).thenReturn(3);
+        fromAmountEditor.changeIntervalType();
+        DateIntervalType type = timeFrame.getFrom().getTimeAmount().getType();
+
+        verify(changeCommand).execute();
+        assertEquals(type, DateIntervalType.DAY);
+    }
+
+    @Test
+    public void testChangeTimeInstant() {
+        TimeFrame timeFrame = TimeFrame.parse("now -1year till now");
+        timeFrameEditor.init(timeFrame, changeCommand);
+
+        when(timeInstantView.getSelectedIntervalTypeIndex()).thenReturn(3);
+        fromInstantEditor.changeIntervalType();
+        DateIntervalType type = timeFrame.getFrom().getIntervalType();
+        verify(changeCommand).execute();
+        assertEquals(type, DateIntervalType.MONTH);
+    }
+
+    @Test
     public void testFirstMonthAvailable() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
-        timeFrameEditor.setTimeFrame(CURRENT_YEAR);
-        timeFrameEditor.setOnChangeCommand(changeCommand);
+        timeFrameEditor.init(CURRENT_YEAR, changeCommand);
         assertEquals(timeFrameEditor.isFirstMonthAvailable(), true);
     }
 
     @Test
     public void testFirstMonthUnavailable() {
-        TimeFrameEditor timeFrameEditor = new TimeFrameEditor(timeFrameView, beanManager);
-        timeFrameEditor.setTimeFrame(LAST_DAY);
-        timeFrameEditor.setOnChangeCommand(changeCommand);
+        timeFrameEditor.init(LAST_DAY, changeCommand);
         assertEquals(timeFrameEditor.isFirstMonthAvailable(), false);
     }
 }

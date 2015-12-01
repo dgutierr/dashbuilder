@@ -32,7 +32,7 @@ import org.jboss.errai.common.client.api.annotations.Portable;
 @Portable
 public class TimeAmount {
 
-    private long quantity = 1;
+    private long quantity = 0;
     private DateIntervalType type = DateIntervalType.DAY;
 
     public TimeAmount() {

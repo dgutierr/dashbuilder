@@ -39,12 +39,11 @@ public class TimeInstantEditorTest {
     @Mock
     Command changeCommand;
 
-
     @Test
     public void testViewInitialization() {
         TimeInstant beginMonth = new TimeInstant(TimeInstant.TimeMode.BEGIN, DateIntervalType.MONTH, Month.JANUARY, new TimeAmount(10, DateIntervalType.DAY));
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setTimeInstant(beginMonth);
+        timeInstantEditor.init(beginMonth, changeCommand);
 
         assertEquals(timeInstantView, timeInstantEditor.view);
         verify(timeInstantView).init(timeInstantEditor);
@@ -61,7 +60,7 @@ public class TimeInstantEditorTest {
     @Test
     public void testNullInitialization() {
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setTimeInstant(null);
+        timeInstantEditor.init(null, changeCommand);
 
         assertEquals(timeInstantView, timeInstantEditor.view);
         verify(timeInstantView).init(timeInstantEditor);
@@ -81,7 +80,7 @@ public class TimeInstantEditorTest {
         when(timeInstantView.getTimeModeSelectedIndex()).thenReturn(TimeInstant.TimeMode.BEGIN.getIndex());
 
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setOnChangeCommand(changeCommand);
+        timeInstantEditor.init(null, changeCommand);
         timeInstantEditor.changeTimeMode();
 
         TimeInstant timeInstant = timeInstantEditor.getTimeInstant();
@@ -94,7 +93,7 @@ public class TimeInstantEditorTest {
         when(timeInstantView.getSelectedIntervalTypeIndex()).thenReturn(0);
 
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setOnChangeCommand(changeCommand);
+        timeInstantEditor.init(null, changeCommand);
         timeInstantEditor.changeIntervalType();
 
         TimeInstant timeInstant = timeInstantEditor.getTimeInstant();
@@ -106,7 +105,7 @@ public class TimeInstantEditorTest {
     public void testSwitchToNow() {
 
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setOnChangeCommand(changeCommand);
+        timeInstantEditor.init(null, changeCommand);
 
         reset(timeInstantView);
         when(timeInstantView.getTimeModeSelectedIndex()).thenReturn(TimeInstant.TimeMode.NOW.getIndex());
@@ -123,7 +122,7 @@ public class TimeInstantEditorTest {
     public void testSwitchFromNow() {
 
         TimeInstantEditor timeInstantEditor = new TimeInstantEditor(timeInstantView, timeAmountEditor);
-        timeInstantEditor.setOnChangeCommand(changeCommand);
+        timeInstantEditor.init(null, changeCommand);
         reset(timeInstantView);
 
         when(timeInstantView.getTimeModeSelectedIndex()).thenReturn(TimeInstant.TimeMode.END.getIndex());

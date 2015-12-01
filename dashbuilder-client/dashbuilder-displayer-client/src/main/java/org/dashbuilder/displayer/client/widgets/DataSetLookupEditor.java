@@ -463,12 +463,21 @@ public class DataSetLookupEditor implements IsWidget {
             }
 
             String columnTitle = lookupConstraints.getColumnTitle(columnIdx);
-            ColumnFunctionEditor columnEditor = beanManager.lookupBean(ColumnFunctionEditor.class).newInstance();
-            columnEditor.init(dataSetMetadata, groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
-
-            _editorsMap.put(_editorsMap.size(), columnEditor);
-            view.addColumnEditor(columnEditor);
+            addColumn(groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
         }
+    }
+
+    void addColumn(GroupFunction groupFunction,
+                   ColumnType columnType,
+                   String columnTitle,
+                   boolean functionsEnabled,
+                   boolean canDelete) {
+
+        ColumnFunctionEditor columnEditor = beanManager.lookupBean(ColumnFunctionEditor.class).newInstance();
+        columnEditor.init(dataSetMetadata, groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
+
+        _editorsMap.put(_editorsMap.size(), columnEditor);
+        view.addColumnEditor(columnEditor);
     }
 
     int getGroupFunctionLastIdx(List<GroupFunction> groupFunctions, String sourceId) {
@@ -616,14 +625,15 @@ public class DataSetLookupEditor implements IsWidget {
     }
 
     void onColumnFunctionDeleted(@Observes GroupFunctionDeletedEvent event) {
-        GroupFunction removed = event.getGroupFunction();
         List<GroupFunction> functionList = getFirstGroupFunctions();
+        boolean canDelete = functionList.size() > lookupConstraints.getMinColumns();
+
+        GroupFunction removed = event.getGroupFunction();
         int index = getFirstGroupFunctionIdx(removed);
-        if (index >= 0) {
+        if (canDelete && index >= 0) {
+
             functionList.remove(index);
-            ColumnFunctionEditor editor = _editorsMap.get(index);
-            view.removeColumnEditor(editor);
-            beanManager.destroyBean(editor);
+            updateColumnControls();
             changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
         }
     }

@@ -44,6 +44,7 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     private static Binder uiBinder = GWT.create(Binder.class);
 
     ColumnFilterEditor presenter;
+    boolean functionSelected = false;
 
     @UiField
     ListBox filterListBox;
@@ -78,6 +79,7 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     @Override
     public void clearFunctionSelector() {
         filterListBox.clear();
+        functionSelected = false;
     }
 
     @Override
@@ -90,11 +92,16 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
     @Override
     public void setFunctionSelected(String function) {
         filterListBox.insertItem(function, 0);
+        filterListBox.setTitle(function);
+        if (functionSelected) {
+            filterListBox.removeItem(1);
+        }
+        functionSelected = true;
     }
 
     @Override
     public int getSelectedFunctionIndex() {
-        return filterListBox.getSelectedIndex() - 1;
+        return filterListBox.getSelectedIndex() - (functionSelected ? 1 : 0);
     }
 
     @Override

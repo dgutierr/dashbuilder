@@ -161,6 +161,12 @@ public class DataSetLookup {
         return this;
     }
 
+    public DataSetGroup getFirstGroupOp() {
+        List<DataSetGroup> ops = getOperationList(DataSetGroup.class);
+        if (ops.isEmpty()) return null;
+        return ops.get(0);
+    }
+
     public DataSetFilter getFirstFilterOp() {
         List<DataSetFilter> ops = getOperationList(DataSetFilter.class);
         if (ops.isEmpty()) return null;

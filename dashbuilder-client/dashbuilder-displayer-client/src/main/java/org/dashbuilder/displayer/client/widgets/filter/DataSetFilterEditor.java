@@ -44,6 +44,8 @@ public class DataSetFilterEditor implements IsWidget {
 
         void showNewFilterHome();
 
+        void clearColumnSelector();
+
         void showColumnSelector();
 
         void addColumn(String column);
@@ -51,6 +53,8 @@ public class DataSetFilterEditor implements IsWidget {
         int getSelectedColumnIndex();
 
         void resetSelectedColumn();
+
+        void clearColumnFilterEditors();
 
         void addColumnFilterEditor(ColumnFilterEditor editor);
 
@@ -87,12 +91,15 @@ public class DataSetFilterEditor implements IsWidget {
         this.filter = filter;
         this.metadata = metadata;
         view.showNewFilterHome();
+        view.clearColumnSelector();
         if (metadata != null) {
             for (int i = 0; i < metadata.getNumberOfColumns(); i++) {
                 view.addColumn(metadata.getColumnId(i));
             }
         }
 
+        view.clearColumnFilterEditors();
+        _editorsMap.clear();
         if (filter != null) {
             for (ColumnFilter columnFilter : filter.getColumnFilterList()) {
                 ColumnFilterEditor columnFilterEditor = beanManager.lookupBean(ColumnFilterEditor.class).newInstance();
@@ -103,15 +110,17 @@ public class DataSetFilterEditor implements IsWidget {
         }
     }
 
-    public void newFilterStart() {
+    // View notifications
+
+    public void onNewFilterStart() {
         view.showColumnSelector();
     }
 
-    public void newFilterCancel() {
+    public void onNewFilterCancel() {
         view.showNewFilterHome();
     }
 
-    public void createFilter() {
+    public void onCreateFilter() {
         int selectedIdx = view.getSelectedColumnIndex();
         String columnId = metadata.getColumnId(selectedIdx);
         ColumnType columnType = metadata.getColumnType(selectedIdx);
@@ -134,6 +143,8 @@ public class DataSetFilterEditor implements IsWidget {
         view.showNewFilterHome();
         changeEvent.fire(new DataSetFilterChangedEvent(filter));
     }
+
+    // Column filter child component callbacks
 
     protected void onColumnFilterChanged(@Observes ColumnFilterChangedEvent event) {
         changeEvent.fire(new DataSetFilterChangedEvent(filter));

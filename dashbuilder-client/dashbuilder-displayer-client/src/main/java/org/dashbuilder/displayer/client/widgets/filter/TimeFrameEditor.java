@@ -57,7 +57,6 @@ public class TimeFrameEditor implements IsWidget {
     public TimeFrameEditor(View view, SyncBeanManager beanManager) {
         this.view = view;
         this.beanManager = beanManager;
-        this.view.init(this);
     }
 
     @Override
@@ -77,32 +76,30 @@ public class TimeFrameEditor implements IsWidget {
         return toEditor;
     }
 
-    public void setOnChangeCommand(Command onChangeCommand) {
+    public void init(TimeFrame tf, Command onChangeCommand) {
         this.onChangeCommand = onChangeCommand;
-    }
-
-    public void setTimeFrame(TimeFrame tf) {
         this.timeFrame = tf != null ? tf : TimeFrame.parse("begin[year] till end[year]");
 
         this.fromEditor = beanManager.lookupBean(TimeInstantEditor.class).newInstance();
-        this.fromEditor.setTimeInstant(timeFrame.getFrom());
-        this.fromEditor.setOnChangeCommand(new Command() {
+        this.fromEditor.init(timeFrame.getFrom(), new Command() {
             public void execute() {
                 fromEditor.getTimeInstant().setFirstMonthOfYear(getFirstMonthOfYear());
+                timeFrame.setFrom(fromEditor.getTimeInstant());
                 changeFirstMonthAvailability();
                 fireChanges();
             }
         });
         this.toEditor = beanManager.lookupBean(TimeInstantEditor.class).newInstance();
-        this.toEditor.setTimeInstant(timeFrame.getTo());
-        this.toEditor.setOnChangeCommand(new Command() {
+        this.toEditor.init(timeFrame.getTo(), new Command() {
             public void execute() {
                 toEditor.getTimeInstant().setFirstMonthOfYear(getFirstMonthOfYear());
+                timeFrame.setTo(toEditor.getTimeInstant());
                 changeFirstMonthAvailability();
                 fireChanges();
             }
         });
 
+        view.init(this);
         initFirstMonthSelector();
         changeFirstMonthAvailability();
     }
@@ -192,7 +189,7 @@ public class TimeFrameEditor implements IsWidget {
 
     public void changeFirstMonth() {
         int selectedIdx = view.getSelectedFirstMonthIndex();
-        Month month = Month.getByIndex(selectedIdx+1);
+        Month month = Month.getByIndex(selectedIdx + 1);
         setFirstMonthOfYear(month);
         fireChanges();
     }

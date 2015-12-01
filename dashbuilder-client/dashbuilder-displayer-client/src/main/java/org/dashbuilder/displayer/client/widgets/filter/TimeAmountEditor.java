@@ -73,17 +73,15 @@ public class TimeAmountEditor implements IsWidget {
         return view.asWidget();
     }
 
-    public void setOnChangeCommand(Command onChangeCommand) {
-        this.onChangeCommand = onChangeCommand;
-    }
-
     public TimeAmount getTimeAmount() {
         return timeAmount;
     }
 
-    public void setTimeAmount(final TimeAmount amount) {
-        this.timeAmount = amount;
+    public void init(final TimeAmount ta, Command onChangeCommand) {
+        this.onChangeCommand = onChangeCommand;
+        this.timeAmount = ta != null ? ta : new TimeAmount();
 
+        view.setQuantity(timeAmount.getQuantity());
         view.clearIntervalTypeSelector();
         for (int i=0; i< INTERVAL_TYPES.size(); i++) {
             DateIntervalType type = INTERVAL_TYPES.get(i);
@@ -92,18 +90,9 @@ public class TimeAmountEditor implements IsWidget {
                 view.setSelectedTypeIndex(i);
             }
         }
-
-        if (timeAmount == null) {
-            view.setQuantity(0);
-        } else {
-            view.setQuantity(timeAmount.getQuantity());
-        }
     }
 
     public long getQuantity() {
-        if (timeAmount == null) {
-            return 0;
-        }
         return timeAmount.getQuantity();
     }
 
