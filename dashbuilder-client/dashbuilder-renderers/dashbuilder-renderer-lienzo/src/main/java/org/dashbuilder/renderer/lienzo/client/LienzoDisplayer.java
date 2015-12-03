@@ -172,7 +172,7 @@ public abstract class LienzoDisplayer<V extends LienzoDisplayer.View> extends Ab
                 for (int j = 0; j < columnValues.size(); j++) {
                     Object value = columnValues.get(j);
                     if (ColumnType.LABEL.equals(columnType)) {
-                        value = super.formatValue(i, j);
+                        value = super.formatValue(j, i);
                     }
 
                     if (ColumnType.DATE.equals(columnType)) {
