@@ -43,8 +43,8 @@ public class LienzoBarChartDisplayer extends LienzoXYChartDisplayer<LienzoBarCha
     protected void createVisualization() {
         DisplayerSubType subType = displayerSettings.getSubtype();
         getView().setHorizontal(subType != null &&
-                        (DisplayerSubType.COLUMN.equals(subType) ||
-                        DisplayerSubType.COLUMN_STACKED.equals(subType)));
+                        (DisplayerSubType.BAR.equals(subType) ||
+                        DisplayerSubType.BAR_STACKED.equals(subType)));
 
         super.createVisualization();
     }

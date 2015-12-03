@@ -56,12 +56,12 @@ public abstract class LienzoCategoriesDisplayerView<P extends LienzoDisplayer, C
 
         layer.setTransformable(true);
         layer.add(chart);
-        layer.draw();
 
         chartPanel.add(layer);
         resizePanel(width, height);
 
         super.showDisplayer(chartPanel);
+        layer.draw();
     }
 
     @Override

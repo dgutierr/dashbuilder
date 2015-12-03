@@ -33,7 +33,7 @@ public abstract class LienzoXYChartDisplayerView<P extends LienzoXYChartDisplaye
     protected String yAxisTitle = null;
     protected boolean showXLabels = false;
     protected boolean showYLabels = false;
-    protected boolean horizontal = true;
+    protected boolean horizontal = false;
 
     @Override
     public void setShowXLabels(boolean showXLabels) {
@@ -91,7 +91,7 @@ public abstract class LienzoXYChartDisplayerView<P extends LienzoXYChartDisplaye
     protected XYChartData createChartData() {
         XYChartData chartData = new XYChartData(getDataTable());
         if (categoriesColumn != null) {
-            if (seriesColumnList.isEmpty()) {
+            if (!seriesColumnList.isEmpty()) {
                 chartData.setCategoryAxisProperty(categoriesColumn.columnId);
                 for (int i=0; i<seriesColumnList.size(); i++) {
                     Column dataColumn = seriesColumnList.get(i);
