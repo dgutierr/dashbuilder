@@ -148,21 +148,10 @@ public class DataSetLookupEditor implements IsWidget {
         this.groupDateEditor = groupDateEditor;
         this.clientServices = clientServices;
         this.changeEvent = event;
-
         this.dataSetLookup = null;
         this.lookupConstraints = null;
         this.dataSetMetadata = null;
         view.init(this);
-    }
-
-    public void init(DataSetLookupConstraints lookupConstraints) {
-        this.lookupConstraints = lookupConstraints;
-        this.view.clearAll();
-        this.clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
-            public void callback(List<DataSetDef> dataSetDefs) {
-                showDataSetDefs(dataSetDefs);
-            }
-        });
     }
 
     public void init(DataSetLookupConstraints lookupConstraints, final DataSetLookup dataSetLookup) {
@@ -172,11 +161,13 @@ public class DataSetLookupEditor implements IsWidget {
         this.clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
             public void callback(List<DataSetDef> dataSetDefs) {
                 showDataSetDefs(dataSetDefs);
-                fetchMetadata(dataSetLookup.getDataSetUUID(), new RemoteCallback<DataSetMetadata>() {
-                    public void callback(DataSetMetadata metadata) {
-                        updateDataSetLookup();
-                    }
-                });
+                if (dataSetLookup != null && dataSetLookup.getDataSetUUID() != null) {
+                    fetchMetadata(dataSetLookup.getDataSetUUID(), new RemoteCallback<DataSetMetadata>() {
+                        public void callback(DataSetMetadata metadata) {
+                            updateDataSetLookup();
+                        }
+                    });
+                }
             }
         });
     }
@@ -463,21 +454,12 @@ public class DataSetLookupEditor implements IsWidget {
             }
 
             String columnTitle = lookupConstraints.getColumnTitle(columnIdx);
-            addColumn(groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
+            ColumnFunctionEditor columnEditor = beanManager.lookupBean(ColumnFunctionEditor.class).newInstance();
+            columnEditor.init(dataSetMetadata, groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
+
+            _editorsMap.put(_editorsMap.size(), columnEditor);
+            view.addColumnEditor(columnEditor);
         }
-    }
-
-    void addColumn(GroupFunction groupFunction,
-                   ColumnType columnType,
-                   String columnTitle,
-                   boolean functionsEnabled,
-                   boolean canDelete) {
-
-        ColumnFunctionEditor columnEditor = beanManager.lookupBean(ColumnFunctionEditor.class).newInstance();
-        columnEditor.init(dataSetMetadata, groupFunction, columnType, columnTitle, functionsEnabled, canDelete);
-
-        _editorsMap.put(_editorsMap.size(), columnEditor);
-        view.addColumnEditor(columnEditor);
     }
 
     int getGroupFunctionLastIdx(List<GroupFunction> groupFunctions, String sourceId) {
@@ -504,14 +486,6 @@ public class DataSetLookupEditor implements IsWidget {
             }
         }
         return 1;
-    }
-
-    String nextGroupFunctionColumnId(String sourceId, AggregateFunctionType function) {
-        int lastIdx = getGroupFunctionLastIdx(getFirstGroupFunctions(), sourceId);
-        String next = sourceId;
-        if (function != null) next += "_" + function.name().toLowerCase();
-        if (lastIdx != -1) next += "_" + (++lastIdx);
-        return next;
     }
 
     // View notifications
@@ -586,7 +560,7 @@ public class DataSetLookupEditor implements IsWidget {
             GroupFunction last = functionList.get(functionList.size() - 1);
 
             GroupFunction clone = last.cloneInstance();
-            String newColumnId = nextGroupFunctionColumnId(last.getSourceId(), last.getFunction());
+            String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup, clone);
             clone.setColumnId(newColumnId);
             functionList.add(clone);
 
@@ -621,6 +595,9 @@ public class DataSetLookupEditor implements IsWidget {
     // ColumnFunctionEditor's events
 
     void onColumnFunctionChanged(@Observes GroupFunctionChangedEvent event) {
+        GroupFunction gf = event.getGroupFunction();
+        String newColumnId = lookupConstraints.buildUniqueColumnId(dataSetLookup, gf);
+        gf.setColumnId(newColumnId);
         changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
     }
 

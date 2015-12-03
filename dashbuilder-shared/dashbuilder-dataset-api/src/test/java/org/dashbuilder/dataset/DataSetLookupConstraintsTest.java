@@ -81,15 +81,20 @@ public class DataSetLookupConstraintsTest {
         ColumnGroup cg = groupOp.getColumnGroup();
         assertNotNull(groupOp);
         assertEquals(cg.getSourceId(), OFFICE);
+        assertEquals(cg.getColumnId(), OFFICE);
         assertEquals(cg.getStrategy(), GroupStrategy.DYNAMIC);
 
         GroupFunction gf1 = groupOp.getGroupFunction(OFFICE);
-        GroupFunction gf2 = groupOp.getGroupFunction(AMOUNT);
         assertNotNull(gf1);
-        assertNotNull(gf2);
-        assertEquals(gf1.getSourceId(), OFFICE);
         assertNull(gf1.getFunction());
+        assertEquals(gf1.getSourceId(), OFFICE);
+        assertEquals(gf1.getColumnId(), OFFICE);
+
+        GroupFunction gf2 = groupOp.getGroupFunction(AMOUNT);
+        assertNotNull(gf2);
         assertNotNull(gf2.getFunction());
+        assertEquals(gf2.getSourceId(), AMOUNT);
+        assertEquals(gf2.getColumnId(), AMOUNT);
     }
 
     @Test
@@ -115,6 +120,7 @@ public class DataSetLookupConstraintsTest {
             GroupFunction gf = groupOp.getGroupFunction(METADATA.getColumnId(i));
             assertNotNull(gf);
             assertEquals(gf.getSourceId(), METADATA.getColumnId(i));
+            assertEquals(gf.getColumnId(), METADATA.getColumnId(i));
             assertNull(gf.getFunction());
         }
     }
@@ -168,6 +174,7 @@ public class DataSetLookupConstraintsTest {
         assertNotNull(error);
         assertEquals(error.getCode(), DataSetLookupConstraints.ERROR_GROUP_REQUIRED);
     }
+
     @Test
     public void testWrongColumnType() {
         DataSetLookup lookup = DataSetFactory.newDataSetLookupBuilder()
@@ -189,5 +196,26 @@ public class DataSetLookupConstraintsTest {
         error = TWO_COLUMNS_GROUPED.check(lookup, METADATA);
         assertNotNull(error);
         assertEquals(error.getCode(), DataSetLookupConstraints.ERROR_COLUMN_TYPE);
+    }
+
+    @Test
+    public void testUniqueColumns() {
+        DataSetLookupConstraints UNIQUE_COLUMNS = new DataSetLookupConstraints()
+                .setUniqueColumnIds(true);
+
+        DataSetLookup lookup = DataSetFactory.newDataSetLookupBuilder()
+                .group(DEPARTMENT)
+                .column(DEPARTMENT, "dept")
+                .column(AMOUNT, AggregateFunctionType.AVERAGE, "amount")
+                .column(AMOUNT, AggregateFunctionType.SUM, "amount")
+                .buildLookup();
+
+        ValidationError error = UNIQUE_COLUMNS.check(lookup, METADATA);
+        assertNotNull(error);
+        assertEquals(error.getCode(), DataSetLookupConstraints.ERROR_DUPLICATED_COLUMN_ID);
+
+        UNIQUE_COLUMNS.setUniqueColumnIds(false);
+        error = UNIQUE_COLUMNS.check(lookup, METADATA);
+        assertNull(error);
     }
 }

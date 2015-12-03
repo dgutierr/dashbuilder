@@ -47,7 +47,7 @@ public class TimeAmountEditor implements IsWidget {
         int getSelectedTypeIndex();
     }
 
-    static List<DateIntervalType> INTERVAL_TYPES = Arrays.asList(
+    public static List<DateIntervalType> INTERVAL_TYPES = Arrays.asList(
             DateIntervalType.SECOND,
             DateIntervalType.MINUTE,
             DateIntervalType.HOUR,

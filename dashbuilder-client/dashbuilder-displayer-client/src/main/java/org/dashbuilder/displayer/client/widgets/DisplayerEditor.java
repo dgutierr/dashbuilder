@@ -141,7 +141,6 @@ public class DisplayerEditor implements IsWidget {
     }
 
     public void init(DisplayerSettings settings) {
-        selectedTypeSettings = null;
         if (settings != null) {
             brandNewDisplayer = false;
             displayerSettings = settings;
@@ -150,6 +149,7 @@ public class DisplayerEditor implements IsWidget {
             displayerSettings = displayerPrototypes.getProto(DisplayerType.BARCHART);
             displayerSettings.setTitle(view.getBrandNewDisplayerTitle());
         }
+        selectedTypeSettings = displayerSettings;
 
         initDisplayer();
         initTypeSelector();
@@ -171,11 +171,7 @@ public class DisplayerEditor implements IsWidget {
 
     protected void initLookupEditor() {
         DataSetLookupConstraints lookupConstraints = displayer.getDisplayerConstraints().getDataSetLookupConstraints();
-        if (displayerSettings.getDataSet() == null && displayerSettings.getDataSetLookup() != null) {
-            lookupEditor.init(lookupConstraints, displayerSettings.getDataSetLookup());
-        } else {
-            lookupEditor.init(lookupConstraints);
-        }
+        lookupEditor.init(lookupConstraints, displayerSettings.getDataSetLookup());
     }
 
     protected void initTypeSelector() {
@@ -357,7 +353,7 @@ public class DisplayerEditor implements IsWidget {
     }
 
     void onDisplayerSubtypeChanged(@Observes DisplayerSubtypeSelectedEvent event) {
-        displayerTypeChanged(displayerSettings.getType(), event.getSelectedSubType());
+        displayerTypeChanged(selectedTypeSettings.getType(), event.getSelectedSubType());
     }
 
     void displayerTypeChanged(DisplayerType type, DisplayerSubType displayerSubType) {
@@ -427,7 +423,9 @@ public class DisplayerEditor implements IsWidget {
     }
 
     void abortSelectedType() {
+        selectedTypeSettings = displayerSettings;
         typeSelector.init(displayerSettings.getType(), displayerSettings.getSubtype());
+        view.showDisplayer(displayer);
     }
 
     List<String> getExistingDataColumnIds() {

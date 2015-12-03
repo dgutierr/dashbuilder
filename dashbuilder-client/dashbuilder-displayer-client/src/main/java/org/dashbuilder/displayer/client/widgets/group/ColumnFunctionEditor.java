@@ -111,7 +111,7 @@ public class ColumnFunctionEditor implements IsWidget {
 
         columnDetailsEditor.init(metadata, this.groupFunction);
         view.setColumnSelectorTitle(columnTitle);
-        setDeleteOptionEnabled(canDelete);
+        view.setDeleteOptionEnabled(canDelete);
         initColumnListBox();
 
         if (functionsEnabled && (targetType == null || isColumnNumeric())) {
@@ -120,10 +120,6 @@ public class ColumnFunctionEditor implements IsWidget {
         } else {
             view.setFunctionSelectorEnabled(false);
         }
-    }
-
-    public void setDeleteOptionEnabled(boolean enabled) {
-        view.setDeleteOptionEnabled(enabled);
     }
 
     public void delete() {

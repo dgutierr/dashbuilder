@@ -120,7 +120,7 @@ public class DisplayerEditorTest {
         verify(displayer).draw();
 
         verify(typeSelector).init(any(DisplayerType.class), any(DisplayerSubType.class));
-        verify(lookupEditor).init(lookupConstraints);
+        verify(lookupEditor).init(lookupConstraints, null);
         verify(settingsEditor).init(displayerSettings);
 
         verify(view).showDisplayer(displayer);

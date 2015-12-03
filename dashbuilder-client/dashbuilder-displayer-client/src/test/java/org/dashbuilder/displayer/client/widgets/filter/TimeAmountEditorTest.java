@@ -41,8 +41,8 @@ public class TimeAmountEditorTest {
         editor.init(timeAmount, changeCommand);
 
         verify(timeAmountView).clearIntervalTypeSelector();
-        verify(timeAmountView, atLeastOnce()).addIntervalTypeItem(any(DateIntervalType.class));
-        verify(timeAmountView).setSelectedTypeIndex(any(Integer.class));
+        verify(timeAmountView, times(TimeAmountEditor.INTERVAL_TYPES.size())).addIntervalTypeItem(any(DateIntervalType.class));
+        verify(timeAmountView).setSelectedTypeIndex(3);
         verify(timeAmountView).setQuantity(10);
     }
 
@@ -52,8 +52,10 @@ public class TimeAmountEditorTest {
         editor.init(null, changeCommand);
 
         verify(timeAmountView).clearIntervalTypeSelector();
-        verify(timeAmountView, atLeastOnce()).addIntervalTypeItem(any(DateIntervalType.class));
-        verify(timeAmountView, never()).setSelectedTypeIndex(any(Integer.class));
+        verify(timeAmountView, times(TimeAmountEditor.INTERVAL_TYPES.size())).addIntervalTypeItem(any(DateIntervalType.class));
+
+        // "0year" set by default
+        verify(timeAmountView).setSelectedTypeIndex(7);
         verify(timeAmountView).setQuantity(0);
     }
 

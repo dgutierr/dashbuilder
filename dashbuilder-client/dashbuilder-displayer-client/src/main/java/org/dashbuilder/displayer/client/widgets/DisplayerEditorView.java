@@ -21,10 +21,10 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import org.dashbuilder.common.client.error.ClientRuntimeError;
+import org.dashbuilder.common.client.widgets.AlertPanel;
 import org.dashbuilder.displayer.client.Displayer;
 import org.dashbuilder.displayer.client.resources.i18n.CommonConstants;
 import org.gwtbootstrap3.client.ui.CheckBox;
@@ -32,6 +32,8 @@ import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Row;
 import org.gwtbootstrap3.client.ui.TabListItem;
 import org.uberfire.mvp.Command;
+import org.gwtbootstrap3.client.ui.constants.AlertType;
+
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -148,11 +150,11 @@ public class DisplayerEditorView extends Composite
 
     @Override
     public void showTypeChangedWarning(Command yes, Command no) {
-        if (Window.confirm(CommonConstants.INSTANCE.displayer_editor_incompatible_settings())) {
-            yes.execute();
-        } else {
-            no.execute();
-        }
+        AlertPanel alertPanel = new AlertPanel();
+        String alertMsg = CommonConstants.INSTANCE.displayer_editor_incompatible_settings();
+        alertPanel.show(AlertType.INFO, alertMsg, 400, yes, no);
+        centerColumn.clear();
+        centerColumn.add(alertPanel);
     }
 
     @Override

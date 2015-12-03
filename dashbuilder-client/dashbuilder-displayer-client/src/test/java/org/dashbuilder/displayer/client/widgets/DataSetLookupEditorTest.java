@@ -32,6 +32,7 @@ import org.dashbuilder.dataset.group.DataSetGroup;
 import org.dashbuilder.dataset.group.GroupFunction;
 import org.dashbuilder.dataset.impl.DataSetMetadataImpl;
 import org.dashbuilder.displayer.client.events.DataSetLookupChangedEvent;
+import org.dashbuilder.displayer.client.events.GroupFunctionChangedEvent;
 import org.dashbuilder.displayer.client.events.GroupFunctionDeletedEvent;
 import org.dashbuilder.displayer.client.widgets.filter.DataSetFilterEditor;
 import org.dashbuilder.displayer.client.widgets.group.ColumnFunctionEditor;
@@ -201,7 +202,7 @@ public class DataSetLookupEditorTest {
 
     @Test
     public void testNonExistingLookup() {
-        presenter.init(DATA_2D_FIXED);
+        presenter.init(DATA_2D_FIXED, null);
 
         verify(view).clearDataSetSelector();
         verify(view).setDataSetSelectorHintEnabled(true);
@@ -258,6 +259,23 @@ public class DataSetLookupEditorTest {
     }
 
     @Test
+    public void testFromNonExistingLookup() {
+        presenter.init(DATA_2D_FIXED, DataSetFactory.newDataSetLookupBuilder()
+                .dataset(POPULATION_UUID)
+                .filter(greaterThan(100))
+                .group("country")
+                .column("country", "Country")
+                .column("population", AggregateFunctionType.SUM, "Total")
+                .buildLookup());
+
+        verify(view, never()).setDataSetSelectorHintEnabled(true);
+
+        reset(view);
+        presenter.init(DATA_2D_FIXED, null);
+        verify(view).setDataSetSelectorHintEnabled(true);
+    }
+
+    @Test
     public void testDataSetDefFilter() {
 
         presenter.setDataSetDefFilter(new DataSetLookupEditor.DataSetDefFilter() {
@@ -266,7 +284,7 @@ public class DataSetLookupEditorTest {
             }
         });
 
-        presenter.init(DATA_2D_FIXED);
+        presenter.init(DATA_2D_FIXED, null);
 
         verify(view).clearDataSetSelector();
         verify(view, never()).addDataSetItem("Population", POPULATION_UUID);
@@ -311,14 +329,14 @@ public class DataSetLookupEditorTest {
                 .column("population")
                 .buildLookup();
 
-        GroupFunction year = lookup.getFirstGroupOp().getGroupFunction("year");
+        GroupFunction year = lookup.getLastGroupOp().getGroupFunction("year");
         presenter.init(DATA_MULTIPLE, lookup);
-        presenter.onColumnFunctionDeleted(new GroupFunctionDeletedEvent(year));
-        presenter.onAddColumn();
 
-        verify(columnFunctionEditor).setDeleteOptionEnabled(false);
-        verify(beanManager).destroyBean(anyObject());
-        verify(view).setAddColumnOptionEnabled(true);
+        reset(view);
+        presenter.onColumnFunctionDeleted(new GroupFunctionDeletedEvent(year));
+
+        verify(view).clearColumnList();
+        verify(view, times(1)).addColumnEditor(any(ColumnFunctionEditor.class));
         verify(event).fire(any(DataSetLookupChangedEvent.class));
     }
 
@@ -414,14 +432,10 @@ public class DataSetLookupEditorTest {
     }
 
     @Test
-    public void testExtraColumnsAllowed() {
-        presenter.init(DATA_2D_MULTIPLE, DataSetFactory.newDataSetLookupBuilder()
-                .dataset(POPULATION_UUID)
-                .group("country")
-                .column("country")
-                .column("population", AggregateFunctionType.SUM)
-                .buildLookup());
+    public void testAddColumns() {
 
+        DataSetLookup lookup = DATA_2D_MULTIPLE.newDataSetLookup(POPULATION_META);
+        presenter.init(DATA_2D_MULTIPLE, lookup);
 
         verify(view).setAddColumnOptionEnabled(true);
         presenter.onAddColumn();
@@ -429,31 +443,38 @@ public class DataSetLookupEditorTest {
 
         assertEquals(presenter.getFirstGroupFunctions().size(), 3);
         assertEquals(presenter.getFirstGroupFunctions().get(2).getSourceId(), "population");
-        assertEquals(presenter.getFirstGroupFunctions().get(2).getColumnId(), "population_sum_2");
+        assertEquals(presenter.getFirstGroupFunctions().get(2).getColumnId(), "population_2");
         assertEquals(presenter.getFirstGroupFunctions().get(2).getFunction(), AggregateFunctionType.SUM);
 
         presenter.onAddColumn();
         assertEquals(presenter.getFirstGroupFunctions().size(), 4);
         assertEquals(presenter.getFirstGroupFunctions().get(3).getSourceId(), "population");
-        assertEquals(presenter.getFirstGroupFunctions().get(3).getColumnId(), "population_sum_3");
+        assertEquals(presenter.getFirstGroupFunctions().get(3).getColumnId(), "population_3");
         assertEquals(presenter.getFirstGroupFunctions().get(3).getFunction(), AggregateFunctionType.SUM);
 
         reset(event);
-        GroupFunction gf = new GroupFunction("population", "population_sum_2", AggregateFunctionType.SUM);
+        GroupFunction gf = new GroupFunction("population", "population_2", AggregateFunctionType.SUM);
         presenter.onColumnFunctionDeleted(new GroupFunctionDeletedEvent(gf));
-        verify(view).removeColumnEditor(any(ColumnFunctionEditor.class));
         verify(event).fire(any(DataSetLookupChangedEvent.class));
-
         assertEquals(presenter.getFirstGroupFunctions().size(), 3);
         assertEquals(presenter.getFirstGroupFunctions().get(2).getSourceId(), "population");
-        assertEquals(presenter.getFirstGroupFunctions().get(2).getColumnId(), "population_sum_3");
+        assertEquals(presenter.getFirstGroupFunctions().get(2).getColumnId(), "population_3");
         assertEquals(presenter.getFirstGroupFunctions().get(2).getFunction(), AggregateFunctionType.SUM);
 
         presenter.onAddColumn();
         assertEquals(presenter.getFirstGroupFunctions().size(), 4);
         assertEquals(presenter.getFirstGroupFunctions().get(3).getSourceId(), "population");
-        assertEquals(presenter.getFirstGroupFunctions().get(3).getColumnId(), "population_sum_4");
+        assertEquals(presenter.getFirstGroupFunctions().get(3).getColumnId(), "population_2");
         assertEquals(presenter.getFirstGroupFunctions().get(3).getFunction(), AggregateFunctionType.SUM);
+    }
 
+    @Test
+    public void testColumnChanged() {
+        DataSetLookup lookup = DATA_2D_MULTIPLE.newDataSetLookup(POPULATION_META);
+        presenter.init(DATA_2D_MULTIPLE, lookup);
+
+        GroupFunction gf = new GroupFunction("population", "population", AggregateFunctionType.SUM);
+        presenter.onColumnFunctionChanged(new GroupFunctionChangedEvent(gf));
+        assertEquals(gf.getColumnId(), "population_2");
     }
 }

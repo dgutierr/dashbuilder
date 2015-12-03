@@ -36,7 +36,7 @@ public class TimeAmount {
     private DateIntervalType type = DateIntervalType.DAY;
 
     public TimeAmount() {
-        this(1, DateIntervalType.YEAR);
+        this(0, DateIntervalType.YEAR);
     }
 
     public TimeAmount(long quantity, DateIntervalType sizeType) {
