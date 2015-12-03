@@ -444,7 +444,7 @@ public class GalleryTree {
                         .width(300).height(200)
                         .margins(50, 50, 50, 50)
                         .backgroundColor("ADE8D4")
-                        .filterOn(false, false, true)
+                        .filterOff(true)
                         .dataset(DataSetFactory.newDataSetBuilder()
                         .number("tweets")
                         .row(54213d)

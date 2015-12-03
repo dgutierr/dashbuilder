@@ -17,6 +17,7 @@ package org.dashbuilder.renderer.client.metric;
 
 import java.util.List;
 
+import org.dashbuilder.common.client.StringUtils;
 import org.dashbuilder.dataset.ColumnType;
 import org.dashbuilder.dataset.DataSetLookupConstraints;
 import org.dashbuilder.dataset.filter.DataSetFilter;
@@ -24,17 +25,36 @@ import org.dashbuilder.displayer.DisplayerAttributeDef;
 import org.dashbuilder.displayer.DisplayerAttributeGroupDef;
 import org.dashbuilder.displayer.DisplayerConstraints;
 import org.dashbuilder.displayer.DisplayerSettings;
+import org.dashbuilder.displayer.DisplayerSubType;
 import org.dashbuilder.displayer.client.AbstractDisplayer;
 
 public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
 
     public interface View extends AbstractDisplayer.View<MetricDisplayer> {
 
-        void show(DisplayerSettings displayerSettings);
+        void showTitle(String title);
+
+        void setWidth(int width);
+
+        void setHeight(int height);
+
+        void setMarginTop(int marginTop);
+
+        void setMarginBottom(int marginBottom);
+
+        void setMarginRight(int marginRight);
+
+        void setMarginLeft(int marginLeft);
+
+        void setBgColor(String color);
+
+        void setFilterEnabled(boolean enabled);
+
+        void setFilterActive(boolean active);
+
+        void setValue(String value);
 
         void nodata();
-
-        void update(String value);
 
         String getColumnsTitle();
     }
@@ -84,7 +104,19 @@ public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
 
     @Override
     protected void createVisualization() {
-        view.show(displayerSettings);
+        if (displayerSettings.isTitleVisible()) {
+            view.showTitle(displayerSettings.getTitle());
+        }
+        view.setWidth(displayerSettings.getChartWidth());
+        view.setHeight(displayerSettings.getChartHeight());
+        view.setMarginTop(displayerSettings.getChartMarginTop());
+        view.setMarginBottom(displayerSettings.getChartMarginBottom());
+        view.setMarginRight(displayerSettings.getChartMarginRight());
+        view.setMarginLeft(displayerSettings.getChartMarginLeft());
+        view.setFilterEnabled(displayerSettings.isFilterEnabled() && fetchFilter() != null);
+        if (!StringUtils.isBlank(displayerSettings.getChartBackgroundColor())) {
+            view.setBgColor("#" + displayerSettings.getChartBackgroundColor());
+        }
         updateVisualization();
     }
 
@@ -94,7 +126,7 @@ public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
             view.nodata();
         } else {
             String valueStr = super.formatValue(0, 0);
-            view.update(valueStr);
+            view.setValue(valueStr);
         }
     }
 
@@ -128,22 +160,20 @@ public class MetricDisplayer extends AbstractDisplayer<MetricDisplayer.View> {
     }
 
     public void filterApply() {
-        filterOn = true;
-        DisplayerSettings clone = displayerSettings.cloneInstance();
-        clone.setChartBackgroundColor("DDDDDD");
-        view.show(clone);
-
         DataSetFilter filter = fetchFilter();
-        super.filterApply(filter);
+        if (displayerSettings.isFilterEnabled() && filter != null) {
+            filterOn = true;
+            view.setFilterActive(true);
+            super.filterApply(filter);
+        }
     }
 
     @Override
     public void filterReset() {
-        filterOn = false;
-        view.show(displayerSettings);
-
         DataSetFilter filter = fetchFilter();
-        if (filter != null) {
+        if (filterOn && filter != null) {
+            filterOn = false;
+            view.setFilterActive(false);
             super.filterReset();
         }
     }

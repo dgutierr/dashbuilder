@@ -37,7 +37,7 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
     public static final int ERROR_GROUP_REQUIRED = 203;
     public static final int ERROR_DUPLICATED_COLUMN_ID = 204;
 
-    protected boolean uniqueColumnIds = true;
+    protected boolean uniqueColumnIds = false;
     protected boolean groupAllowed = true;
     protected boolean groupRequired = false;
     protected int maxGroups = -1;
@@ -156,10 +156,10 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
             }
             List<GroupFunction> groupFunctions = groupOp.getGroupFunctions();
             if (minColumns != -1 && groupFunctions.size() < minColumns) {
-                return super.createValidationError(ERROR_COLUMN_NUMBER);
+                return createValidationError(ERROR_COLUMN_NUMBER);
             }
             if (maxColumns != -1 && groupFunctions.size() > maxColumns) {
-                return super.createValidationError(ERROR_COLUMN_NUMBER);
+                return createValidationError(ERROR_COLUMN_NUMBER);
             }
             if (uniqueColumnIds) {
                 Set<String> columnIds = new HashSet<String>();
@@ -167,7 +167,7 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
                     String columnId = groupFunction.getColumnId();
                     if (columnId != null) {
                         if (columnIds.contains(columnId)) {
-                            return super.createValidationError(ERROR_DUPLICATED_COLUMN_ID, columnId);
+                            return createValidationError(ERROR_DUPLICATED_COLUMN_ID, columnId);
                         } else {
                             columnIds.add(columnId);
                         }
@@ -221,14 +221,14 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
                 boolean isFunctionColumn = (gf.getFunction() != null && !columnType.equals(ColumnType.NUMBER));
 
                 if (!isGroupLabel && !isFunctionColumn) {
-                    return super.createValidationError(ERROR_COLUMN_TYPE, i, types[i], columnType);
+                    return createValidationError(ERROR_COLUMN_TYPE, i, types[i], columnType);
                 }
             }
         }
         return null;
     }
 
-    protected ValidationError createValidationError(int error) {
+    protected ValidationError createValidationError(int error, Object... params) {
         switch (error) {
             case ERROR_GROUP_NOT_ALLOWED:
                 return new ValidationError(error, "Group not allowed");
@@ -237,8 +237,11 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
                 return new ValidationError(error, groupColumn + " column required");
             case ERROR_GROUP_NUMBER:
                 return new ValidationError(error, "Max. groups allowed exceeded " + maxGroups);
+            case ERROR_DUPLICATED_COLUMN_ID:
+                String columnId = (String) params[0];
+                return new ValidationError(error, "Column id '" + columnId + "' is duplicated");
         }
-        return new ValidationError(error);
+        return super.createValidationError(error, params);
     }
 
     public DataSetLookup newDataSetLookup(DataSetMetadata metatada) {
@@ -321,26 +324,24 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
 
     public String buildUniqueColumnId(DataSetLookup lookup, GroupFunction column) {
         String targetId = column.getSourceId();
-        if (uniqueColumnIds) {
-            int lastGop = lookup.getLastGroupOpIndex(0);
-            if (lastGop != -1) {
-                DataSetGroup groupOp = lookup.getOperation(lastGop);
-                List<GroupFunction> columnList = groupOp.getGroupFunctions();
+        int lastGop = lookup.getLastGroupOpIndex(0);
+        if (lastGop != -1) {
+            DataSetGroup groupOp = lookup.getOperation(lastGop);
+            List<GroupFunction> columnList = groupOp.getGroupFunctions();
 
-                String newColumnId = targetId;
-                int counter = 1;
-                while (true) {
-                    boolean unique = true;
-                    for (int i=0; i<columnList.size() && unique; i++) {
-                        GroupFunction gf = columnList.get(i);
-                        if (gf != column && newColumnId.equals(gf.getColumnId())) {
-                            newColumnId = targetId + "_" + (++counter);
-                            unique = false;
-                        }
+            String newColumnId = targetId;
+            int counter = 1;
+            while (true) {
+                boolean unique = true;
+                for (int i=0; i<columnList.size() && unique; i++) {
+                    GroupFunction gf = columnList.get(i);
+                    if (gf != column && newColumnId.equals(gf.getColumnId())) {
+                        newColumnId = targetId + "_" + (++counter);
+                        unique = false;
                     }
-                    if (unique) {
-                        return newColumnId;
-                    }
+                }
+                if (unique) {
+                    return newColumnId;
                 }
             }
         }
