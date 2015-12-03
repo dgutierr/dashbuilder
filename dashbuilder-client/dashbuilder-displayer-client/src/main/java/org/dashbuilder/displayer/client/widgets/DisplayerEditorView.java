@@ -152,7 +152,7 @@ public class DisplayerEditorView extends Composite
     public void showTypeChangedWarning(Command yes, Command no) {
         AlertPanel alertPanel = new AlertPanel();
         String alertMsg = CommonConstants.INSTANCE.displayer_editor_incompatible_settings();
-        alertPanel.show(AlertType.INFO, alertMsg, 400, yes, no);
+        alertPanel.show(AlertType.WARNING, alertMsg, 400, yes, no);
         centerColumn.clear();
         centerColumn.add(alertPanel);
     }

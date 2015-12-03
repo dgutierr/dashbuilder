@@ -53,7 +53,7 @@ public class LikeToFunctionEditorView extends Composite implements LikeToFunctio
 
     @Override
     public void setPattern(String pattern) {
-        searchPatternTextBox.getText();
+        searchPatternTextBox.setText(pattern);
     }
 
     @Override

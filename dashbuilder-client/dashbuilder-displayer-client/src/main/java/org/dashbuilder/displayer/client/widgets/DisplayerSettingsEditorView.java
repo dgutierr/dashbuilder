@@ -64,7 +64,7 @@ public class DisplayerSettingsEditorView extends Composite implements DisplayerS
     public static final String PROPERTY_EDITOR_ID = "displayerSettingsEditor";
 
     @Override
-    public void init(DisplayerSettingsEditor displayerSettingsEditor) {
+    public void init(DisplayerSettingsEditor presenter) {
         this.presenter = presenter;
 
         attrMapI18n.put(GENERAL_GROUP, CommonConstants.INSTANCE.common_group());
@@ -138,7 +138,8 @@ public class DisplayerSettingsEditorView extends Composite implements DisplayerS
 
     @Override
     public void addCategory(DisplayerAttributeDef attributeDef) {
-        category = new PropertyEditorCategory(CommonConstants.INSTANCE.common_group());
+        String catName = attrMapI18n.get(attributeDef);
+        category = new PropertyEditorCategory(catName);
         categories.add(category);
     }
 

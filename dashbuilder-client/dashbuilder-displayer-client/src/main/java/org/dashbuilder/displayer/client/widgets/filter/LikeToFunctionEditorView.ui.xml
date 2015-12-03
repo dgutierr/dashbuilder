@@ -27,7 +27,7 @@
     <g:HorizontalPanel>
       <b:TextBox ui:field="searchPatternTextBox" width="150px"/>
       <b:Tooltip isAnimated="true" placement="RIGHT" title="{i18n.like_to_pattern_instructions}">
-        <b:Icon type="QUESTION" size="LARGE"/>
+        <b:Icon type="QUESTION_CIRCLE" />
       </b:Tooltip>
     </g:HorizontalPanel>
     <b:CheckBox ui:field="caseSensitiveCheckbox" text="{i18n.case_sensitive}" value="true"/>
