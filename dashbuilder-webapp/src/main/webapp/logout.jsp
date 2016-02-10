@@ -48,7 +48,7 @@
             <p><strong><i18n:message key="logoutSuccessful">Logout successful</i18n:message></strong></p>
             <form class="form-horizontal" role="form" action="<%= request.getContextPath() %>" method="post">
                 <div class="form-group">
-                    <div class="col-xs-4 col-sm-4 col-md-4 submit">
+                    <div class="col-xs-4 col-sm-4 col-md-4 submit" style="text-align: left;">
                         <button type="submit" class="btn btn-primary btn-lg" tabindex="4"><i18n:message key="loginAgain">Login again</i18n:message></button>
                     </div>
                 </div>
