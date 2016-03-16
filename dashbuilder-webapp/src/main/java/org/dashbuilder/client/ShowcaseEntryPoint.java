@@ -37,6 +37,7 @@ import org.uberfire.client.mvp.PlaceManager;
 import org.uberfire.client.views.pfly.menu.UserMenu;
 import org.uberfire.client.workbench.widgets.menu.UtilityMenuBar;
 import org.uberfire.client.workbench.widgets.menu.WorkbenchMenuBar;
+import org.uberfire.ext.security.management.client.ClientUserSystemManager;
 import org.uberfire.mvp.Command;
 import org.uberfire.mvp.ParameterizedCommand;
 import org.uberfire.mvp.impl.DefaultPlaceRequest;
@@ -70,7 +71,10 @@ public class ShowcaseEntryPoint {
     private PlaceManager placeManager;
 
     @Inject
-    public User identity;
+    private ClientUserSystemManager userSystemManager;
+
+    @Inject
+    private User identity;
 
     @Inject
     private UserMenu userMenu;
@@ -92,12 +96,11 @@ public class ShowcaseEntryPoint {
 
     @AfterInitialization
     public void startApp() {
-        dashboardManager.loadDashboards(new ParameterizedCommand<Set<DashboardPerspectiveActivity>>() {
-            public void execute(Set<DashboardPerspectiveActivity> parameter) {
+        userSystemManager.waitForInitialization(() ->
+            dashboardManager.loadDashboards((t) -> {
                 setupMenus();
                 hideLoadingPopup();
-            }
-        });
+            }));
     }
 
     private void setupMenus() {
@@ -121,10 +124,11 @@ public class ShowcaseEntryPoint {
 
     private Menus createMenuBar() {
         return newTopLevelMenu(constants.menu_home())
-                .place(new DefaultPlaceRequest("HomePerspective"))
+                .perspective("HomePerspective")
                 .endMenu().
                 newTopLevelMenu(constants.menu_gallery())
-                .place(new DefaultPlaceRequest("DisplayerGalleryPerspective")).endMenu().
+                .perspective("DisplayerGalleryPerspective")
+                .endMenu().
                 newTopLevelMenu(constants.menu_authoring())
                 .withItems(getAuthoringMenuItems())
                 .endMenu().
@@ -151,6 +155,14 @@ public class ShowcaseEntryPoint {
     private List<? extends MenuItem> getAuthoringMenuItems() {
         final List<MenuItem> result = new ArrayList(2);
         result.add(newMenuItem(constants.menu_dataset_authoring(), "DataSetAuthoringPerspective"));
+
+        // User & group management perspectives are only available on supported containers.
+        if (userSystemManager.isActive()) {
+            result.add(newMenuItem(constants.menu_user_management(), "UsersManagementPerspective"));
+            result.add(newMenuItem(constants.menu_group_management(), "GroupsManagementPerspective"));
+        } else {
+            GWT.log("User & group management features are not available.");
+        }
         return result;
     }
 
@@ -215,7 +227,7 @@ public class ShowcaseEntryPoint {
 
     private MenuItem newMenuItem(String caption, final String activityId, final boolean showSubMenu, final boolean showLogo) {
         return MenuFactory.newSimpleItem(caption)
-                .place(new DefaultPlaceRequest(activityId))
+                .perspective(activityId)
                 .endMenu().build().getItems().get(0);
     }
 

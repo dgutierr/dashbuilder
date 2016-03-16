@@ -36,6 +36,10 @@ public interface AppConstants extends Messages {
 
     String menu_dataset_authoring();
 
+    String menu_user_management();
+
+    String menu_group_management();
+
     String menu_dashboards();
 
     String menu_extensions();
