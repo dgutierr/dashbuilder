@@ -15,13 +15,18 @@
  */
 package org.dashbuilder.dataset;
 
+import java.io.File;
+import java.net.URL;
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dashbuilder.config.Config;
+import org.uberfire.commons.services.cdi.Startup;
 
+@Startup
 @ApplicationScoped
 public class DataSetDefDeployerCDI extends DataSetDefDeployer {
 
@@ -35,8 +40,20 @@ public class DataSetDefDeployerCDI extends DataSetDefDeployer {
 
         super(dataSetDefRegistry);
         super.setScanIntervalInMillis(scanIntervalInMillis);
+    }
+
+    @PostConstruct
+    public void init() {
         if (!StringUtils.isBlank(directory)) {
             super.deploy(directory);
+        }
+        else {
+            URL pathURL = Thread.currentThread().getContextClassLoader().getResource("security-management.properties");
+            if (pathURL != null) {
+                File webInf = new File(pathURL.getPath()).getParentFile().getParentFile();
+                File datasets = new File(webInf, "datasets");
+                super.deploy(datasets.getPath());
+            }
         }
     }
 
