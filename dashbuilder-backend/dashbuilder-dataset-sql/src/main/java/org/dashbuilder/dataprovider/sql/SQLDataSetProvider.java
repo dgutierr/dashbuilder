@@ -109,7 +109,6 @@ public class SQLDataSetProvider implements DataSetProvider, DataSetDefRegistryLi
 
             SINGLETON = new SQLDataSetProvider(
                     staticDataSetProvider,
-                    new SQLDataSourceLocatorImpl(),
                     intervalBuilderLocator,
                     intervalBuilderDynamicDate,
                     dataSetOpEngine);
@@ -131,13 +130,11 @@ public class SQLDataSetProvider implements DataSetProvider, DataSetDefRegistryLi
     }
 
     public SQLDataSetProvider(StaticDataSetProvider staticDataSetProvider,
-                              SQLDataSourceLocator dataSourceLocator,
                               IntervalBuilderLocator intervalBuilderLocator,
                               IntervalBuilderDynamicDate intervalBuilderDynamicDate,
                               DataSetOpEngine opEngine) {
 
         this.staticDataSetProvider = staticDataSetProvider;
-        this.dataSourceLocator = dataSourceLocator;
         this.intervalBuilderLocator = intervalBuilderLocator;
         this.intervalBuilderDynamicDate = intervalBuilderDynamicDate;
         this.opEngine = opEngine;
