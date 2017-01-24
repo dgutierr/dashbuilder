@@ -88,6 +88,7 @@ public class NavTabListDragComponent implements PerspectiveEditorDragComponent, 
 
     @Override
     public Modal getConfigurationModal(ModalConfigurationContext ctx) {
+        navItemSelectionModal.setHelpHint(NavigationConstants.INSTANCE.navTabListDragComponentHelp());
         navItemSelectionModal.setOnlyGroups(true);
         navItemSelectionModal.setOnOk(() -> navGroupSelectionOk(ctx));
         navItemSelectionModal.setOnCancel(() -> navGroupSelectionCancel(ctx));

@@ -93,6 +93,7 @@ public class NavTilesDragComponent implements PerspectiveEditorDragComponent, Ha
 
     @Override
     public Modal getConfigurationModal(ModalConfigurationContext ctx) {
+        navItemSelectionModal.setHelpHint(NavigationConstants.INSTANCE.navTilesDragComponentHelp());
         navItemSelectionModal.setOnlyGroups(true);
         navItemSelectionModal.setOnOk(() -> navGroupSelectionOk(ctx));
         navItemSelectionModal.setOnCancel(() -> navGroupSelectionCancel(ctx));

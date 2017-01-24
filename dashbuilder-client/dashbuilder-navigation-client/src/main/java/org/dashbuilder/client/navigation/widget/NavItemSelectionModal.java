@@ -38,6 +38,8 @@ public class NavItemSelectionModal implements IsWidget {
 
         void setCurrentSelection(String name);
 
+        void setHelpText(String text);
+
         void show();
 
         void hide();
@@ -75,6 +77,10 @@ public class NavItemSelectionModal implements IsWidget {
 
     public void setOnCancel(Command onCancel) {
         this.onCancel = onCancel;
+    }
+
+    public void setHelpHint(String text) {
+        view.setHelpText(text);
     }
 
     public NavItem getSelectedItem() {

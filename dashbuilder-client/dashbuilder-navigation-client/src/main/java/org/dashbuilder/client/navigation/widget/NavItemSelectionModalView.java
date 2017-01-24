@@ -76,7 +76,7 @@ public class NavItemSelectionModalView implements NavItemSelectionModal.View {
     public void init(NavItemSelectionModal presenter) {
         this.presenter = presenter;
         currentSelection.setTextContent(NavigationConstants.INSTANCE.navItemSelectorHint());
-        selectorHelp.setAttribute("title", NavigationConstants.INSTANCE.navItemSelectorHelp());
+        selectorHelp.setTitle(NavigationConstants.INSTANCE.navItemSelectorHelp());
         navItemLabel.setTextContent(NavigationConstants.INSTANCE.navItemSelectorLabel());
 
         modal = new CommonModalBuilder()
@@ -116,6 +116,11 @@ public class NavItemSelectionModalView implements NavItemSelectionModal.View {
     @Override
     public void clearItems() {
         DOMUtil.removeAllChildren(selectorItems);
+    }
+
+    @Override
+    public void setHelpText(String text) {
+        selectorHelp.setTitle(text);
     }
 
     @Override
