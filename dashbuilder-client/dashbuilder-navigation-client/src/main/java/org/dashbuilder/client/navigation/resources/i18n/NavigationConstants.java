@@ -28,7 +28,7 @@ public interface NavigationConstants extends Messages {
 
     String itemMenuTitle();
 
-    String itemDeleteTitle();
+    String deleteItem();
 
     String moveUp();
 

@@ -54,10 +54,6 @@ public class NavItemEditorView extends Composite
 
     @Inject
     @DataField
-    Span deleteIcon;
-
-    @Inject
-    @DataField
     Input itemNameInput;
 
     @Inject
@@ -75,7 +71,6 @@ public class NavItemEditorView extends Composite
     public void init(NavItemEditor presenter) {
         this.presenter = presenter;
         itemIcon.setTitle(i18n.itemMenuTitle());
-        deleteIcon.setTitle(i18n.itemDeleteTitle());
         itemNameInput.getStyle().setProperty("display", "none");
         extraDiv.getStyle().setProperty("display", "none");
     }
@@ -174,15 +169,6 @@ public class NavItemEditorView extends Composite
     }
 
     @Override
-    public void setItemDeletable(boolean deletable) {
-        if (deletable) {
-            deleteIcon.getStyle().removeProperty("display");
-        } else {
-            deleteIcon.getStyle().setProperty("display", "none");
-        }
-    }
-
-    @Override
     public String i18nNewItem(String item) {
         return i18n.newItem(item);
     }
@@ -190,6 +176,11 @@ public class NavItemEditorView extends Composite
     @Override
     public String i18nGotoItem(String item) {
         return i18n.gotoItem(item);
+    }
+
+    @Override
+    public String i18nDeleteItem() {
+        return i18n.deleteItem();
     }
 
     @Override
@@ -215,11 +206,6 @@ public class NavItemEditorView extends Composite
     @EventHandler("itemName")
     public void onItemNameClick(ClickEvent event) {
         presenter.onItemClick();
-    }
-
-    @EventHandler("deleteIcon")
-    public void onDeleteClick(ClickEvent event) {
-        presenter.onDeleteItem();
     }
 
     @EventHandler("itemNameInput")

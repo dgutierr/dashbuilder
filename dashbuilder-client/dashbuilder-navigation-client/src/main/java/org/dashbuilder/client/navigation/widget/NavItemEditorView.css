@@ -7,12 +7,6 @@
     cursor: pointer;
 }
 
-.navitem-delete {
-    cursor: pointer;
-    font-size: medium;
-    margin-left: 5px;
-}
-
 .navitem-menu {
     margin-left: 10px;
 }

@@ -65,7 +65,6 @@ public class NavItemEditorTest {
 
         verify(view).setItemName("name");
         verify(view).setItemDescription("description");
-        verify(view).setItemDeletable(false);
         verify(view).setItemEditable(false);
         verify(view).setItemType(NavItemEditor.ItemType.GROUP);
         verify(view, never()).setContextWidget(any());
@@ -82,10 +81,13 @@ public class NavItemEditorTest {
 
         verify(view).setItemName("name");
         verify(view).setItemDescription("description");
-        verify(view).setItemDeletable(true);
         verify(view).setItemEditable(false);
         verify(view).setItemType(NavItemEditor.ItemType.DIVIDER);
         verify(view, never()).setContextWidget(any());
+
+        reset(view);
+        presenter.onItemClick();
+        verify(view, never()).startItemEdition();
     }
 
     @Test
@@ -96,7 +98,6 @@ public class NavItemEditorTest {
         presenter.edit(navItem);
 
         verify(view).setItemName("--------------");
-        verify(view).setItemDeletable(false);
         verify(view).setItemEditable(false);
         verify(view).setItemType(NavItemEditor.ItemType.PERSPECTIVE);
         verify(view).setContextWidget(perspectiveDropDown);

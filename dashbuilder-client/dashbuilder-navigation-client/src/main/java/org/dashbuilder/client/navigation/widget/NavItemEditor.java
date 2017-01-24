@@ -59,8 +59,6 @@ public class NavItemEditor implements IsWidget {
 
         void setItemEditable(boolean editable);
 
-        void setItemDeletable(boolean deletable);
-
         void startItemEdition();
 
         void finishItemEdition();
@@ -70,6 +68,8 @@ public class NavItemEditor implements IsWidget {
         String i18nNewItem(String item);
 
         String i18nGotoItem(String item);
+
+        String i18nDeleteItem();
 
         String i18nMoveUp();
 
@@ -91,6 +91,8 @@ public class NavItemEditor implements IsWidget {
     boolean moveUpEnabled = true;
     boolean moveDownEnabled = true;
     boolean gotoPerspectiveEnabled = false;
+    boolean editEnabled = false;
+    boolean deleteEnabled = false;
     Set<String> visiblePerspectiveIds = null;
     Set<String> hiddenPerspectiveIds = null;
     PerspectiveNameProvider perspectiveNameProvider = null;
@@ -255,8 +257,8 @@ public class NavItemEditor implements IsWidget {
             view.setItemDescription(navItem.getDescription());
         }
 
-        view.setItemEditable(navItem.isModifiable());
-        view.setItemDeletable(navItem.isModifiable());
+        editEnabled = navItem.isModifiable();
+        deleteEnabled = navItem.isModifiable();
 
         // Nav group
         if (navItem instanceof NavGroup) {
@@ -266,7 +268,7 @@ public class NavItemEditor implements IsWidget {
         // Divider
         else if (navItem instanceof NavDivider) {
             view.setItemType(ItemType.DIVIDER);
-            view.setItemEditable(false);
+            editEnabled = false;
         }
         else if (navCtx.getResourceId() != null) {
 
@@ -296,6 +298,7 @@ public class NavItemEditor implements IsWidget {
             // Ignore non supported items
         }
 
+        view.setItemEditable(editEnabled);
         addCommands();
     }
 
@@ -340,10 +343,17 @@ public class NavItemEditor implements IsWidget {
             dividerRequired = true;
             view.addCommand(view.i18nGotoItem(literalPerspective), this::onGotoPerspective);
         }
+        if (deleteEnabled) {
+            if (dividerRequired) {
+                view.addCommandDivider();
+            }
+            dividerRequired = true;
+            view.addCommand(view.i18nDeleteItem(), this::onDeleteItem);
+        }
     }
 
     public void onItemClick() {
-        if (navItem.isModifiable()) {
+        if (editEnabled) {
             view.startItemEdition();
         }
     }
