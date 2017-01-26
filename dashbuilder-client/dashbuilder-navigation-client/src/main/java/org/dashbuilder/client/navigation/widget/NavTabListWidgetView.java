@@ -18,7 +18,11 @@ package org.dashbuilder.client.navigation.widget;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.IsWidget;
+import org.dashbuilder.client.navigation.resources.i18n.NavigationConstants;
 import org.jboss.errai.common.client.dom.DOMUtil;
 import org.jboss.errai.common.client.dom.Div;
 import org.jboss.errai.common.client.dom.Node;
@@ -67,5 +71,23 @@ public class NavTabListWidgetView extends BaseNavWidgetView<NavTabListWidget>
     public void showContent(IsWidget widget) {
         DOMUtil.removeAllChildren(tabContent);
         tabContent.appendChild((Node) widget.asWidget().getElement());
+    }
+
+    @Override
+    public void recursivityError() {
+        DOMUtil.removeAllChildren(tabContent);
+        Element div = DOM.createDiv();
+        Element span1 = DOM.createSpan();
+        Element span2 = DOM.createSpan();
+
+        div.setClassName("alert alert-warning");
+        div.getStyle().setWidth(30, Style.Unit.PCT);
+        div.getStyle().setMargin(10, Style.Unit.PX);
+        span1.setClassName("pficon pficon-warning-triangle-o");
+        span2.setInnerText(NavigationConstants.INSTANCE.navTabListDragComponentRecursivityError());
+
+        div.appendChild(span1);
+        div.appendChild(span2);
+        tabContent.appendChild((Node) div);
     }
 }

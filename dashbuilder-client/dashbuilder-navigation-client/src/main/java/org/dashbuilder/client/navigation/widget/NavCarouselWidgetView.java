@@ -20,7 +20,11 @@ import javax.inject.Inject;
 
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.IsWidget;
+import org.dashbuilder.client.navigation.resources.i18n.NavigationConstants;
 import org.jboss.errai.common.client.dom.DOMUtil;
 import org.jboss.errai.common.client.dom.Div;
 import org.jboss.errai.common.client.dom.Node;
@@ -65,6 +69,23 @@ public class NavCarouselWidgetView extends BaseNavWidgetView<NavCarouselWidget>
         DivElement div = Document.get().createDivElement();
         div.setClassName(carouselDiv.getChildNodes().getLength() == 0 ? "item active" : "item");
         div.appendChild(widget.asWidget().getElement());
+        carouselDiv.appendChild((Node) div);
+    }
+
+    @Override
+    public void recursivityError() {
+        Element div = DOM.createDiv();
+        Element span1 = DOM.createSpan();
+        Element span2 = DOM.createSpan();
+
+        div.setClassName("alert alert-warning");
+        div.getStyle().setWidth(30, Style.Unit.PCT);
+        div.getStyle().setMargin(10, Style.Unit.PX);
+        span1.setClassName("pficon pficon-warning-triangle-o");
+        span2.setInnerText(NavigationConstants.INSTANCE.navCarouselDragComponentRecursivityError());
+
+        div.appendChild(span1);
+        div.appendChild(span2);
         carouselDiv.appendChild((Node) div);
     }
 }

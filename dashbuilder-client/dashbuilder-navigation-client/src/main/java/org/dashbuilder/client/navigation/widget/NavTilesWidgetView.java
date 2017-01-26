@@ -20,10 +20,13 @@ import javax.inject.Inject;
 
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LIElement;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.IsWidget;
+import org.dashbuilder.client.navigation.resources.i18n.NavigationConstants;
 import org.jboss.errai.common.client.api.IsElement;
 import org.jboss.errai.common.client.dom.DOMUtil;
 import org.jboss.errai.common.client.dom.Div;
@@ -73,6 +76,24 @@ public class NavTilesWidgetView extends BaseNavWidgetView<NavTilesWidget>
     public void showTileContent(IsWidget tileContent) {
         DOMUtil.removeAllChildren(tilesDiv);
         tilesDiv.appendChild((Node) tileContent.asWidget().getElement());
+    }
+
+    @Override
+    public void recursivityError() {
+        DOMUtil.removeAllChildren(tilesDiv);
+        Element div = DOM.createDiv();
+        Element span1 = DOM.createSpan();
+        Element span2 = DOM.createSpan();
+
+        div.setClassName("alert alert-warning");
+        div.getStyle().setWidth(30, Style.Unit.PCT);
+        div.getStyle().setMargin(10, Style.Unit.PX);
+        span1.setClassName("pficon pficon-warning-triangle-o");
+        span2.setInnerText(NavigationConstants.INSTANCE.navTilesDragComponentRecursivityError());
+
+        div.appendChild(span1);
+        div.appendChild(span2);
+        tilesDiv.appendChild((Node) div);
     }
 
     @Override

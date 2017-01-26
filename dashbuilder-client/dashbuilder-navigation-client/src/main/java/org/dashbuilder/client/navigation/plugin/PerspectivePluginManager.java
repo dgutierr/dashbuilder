@@ -18,13 +18,16 @@ package org.dashbuilder.client.navigation.plugin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.IsWidget;
 import org.dashbuilder.client.navigation.NavigationManager;
 import org.dashbuilder.client.navigation.event.PerspectivePluginsChangedEvent;
@@ -38,7 +41,6 @@ import org.uberfire.client.workbench.type.ClientTypeRegistry;
 import org.uberfire.ext.layout.editor.api.LayoutServices;
 import org.uberfire.ext.layout.editor.api.editor.LayoutTemplate;
 import org.uberfire.ext.layout.editor.client.generator.LayoutGenerator;
-import org.uberfire.ext.plugin.client.security.PluginController;
 import org.uberfire.ext.plugin.client.type.PerspectiveLayoutPluginResourceType;
 import org.uberfire.ext.plugin.event.PluginAdded;
 import org.uberfire.ext.plugin.event.PluginDeleted;
@@ -48,6 +50,7 @@ import org.uberfire.ext.plugin.model.LayoutEditorModel;
 import org.uberfire.ext.plugin.model.Plugin;
 import org.uberfire.ext.plugin.model.PluginType;
 import org.uberfire.ext.plugin.service.PluginServices;
+import org.uberfire.mvp.Command;
 import org.uberfire.mvp.ParameterizedCommand;
 import org.uberfire.workbench.model.ActivityResourceType;
 
@@ -62,7 +65,7 @@ public class PerspectivePluginManager {
     private Caller<LayoutServices> layoutServices;
     private Event<PerspectivePluginsChangedEvent> perspectivesChangedEvent;
     private Map<String,Plugin> pluginMap = new HashMap<>();
-    private Map<String,IsWidget> widgetMap = new HashMap<>();
+    private Set<String> perspectiveNames = new HashSet<>();
 
     @Inject
     public PerspectivePluginManager(ClientTypeRegistry clientTypeRegistry,
@@ -112,32 +115,36 @@ public class PerspectivePluginManager {
         boolean isRuntimePerspective = resourceId != null && ActivityResourceType.PERSPECTIVE.equals(resourceType) && isRuntimePerspective(resourceId);
         return isRuntimePerspective ? resourceId : null;
     }
-    public void buildPerspectiveWidget(String perspectiveName, ParameterizedCommand<IsWidget> afterBuild) {
-        IsWidget widget = widgetMap.get(perspectiveName);
-        // TODO: Cache disabled as there is an issue with charts don't showing up
-        if (false /*widget != null*/) {
-            afterBuild.execute(widget);
-        }
-        else {
-            Plugin plugin = pluginMap.get(perspectiveName);
-            if (plugin != null) {
-                buildPerspectiveWidget(plugin, afterBuild);
-            }
+
+    public void buildPerspectiveWidget(String perspectiveName, ParameterizedCommand<IsWidget> afterBuild, Command onRecursivity) {
+        Plugin plugin = pluginMap.get(perspectiveName);
+        if (plugin != null) {
+            buildPerspectiveWidget(plugin, afterBuild, onRecursivity);
         }
     }
 
-    public void buildPerspectiveWidget(Plugin perspectivePlugin, ParameterizedCommand<IsWidget> afterBuild) {
-        pluginServices.call((LayoutEditorModel layoutEditorModel) -> {
-            layoutServices.call((LayoutTemplate layoutTemplate) -> {
+    public void buildPerspectiveWidget(Plugin perspectivePlugin, ParameterizedCommand<IsWidget> afterBuild, Command onRecursivity) {
+        final String perspectiveName = perspectivePlugin.getName();
 
-                if (layoutTemplate != null) {
-                    IsWidget result = layoutGenerator.build(layoutTemplate);
-                    widgetMap.put(perspectivePlugin.getName(), result);
-                    afterBuild.execute(result);
-                }
-            }).convertLayoutFromString(layoutEditorModel.getLayoutEditorModel());
-        }).getLayoutEditor(perspectivePlugin.getPath(), PluginType.PERSPECTIVE_LAYOUT);
+        if (perspectiveNames.contains(perspectiveName) && onRecursivity != null) {
+            onRecursivity.execute();
+            //GWT.log("RECURSIVE " + perspectiveName);
+        }
+        else {
+            //GWT.log("START" + perspectiveName);
+            perspectiveNames.add(perspectiveName);
+            pluginServices.call((LayoutEditorModel layoutEditorModel) -> {
+                layoutServices.call((LayoutTemplate layoutTemplate) -> {
 
+                    if (layoutTemplate != null) {
+                        IsWidget result = layoutGenerator.build(layoutTemplate);
+                        afterBuild.execute(result);
+                        perspectiveNames.remove(perspectiveName);
+                        //GWT.log("END" + perspectiveName);
+                    }
+                }).convertLayoutFromString(layoutEditorModel.getLayoutEditorModel());
+            }).getLayoutEditor(perspectivePlugin.getPath(), PluginType.PERSPECTIVE_LAYOUT);
+        }
     }
 
     // Sync up both the internals plugin & widget registry
@@ -146,7 +153,6 @@ public class PerspectivePluginManager {
         Plugin plugin = event.getPlugin();
         if (isRuntimePerspective(plugin)) {
             pluginMap.put(plugin.getName(), plugin);
-            widgetMap.remove(plugin.getName());
             perspectivesChangedEvent.fire(new PerspectivePluginsChangedEvent());
         }
     }
@@ -155,7 +161,6 @@ public class PerspectivePluginManager {
         Plugin plugin = event.getPlugin();
         if (isRuntimePerspective(plugin)) {
             pluginMap.put(plugin.getName(), plugin);
-            widgetMap.remove(plugin.getName());
         }
     }
 
@@ -164,7 +169,6 @@ public class PerspectivePluginManager {
         if (isRuntimePerspective(plugin)) {
             pluginMap.remove(event.getOldPluginName());
             pluginMap.put(plugin.getName(), plugin);
-            widgetMap.remove(plugin.getName());
 
             NavWorkbenchCtx ctx = NavWorkbenchCtx.perspective(event.getOldPluginName());
             NavWorkbenchCtx newCtx = NavWorkbenchCtx.perspective(event.getPlugin().getName());
@@ -184,7 +188,6 @@ public class PerspectivePluginManager {
     public void onPlugInDeleted(@Observes final PluginDeleted event) {
         Plugin plugin = event.getPlugin();
         pluginMap.remove(plugin.getName());
-        widgetMap.remove(plugin.getName());
 
         NavWorkbenchCtx ctx = NavWorkbenchCtx.perspective(event.getPluginName());
         List<NavItem> targetItems = navigationManager.getNavTree().searchItems(ctx);
