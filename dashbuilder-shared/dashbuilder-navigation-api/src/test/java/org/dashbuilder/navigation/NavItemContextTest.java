@@ -19,7 +19,10 @@ import org.dashbuilder.navigation.workbench.NavWorkbenchCtx;
 import org.junit.Test;
 import org.uberfire.workbench.model.ActivityResourceType;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 public class NavItemContextTest {
 
@@ -60,5 +63,29 @@ public class NavItemContextTest {
         assertEquals(ctx.getProperty(NavWorkbenchCtx.RESOURCE_ID), "A");
         assertEquals(ctx.getProperty(NavWorkbenchCtx.RESOURCE_TYPE), "PERSPECTIVE");
         assertEquals(ctx.toString(), "resourceId=A;resourceType=PERSPECTIVE;");
+    }
+
+    @Test
+    public void testPermissions() {
+        NavWorkbenchCtx ctx = NavWorkbenchCtx.permission("p1", "p2", "p3");
+
+        assertThat(ctx.getPermissions())
+                .hasSize(3)
+                .contains("p1", "p2", "p3");
+
+        ctx.clearPermissions();
+
+        assertThat(ctx.getPermissions())
+                .isEmpty();
+    }
+
+    @Test
+    public void testRemoveProperty() {
+        NavWorkbenchCtx ctx = NavWorkbenchCtx.get("a=1;b=2;c=3");
+
+        ctx.removeProperty("b");
+
+        NavWorkbenchCtx expectedCtx = NavWorkbenchCtx.get("a=1;c=3");
+        assertTrue(ctx.includesPropertiesOf(expectedCtx));
     }
 }

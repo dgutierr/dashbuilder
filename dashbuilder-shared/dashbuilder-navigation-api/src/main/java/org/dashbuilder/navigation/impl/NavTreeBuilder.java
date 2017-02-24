@@ -70,7 +70,7 @@ public class NavTreeBuilder {
         return this;
     }
 
-    public NavTreeBuilder end() {
+    public NavTreeBuilder endGroup() {
         if (!stack.isEmpty()) {
             stack.pop();
         } else {

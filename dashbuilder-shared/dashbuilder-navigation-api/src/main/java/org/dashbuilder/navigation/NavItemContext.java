@@ -20,7 +20,7 @@ import java.util.Collection;
 import org.dashbuilder.navigation.impl.NavItemContextImpl;
 
 /**
- * An interface for manipulating a {@link NavItem#getContext()} as it was a collection of attribute/value pairs
+ * An interface for manipulating a {@link NavItem#getContext()} as it was a collection of attribute/value pairs.
  */
 public interface NavItemContext {
 
@@ -46,5 +46,11 @@ public interface NavItemContext {
 
     NavItemContext setProperty(String id, String value);
 
-    boolean match(NavItemContext ctx);
+    /**
+     * Check if this context contains all property-value pairs of some other context.
+     *
+     * @param cxt
+     * @return true iff all the properties of ctx are also present in this context and have the same value.
+     */
+    boolean includesPropertiesOf(NavItemContext cxt);
 }

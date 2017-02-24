@@ -27,11 +27,11 @@ import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.IsWidget;
 import org.dashbuilder.client.navigation.NavigationManager;
 import org.dashbuilder.client.navigation.event.PerspectivePluginsChangedEvent;
 import org.dashbuilder.navigation.NavItem;
+import org.dashbuilder.navigation.NavTree;
 import org.dashbuilder.navigation.workbench.NavWorkbenchCtx;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.ioc.client.api.AfterInitialization;
@@ -64,7 +64,7 @@ public class PerspectivePluginManager {
     private Caller<PluginServices> pluginServices;
     private Caller<LayoutServices> layoutServices;
     private Event<PerspectivePluginsChangedEvent> perspectivesChangedEvent;
-    private Map<String,Plugin> pluginMap = new HashMap<>();
+    private Map<String, Plugin> pluginMap = new HashMap<>();
     private Set<String> perspectiveNames = new HashSet<>();
 
     @Inject
@@ -129,8 +129,7 @@ public class PerspectivePluginManager {
         if (perspectiveNames.contains(perspectiveName) && onRecursivity != null) {
             onRecursivity.execute();
             //GWT.log("RECURSIVE " + perspectiveName);
-        }
-        else {
+        } else {
             //GWT.log("START" + perspectiveName);
             perspectiveNames.add(perspectiveName);
             pluginServices.call((LayoutEditorModel layoutEditorModel) -> {
@@ -172,32 +171,30 @@ public class PerspectivePluginManager {
 
             NavWorkbenchCtx ctx = NavWorkbenchCtx.perspective(event.getOldPluginName());
             NavWorkbenchCtx newCtx = NavWorkbenchCtx.perspective(event.getPlugin().getName());
-            List<NavItem> targetItems = navigationManager.getNavTree().searchItems(ctx);
-            boolean changed = false;
-            for (NavItem navItem : targetItems) {
+            List<NavItem> itemsToRename = navigationManager.getNavTree().searchItems(ctx);
+            for (NavItem navItem : itemsToRename) {
                 navItem.setContext(newCtx.toString());
-                changed = true;
             }
-            if (changed) {
+            if (!itemsToRename.isEmpty()) {
                 navigationManager.saveNavTree(navigationManager.getNavTree(), () -> {});
             }
             perspectivesChangedEvent.fire(new PerspectivePluginsChangedEvent());
         }
     }
 
-    public void onPlugInDeleted(@Observes final PluginDeleted event) {
-        Plugin plugin = event.getPlugin();
-        pluginMap.remove(plugin.getName());
 
-        NavWorkbenchCtx ctx = NavWorkbenchCtx.perspective(event.getPluginName());
-        List<NavItem> targetItems = navigationManager.getNavTree().searchItems(ctx);
-        boolean changed = false;
-        for (NavItem navItem : targetItems) {
-            navigationManager.getNavTree().deleteItem(navItem.getId());
-            changed = true;
+    public void onPlugInDeleted(@Observes final PluginDeleted event) {
+        String pluginName = event.getPluginName();
+        pluginMap.remove(pluginName);
+
+        NavWorkbenchCtx ctx = NavWorkbenchCtx.perspective(pluginName);
+        NavTree navTree = navigationManager.getNavTree();
+        List<NavItem> itemsToDelete = navTree.searchItems(ctx);
+        for (NavItem item : itemsToDelete) {
+            navTree.deleteItem(item.getId());
         }
-        if (changed) {
-            navigationManager.saveNavTree(navigationManager.getNavTree(), () -> {});
+        if (!itemsToDelete.isEmpty()) {
+            navigationManager.saveNavTree(navTree, null);
         }
         perspectivesChangedEvent.fire(new PerspectivePluginsChangedEvent());
     }

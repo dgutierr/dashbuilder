@@ -69,7 +69,7 @@ public class NavItemContextImpl implements NavItemContext {
     }
 
     @Override
-    public boolean match(NavItemContext ctx) {
+    public boolean includesPropertiesOf(NavItemContext ctx) {
         for (String p : ctx.getPropertyIds()) {
             String v1 = this.getProperty(p);
             String v2 = ctx.getProperty(p);

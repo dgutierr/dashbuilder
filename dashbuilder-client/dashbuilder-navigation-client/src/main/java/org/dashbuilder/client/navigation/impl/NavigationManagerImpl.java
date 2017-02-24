@@ -18,7 +18,6 @@ package org.dashbuilder.client.navigation.impl;
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.dashbuilder.client.navigation.NavigationManager;
@@ -56,7 +55,9 @@ public class NavigationManagerImpl implements NavigationManager {
     public void init(Command afterInit) {
         navServices.call((NavTree n) -> {
             navTree = n;
-            afterInit.execute();
+            if (afterInit != null) {
+                afterInit.execute();
+            }
         }).loadNavTree();
     }
 

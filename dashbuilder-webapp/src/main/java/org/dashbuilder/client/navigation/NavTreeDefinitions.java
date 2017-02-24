@@ -47,11 +47,11 @@ public interface NavTreeDefinitions {
                         .item(ENTRY_DATASETS, "Datasets", "The dataset authoring tool", false, perspective(DATA_SETS))
                         .item(ENTRY_SECURITY, "Security", "The security configuration tool", false, perspective(SECURITY))
                         .item(ENTRY_CONTENT_MGR, "Content manager", "The content manager tool", false, perspective(CONTENT_MANAGER))
-                        .end()
+                        .endGroup()
                     .group(GROUP_DASHBOARDS, "Dashboards", "The default location for dashboard items", false)
                         .item(ENTRY_SALES_DASHBOARD, "Sales dashboard", null, true, perspective(SALES_DASHBOARD))
                         .item(ENTRY_SALES_REPORTS, "Sales reports", null, true, perspective(SALES_REPORTS))
-                        .end()
-                .end()
+                        .endGroup()
+                .endGroup()
             .build();
 }

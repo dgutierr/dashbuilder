@@ -87,7 +87,7 @@ public class NavTreeImpl implements NavTree {
         for (NavItem navItem : navItemList) {
             niCtx.init(navItem.getContext());
 
-            if (niCtx.match(ctx)) {
+            if (niCtx.includesPropertiesOf(ctx)) {
                 result.add(navItem);
             }
             if (navItem instanceof NavGroup) {
