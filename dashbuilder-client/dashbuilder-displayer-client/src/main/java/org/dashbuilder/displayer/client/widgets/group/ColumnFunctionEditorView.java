@@ -18,6 +18,7 @@ package org.dashbuilder.displayer.client.widgets.group;
 import javax.enterprise.context.Dependent;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -66,16 +67,10 @@ public class ColumnFunctionEditorView extends Composite implements ColumnFunctio
         this.columnDetailsEditor = presenter.getColumnDetailsEditor();
         initWidget(uiBinder.createAndBindUi(this));
 
-        columnExpandIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                expandOrCollapse();
-            }
-        }, ClickEvent.getType());
-        columnDeleteIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                presenter.delete();
-            }
-        }, ClickEvent.getType());
+        columnExpandIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
+        columnDeleteIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
+        columnExpandIcon.addDomHandler(event -> expandOrCollapse(), ClickEvent.getType());
+        columnDeleteIcon.addDomHandler(event -> presenter.delete(), ClickEvent.getType());
     }
 
     @Override

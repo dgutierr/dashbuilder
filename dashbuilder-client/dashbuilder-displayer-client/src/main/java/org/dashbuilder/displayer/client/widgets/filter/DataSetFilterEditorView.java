@@ -16,6 +16,7 @@
 package org.dashbuilder.displayer.client.widgets.filter;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -54,11 +55,8 @@ public class DataSetFilterEditorView extends Composite implements DataSetFilterE
 
     public DataSetFilterEditorView() {
         initWidget(uiBinder.createAndBindUi(this));
-        filterDeleteIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                onNewFilterClosed(event);
-            }
-        }, ClickEvent.getType());
+        filterDeleteIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
+        filterDeleteIcon.addDomHandler(this::onNewFilterClosed, ClickEvent.getType());
     }
 
     @Override

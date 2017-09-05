@@ -18,6 +18,7 @@ package org.dashbuilder.displayer.client.widgets;
 import javax.enterprise.context.Dependent;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -100,6 +101,7 @@ public class DataSetLookupEditorView extends Composite
         initWidget(uiBinder.createAndBindUi(this));
 
         groupDetailsIcon.setType(IconType.ARROW_DOWN);
+        groupDetailsIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
         groupDetailsIcon.addDomHandler(this::expandCollapseGroupDetails, ClickEvent.getType());
     }
 

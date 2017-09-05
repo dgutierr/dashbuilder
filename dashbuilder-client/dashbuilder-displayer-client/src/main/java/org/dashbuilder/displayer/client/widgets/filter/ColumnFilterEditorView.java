@@ -18,6 +18,7 @@ package org.dashbuilder.displayer.client.widgets.filter;
 import java.util.Date;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -64,16 +65,10 @@ public class ColumnFilterEditorView extends Composite implements ColumnFilterEdi
         this.presenter = checkNotNull( "presenter", presenter );
         initWidget(uiBinder.createAndBindUi(this));
 
-        filterExpandIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                onExpandCollapseDetails();
-            }
-        }, ClickEvent.getType());
-        filterDeleteIcon.addDomHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                onDeleteFilter();
-            }
-        }, ClickEvent.getType());
+        filterDeleteIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
+        filterExpandIcon.getElement().getStyle().setCursor(Style.Cursor.POINTER);
+        filterDeleteIcon.addDomHandler(event -> onDeleteFilter(), ClickEvent.getType());
+        filterExpandIcon.addDomHandler(event -> onExpandCollapseDetails(), ClickEvent.getType());
     }
 
     @Override
