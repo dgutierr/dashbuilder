@@ -41,6 +41,7 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
     protected boolean filterAllowed = true;
     protected boolean groupAllowed = true;
     protected boolean groupRequired = false;
+    protected boolean sortAllowed = true;
     protected int maxGroups = -1;
     protected String groupsTitle = "Rows";
     protected String columnsTitle = "Columns";
@@ -81,6 +82,15 @@ public class DataSetLookupConstraints extends DataSetConstraints<DataSetLookupCo
 
     public DataSetLookupConstraints setGroupRequired(boolean groupRequired) {
         this.groupRequired = groupRequired;
+        return this;
+    }
+
+    public boolean isSortAllowed() {
+        return sortAllowed;
+    }
+
+    public DataSetLookupConstraints setSortAllowed(boolean sortAllowed) {
+        this.sortAllowed = sortAllowed;
         return this;
     }
 

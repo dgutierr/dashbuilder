@@ -37,6 +37,7 @@ import org.dashbuilder.displayer.client.events.GroupFunctionDeletedEvent;
 import org.dashbuilder.displayer.client.widgets.filter.DataSetFilterEditor;
 import org.dashbuilder.displayer.client.widgets.group.ColumnFunctionEditor;
 import org.dashbuilder.displayer.client.widgets.group.DataSetGroupDateEditor;
+import org.dashbuilder.displayer.client.widgets.sort.DataSetSortEditor;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.SyncBeanDef;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
@@ -161,13 +162,16 @@ public class DataSetLookupEditorTest {
     DataSetGroupDateEditor groupDateEditor;
 
     @Mock
+    DataSetSortEditor sortEditor;
+
+    @Mock
     DataSetClientServices clientServices;
 
     DataSetLookupEditor presenter = null;
 
     @Before
     public void init() throws Exception {
-        presenter = new DataSetLookupEditor(view, beanManager, filterEditor, groupDateEditor, clientServices, event);
+        presenter = new DataSetLookupEditor(view, beanManager, filterEditor, groupDateEditor, sortEditor, clientServices, event);
 
         doAnswer(new Answer() {
             @Override

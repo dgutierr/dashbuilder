@@ -225,6 +225,12 @@ public interface CommonConstants extends Messages {
 
     String dataset_lookup_init_error();
 
+    String dataset_lookup_sort_order_by();
+
+    String dataset_lookup_sort_order_asc();
+
+    String dataset_lookup_sort_order_desc();
+
     // DisplayerEditor literals
 
     String displayer_editor_title();

@@ -45,6 +45,7 @@ import org.dashbuilder.dataset.group.AggregateFunctionType;
 import org.dashbuilder.dataset.group.ColumnGroup;
 import org.dashbuilder.dataset.group.DataSetGroup;
 import org.dashbuilder.dataset.group.GroupFunction;
+import org.dashbuilder.dataset.sort.DataSetSort;
 import org.dashbuilder.displayer.client.events.DataSetFilterChangedEvent;
 import org.dashbuilder.displayer.client.events.DataSetGroupDateChanged;
 import org.dashbuilder.displayer.client.events.DataSetLookupChangedEvent;
@@ -53,6 +54,8 @@ import org.dashbuilder.displayer.client.events.GroupFunctionDeletedEvent;
 import org.dashbuilder.displayer.client.widgets.filter.DataSetFilterEditor;
 import org.dashbuilder.displayer.client.widgets.group.ColumnFunctionEditor;
 import org.dashbuilder.displayer.client.widgets.group.DataSetGroupDateEditor;
+import org.dashbuilder.displayer.client.widgets.sort.ColumnSortEditor;
+import org.dashbuilder.displayer.client.widgets.sort.DataSetSortEditor;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.SyncBeanManager;
 import org.uberfire.client.mvp.UberView;
@@ -122,30 +125,28 @@ public class DataSetLookupEditor implements IsWidget {
     DataSetClientServices clientServices;
     DataSetFilterEditor filterEditor;
     DataSetGroupDateEditor groupDateEditor;
+    DataSetSortEditor sortEditor;
     DataSetLookup dataSetLookup = null;
     DataSetLookupConstraints lookupConstraints = null;
     DataSetMetadata dataSetMetadata = null;
     Event<DataSetLookupChangedEvent> changeEvent = null;
-    List<DataSetDef> _dataSetDefList = new ArrayList<DataSetDef>();
-    Map<Integer, ColumnFunctionEditor> _editorsMap = new HashMap<Integer, ColumnFunctionEditor>();
-
-    DataSetDefFilter dataSetDefFilter = new DataSetDefFilter() {
-        public boolean accept(DataSetDef def) {
-            return true;
-        }
-    };
+    List<DataSetDef> _dataSetDefList = new ArrayList<>();
+    Map<Integer, ColumnFunctionEditor> _editorsMap = new HashMap<>();
+    DataSetDefFilter dataSetDefFilter = def -> true;
 
     @Inject
     public DataSetLookupEditor(final View view,
                                SyncBeanManager beanManager,
                                DataSetFilterEditor filterEditor,
                                DataSetGroupDateEditor groupDateEditor,
+                               DataSetSortEditor sortEditor,
                                DataSetClientServices clientServices,
                                Event<DataSetLookupChangedEvent> event) {
         this.view = view;
         this.beanManager = beanManager;
         this.filterEditor = filterEditor;
         this.groupDateEditor = groupDateEditor;
+        this.sortEditor = sortEditor;
         this.clientServices = clientServices;
         this.changeEvent = event;
         this.dataSetLookup = null;
@@ -158,16 +159,10 @@ public class DataSetLookupEditor implements IsWidget {
         this.dataSetLookup = dataSetLookup;
         this.lookupConstraints = lookupConstraints;
         this.view.clearAll();
-        this.clientServices.getPublicDataSetDefs(new RemoteCallback<List<DataSetDef>>() {
-            public void callback(List<DataSetDef> dataSetDefs) {
-                showDataSetDefs(dataSetDefs);
-                if (dataSetLookup != null && dataSetLookup.getDataSetUUID() != null) {
-                    fetchMetadata(dataSetLookup.getDataSetUUID(), new RemoteCallback<DataSetMetadata>() {
-                        public void callback(DataSetMetadata metadata) {
-                            updateDataSetLookup();
-                        }
-                    });
-                }
+        this.clientServices.getPublicDataSetDefs(dataSetDefs -> {
+            showDataSetDefs(dataSetDefs);
+            if (dataSetLookup != null && dataSetLookup.getDataSetUUID() != null) {
+                fetchMetadata(dataSetLookup.getDataSetUUID(), metadata -> updateDataSetLookup());
             }
         });
     }
@@ -409,6 +404,11 @@ public class DataSetLookupEditor implements IsWidget {
         }
     }
 
+    void updateSortControls() {
+        view.setSortEnabled(lookupConstraints.isSortAllowed());
+        sortEditor.init(dataSetLookup.getFirstSortOp(), dataSetMetadata);
+    }
+
     void updateColumnControls() {
         String groupColumnId = getFirstGroupColumnId();
         List<GroupFunction> groupFunctions = getFirstGroupFunctions();
@@ -498,13 +498,10 @@ public class DataSetLookupEditor implements IsWidget {
         String selectedUUID = view.getSelectedDataSetId();
         for (DataSetDef dataSetDef : _dataSetDefList) {
             if (dataSetDef.getUUID().equals(selectedUUID)) {
-                fetchMetadata(selectedUUID, new RemoteCallback<DataSetMetadata>() {
-
-                    public void callback(DataSetMetadata metadata) {
-                        dataSetLookup = lookupConstraints.newDataSetLookup(metadata);
-                        updateDataSetLookup();
-                        changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
-                    }
+                fetchMetadata(selectedUUID, metadata -> {
+                    dataSetLookup = lookupConstraints.newDataSetLookup(metadata);
+                    updateDataSetLookup();
+                    changeEvent.fire(new DataSetLookupChangedEvent(dataSetLookup));
                 });
             }
         }
